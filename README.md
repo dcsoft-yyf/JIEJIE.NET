@@ -1,5 +1,5 @@
 # DC.NET Protector
-  Against crack, protect your .NET software copyright powerfull.
+  An open source tool to against crack, protect your .NET software copyright powerfull.
 
 ## Background
 Many .net developers are worry about their software has been cracked , so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.So I write DC.NET Protector to provide more powerful .net IL code protection and it is open source.
