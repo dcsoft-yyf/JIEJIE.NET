@@ -1,7 +1,7 @@
-# DC.NET Protector
+#DC.NET Protector
 protect your .NET software copyright powerfull.
 
-## Background
+##Background
 Many .net developers are worry about their software has been cracked , so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.So I write DC.NET Protector to provide more powerful .net IL code protection and it is open source.
 It is a console .NET application, the UI is :
 <br/>
@@ -246,7 +246,7 @@ In .NET Memory profiler.the UI is
 seach the string "This software license to:Administrator" and double click , then you can see the follow UI:
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo3.png"/>
 There are list the key string value allocation call stack :
-```C#
+```
 mscorlib!System.String.Concat( string,string )
 SampleWinApp!SampleWinApp.frmMain.GetLicenseMessage() frmMain.cs
 SampleWinApp!SampleWinApp.frmMain.btnAbout_Click( object,EventArgs ) frmMain.cs
@@ -267,7 +267,7 @@ SampleWinApp!SampleWinApp.Program.Main() Program.cs
 ```
  This call stack maby point out how to crack the software. 
 My new tool can change this call stack to this:
-```C#
+```
 mscorlib!System.String.CtorCharArray( char[] )
 SampleWinApp2!DCSoft.Common.InnerAssemblyHelper20210315.CloneStringCrossThead_Thread()
 mscorlib!System.Threading.ExecutionContext.RunInternal( ExecutionContext,ContextCallback,object,bool )
@@ -279,16 +279,18 @@ It is more difficuted to find out the key call stack.This feature help you prote
 
 ## Fifth. Easy to use.
 My new tool is a .NET framework console  application.     It support following command line argument :
-        input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
-        output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
-        snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
-        pause =[optional,pause the console after finish process.]
-     Example 1, protect d:\a.dll ,this will modify dll file.
-        DCNETProtector.exe input=d:\a.dll  
-     Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name.
-        DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
-
+```
+  input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
+  output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
+  snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
+  pause =[optional,pause the console after finish process.]
+ Example 1, protect d:\a.dll ,this will modify dll file.
+   DCNETProtector.exe input=d:\a.dll  
+ Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name.
+   DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
+```
 ## My target
 This new tool's finall target is protect all .NET software copyright.Of cause,it does not do all things, it does not support renaming,flow-obfuscate, For those function you can seach other tools.
 
-
+## License
+DC.NET Protector use GPL-2.0 License.
