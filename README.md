@@ -1,7 +1,7 @@
-#DC.NET Protector
+# DC.NET Protector
 protect your .NET software copyright powerfull.
 
-##Background
+## Background
 Many .net developers are worry about their software has been cracked , so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.So I write DC.NET Protector to provide more powerful .net IL code protection and it is open source.
 It is a console .NET application, the UI is :
 <br/>
@@ -10,7 +10,7 @@ It is a console .NET application, the UI is :
 ## Features
 It has following features.
 
-## First.Avoid performance problem.
+## NO.1 .Avoid performance problem.
 Some times application obfuscate can cause bad performance problem.For example, to the following C# code.
 ```C#
 public static byte[] ParseUpperHexString(string hexs)
@@ -147,7 +147,7 @@ public static byte[] z0ZzZzbu(string A_0)
 So my new tools can analyse IL code ,select all string value define in methods , and bring out and redefine as a static readonly field,  This can solve this performance problem.
 Additional , New tool can hidden all string value defines, hakers can not find any string value define in ildasm result.
 
-## Second,Encrypt *.resources file.
+## NO.2 ,Encrypt *.resources file.
  Haker can use ildasm.exe get *.resouces file emit in .NET assembly file , change it , mark their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI as haker's copyright UI.
 My new tool can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So my new tool can protect your copyright.
 Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My new tools will prompt operator to select a UI language and compress UI language resource data to IL code . This will provide a more fast lanuch speed and without UI language resouce dll.
@@ -225,7 +225,7 @@ internal class Resource1
 ```
 The resouce data aleady has been encrypted, and hard to crack.
 
-## Thirth,Hidden allocation call stack.
+## NO.3 ,Hidden allocation call stack.
 Haker can get and seach key code by using memory profiler tools , etc. Scitech .NET memory Profiler.
 For example, I use the follow code to display software license info.
 ```C#
@@ -277,7 +277,7 @@ mscorlib!System.Threading.ThreadHelper.ThreadStart()
 ```
 It is more difficuted to find out the key call stack.This feature help you protect your software copyright.
 
-## Fifth. Easy to use.
+## NO.4 . Easy to use.
 My new tool is a .NET framework console  application.     It support following command line argument :
 ```
   input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
@@ -294,3 +294,6 @@ This new tool's finall target is protect all .NET software copyright.Of cause,it
 
 ## License
 DC.NET Protector use GPL-2.0 License.
+
+## Donate
+Click <a href="">here</a>
