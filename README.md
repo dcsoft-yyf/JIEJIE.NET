@@ -1,5 +1,5 @@
 # DC.NET Protector
-protect your .NET software copyright powerfull.
+  Against crack, protect your .NET software copyright powerfull.
 
 ## Background
 Many .net developers are worry about their software has been cracked , so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.So I write DC.NET Protector to provide more powerful .net IL code protection and it is open source.
@@ -305,7 +305,7 @@ My new tool is a .NET framework console  application.
  Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name.
    DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
 ```
-## My target
+## Exclude
 This new tool's finall target is protect all .NET software copyright.Of cause,it does not do all things, it does not support renaming,flow-obfuscate, For those function you can seach other tools.
 
 ## License
