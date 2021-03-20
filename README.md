@@ -46,7 +46,7 @@ public static byte[] z0ZzZzbn(string A_0)
   int num = -1;
   foreach (char value in A_0)
   {
-    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9Áô\ue8cf\uebd1êGîðõœüañ‚ïy", a_).IndexOf(value);
+    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9¨¢?\ue8cf\uebd1¨ºG?e??¨¹a???y", a_).IndexOf(value);
     if (num2 >= 0)
     {
       if (num < 0)
@@ -121,7 +121,7 @@ public static byte[] ParseUpperHexString(string hexs)
 ```
 the result code after dotfuscate is
 ```C#
-private static readonly string z0ZzZzbg = z0ZzZzbbz.b("òÂÓUÑJÞyÕy\uf5bf\uf4c1\uf3c3\uf1c7ËßÜˆÚœè™íläi", 5);
+private static readonly string z0ZzZzbg = z0ZzZzbbz.b("¨°?¨®U?JTy?y\uf5bf\uf4c1\uf3c3\uf1c7??¨¹?¨²?¨¨?¨ªl?i", 5);
 public static byte[] z0ZzZzbu(string A_0)
 {
   List<byte> list = new List<byte>();
@@ -148,7 +148,7 @@ So my new tools can analyse IL code ,select all string value define in methods ,
 Additional , New tool can hidden all string value defines, hakers can not find any string value define in ildasm result.
 
 ## NO.2 ,Encrypt *.resources file.
- Haker can use ildasm.exe get *.resouces file emit in .NET assembly file , change it , mark their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI as haker's copyright UI.
+ Haker can use ildasm.exe get `*.resouces` file emit in .NET assembly file , change it , mark their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI as haker's copyright UI.
 My new tool can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So my new tool can protect your copyright.
 Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My new tools will prompt operator to select a UI language and compress UI language resource data to IL code . This will provide a more fast lanuch speed and without UI language resouce dll.
 My new tool also can change the resource package class code.For example, This is a resource package class code:
@@ -243,7 +243,7 @@ When you start application in Scitech .NET memory Profiler, and show the about d
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo.png"/>
 <br/>In .NET Memory profiler.the UI is 
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo2.png"/>
-seach the string "This software license to:Administrator" and double click , then you can see the follow UI:
+seach the string `"This software license to:Administrator"` and double click , then you can see the follow UI:
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo3.png"/>
 There are list the key string value allocation call stack :
 ```
@@ -280,7 +280,7 @@ private string GetLicenseMessage()
     return msg;
 }
 ```
-At there,the code"var str = "Yuan_yong_fu_dao_ci_yi_you";"just let DC.NET Protector know the owner method need change.case sensitive.
+At there,the code `var str = "Yuan_yong_fu_dao_ci_yi_you";` just let DC.NET Protector know the owner method need change.case sensitive.
 My new tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
@@ -293,7 +293,8 @@ mscorlib!System.Threading.ThreadHelper.ThreadStart()
 It is more difficuted to find out the key call stack.This feature help you protect your software copyright.
 
 ## NO.4 . Easy to use.
-My new tool is a .NET framework console  application.     It support following command line argument :
+My new tool is a .NET framework console  application. 
+<br/>It support following command line argument :
 ```
   input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
   output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
