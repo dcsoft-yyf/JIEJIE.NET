@@ -241,7 +241,7 @@ private string GetLicenseMessage()
 ```
 When you start application in Scitech .NET memory Profiler, and show the about dialog. the screensnapshort like this.
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo.png"/>
-In .NET Memory profiler.the UI is 
+<br/>In .NET Memory profiler.the UI is 
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo2.png"/>
 seach the string "This software license to:Administrator" and double click , then you can see the follow UI:
 <br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/winformdemo3.png"/>
