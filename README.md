@@ -266,6 +266,19 @@ System.Windows.Forms!System.Windows.Forms.Application.ThreadContext.RunMessageLo
 SampleWinApp!SampleWinApp.Program.Main() Program.cs
 ```
  This call stack maby point out how to crack the software. 
+ ```C#
+ private void btnAbout_Click(object sender, EventArgs e)
+{
+    MessageBox.Show(this, GetLicenseMessage());
+}
+         
+private string GetLicenseMessage()
+{
+    var str = "Yuan_yong_fu_dao_ci_yi_you";// no used,just let DC.NET Protector know the owner method need change.
+    string msg = "This software license to :" + Environment.UserName;
+    return msg;
+}
+```
 My new tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
