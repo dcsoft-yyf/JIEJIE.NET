@@ -2,6 +2,21 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Reflection;
+
+[assembly: AssemblyTitle("DC.NET Protector console application")]
+[assembly: AssemblyDescription("Protect your .NET software copyright powerfull.")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("DCSoft")]
+[assembly: AssemblyProduct("DC.NET Protector")]
+[assembly: AssemblyCopyright("Copyright ©  2021")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+[assembly: ComVisible(false)]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 
 namespace DCNETProtector
 {
@@ -24,10 +39,10 @@ namespace DCNETProtector
  |_____/ \_____(_)_| \_|______|  |_|    |_|   |_|  \___/ \__\___|\___|\__\___/|_|   
                                                                                     
 
-     DC.NET Protector ,protect your .NET software copyright powerfull.
+     DC.NET Protector v1.0 ,Protect your .NET software copyright powerfull.
      last update 2021-3-19
-     Author:yuan yong fu from CHINA. mail: 28348092@qq.com
-
+     Author:yuan yong fu from CHINA . mail: 28348092@qq.com
+     Site :https://github.com/dcsoft-yyf/DCNETProtector
      Support command line argument :
         input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
         output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
@@ -89,6 +104,7 @@ namespace DCNETProtector
                 {
                     if (File.Exists(inputAssmblyFileName))
                     {
+                        Console.Title = "DC.NET Protector - " + inputAssmblyFileName;
                         DCProtectEngine.ExecuteAssemblyFile(inputAssmblyFileName, snkFileName, outputAssemblyFileName);
                     }
                     else
