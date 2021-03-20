@@ -311,5 +311,5 @@ This new tool's finall target is protect all .NET software copyright.Of cause,it
 ## License
 DC.NET Protector use GPL-2.0 License.
 
-## Donate
+
 Donate by alipay,clich <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">here</a>.use wechat pay,click <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">here</a>.
