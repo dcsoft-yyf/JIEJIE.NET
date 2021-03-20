@@ -266,6 +266,7 @@ System.Windows.Forms!System.Windows.Forms.Application.ThreadContext.RunMessageLo
 SampleWinApp!SampleWinApp.Program.Main() Program.cs
 ```
  This call stack maby point out how to crack the software. 
+ Then change source to :
  ```C#
  private void btnAbout_Click(object sender, EventArgs e)
 {
@@ -279,6 +280,7 @@ private string GetLicenseMessage()
     return msg;
 }
 ```
+At there,the code"var str = "Yuan_yong_fu_dao_ci_yi_you";"just let DC.NET Protector know the owner method need change.case sensitive.
 My new tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
