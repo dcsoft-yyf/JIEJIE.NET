@@ -267,6 +267,164 @@ This code avoid the performance problem.
 ## NO.2 ,Encrypt *.resources file.
  Haker can use ildasm.exe get `*.resouces` file emit in .NET assembly file , change it , mark their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI as haker's copyright UI.
 My new tool can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So my new tool can protect your copyright.
+For example,there define a winform , and the source code just like this:
+```C#
+private void InitializeComponent()
+{
+	System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SampleWinApp.frmMain));
+	pictureBox1 = new System.Windows.Forms.PictureBox();
+	btnAbout = new System.Windows.Forms.Button();
+	btnDoWork = new System.Windows.Forms.Button();
+	label1 = new System.Windows.Forms.Label();
+	button1 = new System.Windows.Forms.Button();
+	((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+	SuspendLayout();
+	pictureBox1.Image = (System.Drawing.Image)resources.GetObject("pictureBox1.Image");
+	pictureBox1.Location = new System.Drawing.Point(150, 21);
+	pictureBox1.Name = "pictureBox1";
+	pictureBox1.Size = new System.Drawing.Size(64, 64);
+	pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+	pictureBox1.TabIndex = 1;
+	pictureBox1.TabStop = false;
+	btnAbout.Location = new System.Drawing.Point(21, 188);
+	btnAbout.Name = "btnAbout";
+	btnAbout.Size = new System.Drawing.Size(299, 64);
+	btnAbout.TabIndex = 2;
+	btnAbout.Text = "About...";
+	btnAbout.UseVisualStyleBackColor = true;
+	btnAbout.Click += new System.EventHandler(btnAbout_Click);
+	btnDoWork.Location = new System.Drawing.Point(21, 109);
+	btnDoWork.Name = "btnDoWork";
+	btnDoWork.Size = new System.Drawing.Size(299, 64);
+	btnDoWork.TabIndex = 3;
+	btnDoWork.Text = "Do work";
+	btnDoWork.UseVisualStyleBackColor = true;
+	btnDoWork.Click += new System.EventHandler(btnDoWork_Click);
+	label1.AutoSize = true;
+	label1.Location = new System.Drawing.Point(13, 43);
+	label1.Name = "label1";
+	label1.Size = new System.Drawing.Size(131, 12);
+	label1.TabIndex = 4;
+	label1.Text = "This is a logo image:";
+	button1.Location = new System.Drawing.Point(21, 275);
+	button1.Name = "button1";
+	button1.Size = new System.Drawing.Size(299, 63);
+	button1.TabIndex = 5;
+	button1.Text = "Get string in resource";
+	button1.UseVisualStyleBackColor = true;
+	button1.Click += new System.EventHandler(button1_Click);
+	base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
+	base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+	base.ClientSize = new System.Drawing.Size(414, 365);
+	base.Controls.Add(button1);
+	base.Controls.Add(label1);
+	base.Controls.Add(btnDoWork);
+	base.Controls.Add(btnAbout);
+	base.Controls.Add(pictureBox1);
+	base.Name = "frmMain";
+	Text = "frmMain";
+	base.Load += new System.EventHandler(frmMain_Load);
+	((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+	ResumeLayout(false);
+	PerformLayout();
+}
+```
+After use DC.NET Protector, the code change to :
+```C#
+private void InitializeComponent()
+{
+	__DC20210205._Res1 res = new __DC20210205._Res1();
+	pictureBox1 = new System.Windows.Forms.PictureBox();
+	btnAbout = new System.Windows.Forms.Button();
+	btnDoWork = new System.Windows.Forms.Button();
+	label1 = new System.Windows.Forms.Label();
+	button1 = new System.Windows.Forms.Button();
+	((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+	SuspendLayout();
+	pictureBox1.Image = (System.Drawing.Image)res.GetObject(__DC20210205._0._2);
+	pictureBox1.Location = new System.Drawing.Point(150, 21);
+	pictureBox1.Name = __DC20210205._0._8;
+	pictureBox1.Size = new System.Drawing.Size(64, 64);
+	pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+	pictureBox1.TabIndex = 1;
+	pictureBox1.TabStop = false;
+	btnAbout.Location = new System.Drawing.Point(21, 188);
+	btnAbout.Name = __DC20210205._0._16;
+	btnAbout.Size = new System.Drawing.Size(299, 64);
+	btnAbout.TabIndex = 2;
+	btnAbout.Text = __DC20210205._0._20;
+	btnAbout.UseVisualStyleBackColor = true;
+	btnAbout.Click += new System.EventHandler(btnAbout_Click);
+	btnDoWork.Location = new System.Drawing.Point(21, 109);
+	btnDoWork.Name = __DC20210205._0._0;
+	btnDoWork.Size = new System.Drawing.Size(299, 64);
+	btnDoWork.TabIndex = 3;
+	btnDoWork.Text = __DC20210205._0._21;
+	btnDoWork.UseVisualStyleBackColor = true;
+	btnDoWork.Click += new System.EventHandler(btnDoWork_Click);
+	label1.AutoSize = true;
+	label1.Location = new System.Drawing.Point(13, 43);
+	label1.Name = __DC20210205._0._11;
+	label1.Size = new System.Drawing.Size(131, 12);
+	label1.TabIndex = 4;
+	label1.Text = __DC20210205._0._7;
+	button1.Location = new System.Drawing.Point(21, 275);
+	button1.Name = __DC20210205._0._4;
+	button1.Size = new System.Drawing.Size(299, 63);
+	button1.TabIndex = 5;
+	button1.Text = __DC20210205._0._13;
+	button1.UseVisualStyleBackColor = true;
+	button1.Click += new System.EventHandler(button1_Click);
+	base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
+	base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+	base.ClientSize = new System.Drawing.Size(414, 365);
+	base.Controls.Add(button1);
+	base.Controls.Add(label1);
+	base.Controls.Add(btnDoWork);
+	base.Controls.Add(btnAbout);
+	base.Controls.Add(pictureBox1);
+	base.Name = __DC20210205._0._18;
+	Text = __DC20210205._0._18;
+	base.Load += new System.EventHandler(frmMain_Load);
+	((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+	ResumeLayout(false);
+	PerformLayout();
+}
+
+```
+And auto create a new class:
+```C#
+internal class _Res1 : ComponentResourceManager, IDisposable
+{
+	private ResourceSet _Data;
+
+	public _Res1()
+	{
+		_Data = InnerAssemblyHelper20210315.LoadResourceSet(_BytesContainer__._2(), 224, gzip: true);
+	}
+
+	public override ResourceSet GetResourceSet(CultureInfo culture, bool createIfNotExists, bool tryParents)
+	{
+		return _Data;
+	}
+
+	protected override ResourceSet InternalGetResourceSet(CultureInfo culture, bool createIfNotExists, bool tryParents)
+	{
+		return _Data;
+	}
+
+	public void Dispose()
+	{
+		if (_Data != null)
+		{
+			_Data.Close();
+			_Data = null;
+		}
+	}
+}
+```
+These code is more difficulty crack.
+
 Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My new tools will prompt operator to select a UI language and compress UI language resource data to IL code . This will provide a more fast lanuch speed and without UI language resouce dll.
 My new tool also can change the resource package class code.For example, This is a resource package class code:
 ```C#
