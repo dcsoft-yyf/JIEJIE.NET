@@ -520,7 +520,7 @@ System.Windows.Forms!System.Windows.Forms.Application.ThreadContext.RunMessageLo
 SampleWinApp!SampleWinApp.Program.Main() Program.cs
 ```
  This call stack maby point out how to crack the software. 
- Then change source to :
+ <br/>Then you can change source to :
  ```C#
  private void btnAbout_Click(object sender, EventArgs e)
 {
@@ -534,8 +534,8 @@ private string GetLicenseMessage()
     return msg;
 }
 ```
-At there,the code `var str = "Yuan_yong_fu_dao_ci_yi_you";` just let DC.NET Protector know the owner method need change, the value is case sensitive.
-My tool can change this call stack to this:
+At there,the code `var str = "Yuan_yong_fu_dao_ci_yi_you";` do nothing, just let DC.NET Protector know this is a key method, need to change, the value is case sensitive.
+<br/>My tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
 SampleWinApp2!DCSoft.Common.InnerAssemblyHelper20210315.CloneStringCrossThead_Thread()
