@@ -10,7 +10,125 @@ It is a console .NET application, the UI is :
 ## Features
 It has following features.
 
-## NO.1 .Avoid performance problem.
+## NO.1 Encrypt and hidden all string value defines in assembly.
+  .NET assembly file can be decompilation to C# source code.and hacker can search key string value. this is a security hole.for example, maby you write the following code:
+```C#
+private string GetLicenseMessage()
+{
+
+	return "This software license to :" + Environment.UserName;
+}
+```
+  It is dangerous. after use my new tool , the source code change to :
+  
+```C#
+private string GetLicenseMessage()
+{
+	string text = _0._6 + Environment.UserName;
+	string txt = text;
+	return InnerAssemblyHelper20210315.CloneStringCrossThead(txt);
+}
+
+```
+and also create a new class, collect all string value in assembly file.:
+```C#
+internal static class _0
+{
+	public static readonly string _0;
+
+	public static readonly string _1;
+
+	public static readonly string _2;
+
+	public static readonly string _3;
+
+	public static readonly string _4;
+
+	public static readonly string _5;
+
+	public static readonly string _6;
+
+	public static readonly string _7;
+
+	public static readonly string _8;
+
+	public static readonly string _9;
+
+	public static readonly string _10;
+
+	public static readonly string _11;
+
+	public static readonly string _12;
+
+	public static readonly string _13;
+
+	public static readonly string _14;
+
+	public static readonly string _15;
+
+	public static readonly string _16;
+
+	public static readonly string _17;
+
+	public static readonly string _18;
+
+	public static readonly string _19;
+
+	public static readonly string _20;
+
+	public static readonly string _21;
+
+	static _0()
+	{
+		byte[] datas = _BytesContainer__._0();
+		_11 = GetStringByLong(datas, 151732605047602L);
+		_20 = GetStringByLong(datas, 450799767951810L);
+		_7 = GetStringByLong(datas, 101155071172227L);
+		_4 = GetStringByLong(datas, 47279000500949L);
+		_15 = GetStringByLong(datas, 415615395474299L);
+		_5 = GetStringByLong(datas, 54975582493063L);
+		_2 = GetStringByLong(datas, 17592187197342L);
+		_14 = GetStringByLong(datas, 206708198516324L);
+		_8 = GetStringByLong(datas, 124244814685054L);
+		_21 = GetStringByLong(datas, 459595860893446L);
+		_6 = GetStringByLong(datas, 72567769190975L);
+		_13 = GetStringByLong(datas, 182518931688172L);
+		_18 = GetStringByLong(datas, 433207581847376L);
+		_16 = GetStringByLong(datas, 417814419099513L);
+		_3 = GetStringByLong(datas, 36283884381871L);
+		_1 = GetStringByLong(datas, 9895605165436L);
+		_9 = GetStringByLong(datas, 136339442622330L);
+		_19 = GetStringByLong(datas, 440904163377248L);
+		_17 = GetStringByLong(datas, 426610511995160L);
+		_0 = GetStringByLong(datas, 598562L);
+		_10 = GetStringByLong(datas, 148434069970387L);
+		_12 = GetStringByLong(datas, 158329675868829L);
+	}
+
+	private static string GetStringByLong(byte[] datas, long key)
+	{
+		int num = (int)(key & 0xFFFF) ^ 0xEF83;
+		key >>= 16;
+		int num2 = (int)(key & 0xFFFFF);
+		key >>= 24;
+		int num3 = (int)key;
+		char[] array = new char[num2];
+		int num4 = 0;
+		while (num4 < num2)
+		{
+			int num5 = num4 + num3 << 1;
+			array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
+			num4++;
+			num++;
+		}
+		return new string(array);
+	}
+}
+```
+DC.NET Protector analyse .NET assembly, find out all string value defines,and encrypt then and save as a byte array.recreate string value at runtime.
+Then hacker can not search string direct in dasm result, crack is more difficulty.
+
+And this process can avoid a kind of performance problem.
 Some times application obfuscate can cause bad performance problem.For example, to the following C# code.
 ```C#
 public static byte[] ParseUpperHexString(string hexs)
@@ -92,9 +210,9 @@ internal unsafe static string z0ZzZzbbz.b(string A_0, int A_1)
 }
 ```
 
-This cause a serious performance problem.To solve the problem, I can use the follow code:
+This cause a serious performance problem.To solve the problem, by use DC.NET Proector, this code change to :
 ```C#
-private static readonly string _HexChars = "0123456789ABCDEF";
+private static readonly string _HexChars = _0._11 ;
 public static byte[] ParseUpperHexString(string hexs)
 {
   var list = new List<byte>();
@@ -121,7 +239,7 @@ public static byte[] ParseUpperHexString(string hexs)
 ```
 the result code after dotfuscate is
 ```C#
-private static readonly string z0ZzZzbg = z0ZzZzbbz.b("¨°?¨®U?JTy?y\uf5bf\uf4c1\uf3c3\uf1c7??¨¹?¨²?¨¨?¨ªl?i", 5);
+private static readonly string z0ZzZzbg = z0ZzZzbbz.z0ZzZzbef;
 public static byte[] z0ZzZzbu(string A_0)
 {
   List<byte> list = new List<byte>();
@@ -144,8 +262,7 @@ public static byte[] z0ZzZzbu(string A_0)
   return list.ToArray();
 }
 ```
-So my new tools can analyse IL code ,select all string value define in methods , and bring out and redefine as a static readonly field,  This can solve this performance problem.
-Additional , New tool can hidden all string value defines, hakers can not find any string value define in ildasm result.
+This code avoid the performance problem.
 
 ## NO.2 ,Encrypt *.resources file.
  Haker can use ildasm.exe get `*.resouces` file emit in .NET assembly file , change it , mark their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI as haker's copyright UI.
