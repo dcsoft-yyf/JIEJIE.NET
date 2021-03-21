@@ -10,8 +10,9 @@ It is a console .NET application, the UI is :
 ## Features
 It has following features.
 
-## NO.1 Encrypt and hidden all string value defines in assembly.
-  .NET assembly file can be decompilation to C# source code.and hacker can search key string value. this is a security hole.for example, maby you write the following code:
+## NO.1 Encrypt all string values define in assembly.
+DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
+For example , the old code is :
 ```C#
 private string GetLicenseMessage()
 {
@@ -19,19 +20,15 @@ private string GetLicenseMessage()
 	return "This software license to :" + Environment.UserName;
 }
 ```
-  It is dangerous. after use my new tool , the source code change to :
+ After use DC.NET Protector , the new code is :
   
 ```C#
 private string GetLicenseMessage()
 {
 	string text = _0._6 + Environment.UserName;
-	string txt = text;
-	return InnerAssemblyHelper20210315.CloneStringCrossThead(txt);
+	return text;
 }
-
-```
-and also create a new class, collect all string value in assembly file.:
-```C#
+//  also create a new class, contains all string value in assembly in random order.
 internal static class _0
 {
 	public static readonly string _0;
@@ -83,7 +80,6 @@ internal static class _0
 		_10 = GetStringByLong(datas, 148434069970387L);
 		_12 = GetStringByLong(datas, 158329675868829L);
 	}
-
 	private static string GetStringByLong(byte[] datas, long key)
 	{
 		int num = (int)(key & 0xFFFF) ^ 0xEF83;
@@ -104,11 +100,7 @@ internal static class _0
 	}
 }
 ```
-DC.NET Protector analyse .NET assembly, find out all string value defines,and encrypt then and save as a byte array.recreate string value at runtime.
-Then hacker can not search string direct in dasm result, crack is more difficulty.
-
-And this process can avoid a kind of performance problem.
-Some times application obfuscate can cause bad performance problem.For example, to the following C# code.
+Additional, this process can avoid a kind of performance problem cause by assembly obfuscation. for example, use the following code:
 ```C#
 public static byte[] ParseUpperHexString(string hexs)
 {
@@ -134,7 +126,7 @@ public static byte[] ParseUpperHexString(string hexs)
     return list.ToArray();
 }
 ```
-After dotfuscate the code change to
+After dotfuscate the code change to:
 ```C#
 public static byte[] z0ZzZzbn(string A_0)
 {
@@ -188,7 +180,6 @@ internal unsafe static string z0ZzZzbbz.b(string A_0, int A_1)
   goto IL_005c;
 }
 ```
-
 This cause a serious performance problem.To solve the problem, by use DC.NET Proector, this code change to :
 ```C#
 private static readonly string _HexChars = _0._11 ;
@@ -216,7 +207,7 @@ public static byte[] ParseUpperHexString(string hexs)
   return list.ToArray();
 }
 ```
-the result code after dotfuscate is
+After dotfuscate the code change to:
 ```C#
 private static readonly string z0ZzZzbg = z0ZzZzbbz.z0ZzZzbef;
 public static byte[] z0ZzZzbu(string A_0)
@@ -244,9 +235,9 @@ public static byte[] z0ZzZzbu(string A_0)
 This code avoid the performance problem.
 
 ## NO.2 ,Encrypt *.resources file.
- Haker can use ildasm.exe get `*.resouces` file emit in .NET assembly file , change it , mark their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI as haker's copyright UI.
-My new tool can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So my new tool can protect your copyright.
-For example,there define a winform , and the source code just like this:
+ Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
+  DC.NET Protector can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
+For example, your a define a WinFrom , and the InitializeComponent() function code is :
 ```C#
 private void InitializeComponent()
 {
@@ -370,10 +361,7 @@ private void InitializeComponent()
 	ResumeLayout(false);
 	PerformLayout();
 }
-
-```
-And auto create a new class:
-```C#
+// And auto create a new class:
 internal class _Res1 : ComponentResourceManager, IDisposable
 {
 	private ResourceSet _Data;
@@ -406,10 +394,10 @@ internal class _Res1 : ComponentResourceManager, IDisposable
 	}
 }
 ```
-And in assembly file,the embeded resource "SampleWinApp.frmMain.resources" has been removed.These code is very difficulty to crack.
+And remove the embeded resource "SampleWinApp.frmMain.resources". after do these, new code is very difficulty to crack.
 
-Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My new tools will prompt operator to select a UI language and compress UI language resource data to IL code . This will provide a more fast lanuch speed and without UI language resouce dll.
-My new tool also can change the resource package class code.For example, This is a resource package class code:
+   Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My tools will prompt operator to select a UI language and merge UI language resource data to IL code .and remove embeded .resources file. This will provide a more fast lanuch speed and without UI language resouce dll.
+   My also can change the resource package class code.For example, This is a resource package class code:
 ```C#
 [GeneratedCode("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
 [DebuggerNonUserCode]
@@ -451,14 +439,14 @@ internal class Resource1
 			return (Bitmap)obj;
 		}
 	}
-	internal static string String2 => ResourceManager.GetString("String2", resourceCulture);
-	internal static string StringValue => ResourceManager.GetString("StringValue", resourceCulture);
+	internal static string String2 {get{ return ResourceManager.GetString("String2", resourceCulture);}}
+	internal static string StringValue {get{ return ResourceManager.GetString("StringValue", resourceCulture);}}
 	internal Resource1()
 	{
 	}
 }
 ```
-After use my new tool , It change to :
+After use my tool , It change to :
 ```C#
 internal class Resource1
 {
@@ -485,7 +473,7 @@ internal class Resource1
 The resouce data aleady has been encrypted, and hard to crack.
 
 ## NO.3 ,Hidden allocation call stack.
-Haker can get and seach key code by using memory profiler tools , etc. Scitech .NET memory Profiler.
+Haker can seach key information by using memory profiler tools , etc. Scitech .NET memory Profiler.
 For example, I use the follow code to display software license info.
 ```C#
 private void btnAbout_Click(object sender, EventArgs e)
@@ -539,8 +527,8 @@ private string GetLicenseMessage()
     return msg;
 }
 ```
-At there,the code `var str = "Yuan_yong_fu_dao_ci_yi_you";` just let DC.NET Protector know the owner method need change.case sensitive.
-My new tool can change this call stack to this:
+At there,the code `var str = "Yuan_yong_fu_dao_ci_yi_you";` just let DC.NET Protector know the owner method need change, the value is case sensitive.
+My tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
 SampleWinApp2!DCSoft.Common.InnerAssemblyHelper20210315.CloneStringCrossThead_Thread()
@@ -549,9 +537,35 @@ mscorlib!System.Threading.ExecutionContext.Run( ExecutionContext,ContextCallback
 mscorlib!System.Threading.ExecutionContext.Run( ExecutionContext,ContextCallback,object )
 mscorlib!System.Threading.ThreadHelper.ThreadStart()
 ```
-It is more difficuted to find out the key call stack.This feature help you protect your software copyright.
+It is more difficuted to find out the key call stack.This feature help you hidden your weakness, protect your software copyright.
 
-## NO.4 . Easy to use.
+## NO.4 . Obfuscate class's members order.
+   When we write a large class's code , usual ,field or method for the same target is very nearby.for example:
+```C#
+	private string _RegisterCode = null;
+	private bool _IsRegisteredFlag = false;
+	public void SetRegisterCode( string code ){};
+	pulbic bool IsRegisterdCodeOK( string code ){};
+	public string GetErrorMessageForRegister();
+	XXXXXXX other members XXXXXX
+```
+When hakers capture one key member,for example `_RegisterCode` , and analyse other members nearby, maby can get more information.
+But DC.NET Protector can obfuscate order of class's members , just like this:
+```C#
+	private string _RegisterCode = null;
+	XXXXXXX other members XXXXXX
+	private bool _IsRegisteredFlag = false;
+	XXXXXXX other members XXXXXX
+	public string GetErrorMessageForRegister();
+	XXXXXXX other members XXXXXX
+	pulbic bool IsRegisterdCodeOK( string code ){};
+	XXXXXXX other members XXXXXX
+	public void SetRegisterCode( string code ){};
+	XXXXXXX other members XXXXXX
+```
+ Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
+
+## NO.5 . Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
