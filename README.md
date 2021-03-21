@@ -11,7 +11,7 @@ It is a console .NET application, the UI is :
 ## Features
 It has following features.
 
-## NO.1 Encrypt all string values define in assembly.
+## 1 , Encrypt all string values define in assembly.
 DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 For example , the old code is :
 ```C#
@@ -235,7 +235,7 @@ public static byte[] z0ZzZzbu(string A_0)
 ```
 This code avoid the performance problem.
 
-## NO.2 ,Encrypt *.resources file.
+## 2 , Encrypt *.resources file.
  Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
   DC.NET Protector can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
 For example, your a define a WinFrom , and the InitializeComponent() function code is :
@@ -477,7 +477,7 @@ internal class Resource1
 ```
 The resouce data aleady has been encrypted, and hard to crack.
 
-## NO.3 ,Hidden allocation call stack.
+## 3 ,Hidden allocation call stack.
 Hackers can search key information by using memory profiler tools , etc. Scitech .NET memory Profiler.but DC.NET Protector can change this stack,puzzle hackers.
 For example, I use the follow code to display software license info.
 ```C#
@@ -544,7 +544,7 @@ mscorlib!System.Threading.ThreadHelper.ThreadStart()
 ```
 It is more difficuted to find out the key call stack.This feature help you hidden your weakness, protect your software copyright.
 
-## NO.4 . Obfuscate class's members order.
+## 4 , Obfuscate class's members order.
    When we write a large class's code , usual ,field or method for the same target is very nearby.for example:
 ```C#
     private string _RegisterCode = null;
@@ -570,7 +570,7 @@ But DC.NET Protector can obfuscate order of class's members , just like this:
 ```
  Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
 
-## NO.5 . Easy to use.
+## 5 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
