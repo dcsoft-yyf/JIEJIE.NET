@@ -559,9 +559,9 @@ It is more difficuted to find out the key call stack.This feature help you hidde
 When hakers capture one key member,for example `_RegisterCode` , and analyse other members nearby, maby can get more information.
 <br/>But DC.NET Protector can obfuscate order of class's members , just like this:
 ```C#
-    private string _RegisterCode = null;
-    XXXXXXX other members XXXXXX
     private bool _IsRegisteredFlag = false;
+    XXXXXXX other members XXXXXX
+    private string _RegisterCode = null;
     XXXXXXX other members XXXXXX
     public string GetErrorMessageForRegister();
     XXXXXXX other members XXXXXX
