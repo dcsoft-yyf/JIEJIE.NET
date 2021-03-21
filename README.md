@@ -439,8 +439,12 @@ internal class Resource1
 			return (Bitmap)obj;
 		}
 	}
-	internal static string String2 {get{ return ResourceManager.GetString("String2", resourceCulture);}}
-	internal static string StringValue {get{ return ResourceManager.GetString("StringValue", resourceCulture);}}
+	internal static string String2 {
+		get{ return ResourceManager.GetString("String2", resourceCulture);}
+	}
+	internal static string StringValue {
+		get{ return ResourceManager.GetString("StringValue", resourceCulture);}
+	}
 	internal Resource1()
 	{
 	}
