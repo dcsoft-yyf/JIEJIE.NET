@@ -406,7 +406,7 @@ internal class _Res1 : ComponentResourceManager, IDisposable
 	}
 }
 ```
-These code is more difficulty crack.
+And in assembly file,the embeded resource "SampleWinApp.frmMain.resources" has been removed.These code is very difficulty to crack.
 
 Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My new tools will prompt operator to select a UI language and compress UI language resource data to IL code . This will provide a more fast lanuch speed and without UI language resouce dll.
 My new tool also can change the resource package class code.For example, This is a resource package class code:
