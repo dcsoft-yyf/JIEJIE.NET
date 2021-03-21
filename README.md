@@ -35,47 +35,26 @@ and also create a new class, collect all string value in assembly file.:
 internal static class _0
 {
 	public static readonly string _0;
-
 	public static readonly string _1;
-
 	public static readonly string _2;
-
 	public static readonly string _3;
-
 	public static readonly string _4;
-
 	public static readonly string _5;
-
 	public static readonly string _6;
-
 	public static readonly string _7;
-
 	public static readonly string _8;
-
 	public static readonly string _9;
-
 	public static readonly string _10;
-
 	public static readonly string _11;
-
 	public static readonly string _12;
-
 	public static readonly string _13;
-
 	public static readonly string _14;
-
 	public static readonly string _15;
-
 	public static readonly string _16;
-
 	public static readonly string _17;
-
 	public static readonly string _18;
-
 	public static readonly string _19;
-
 	public static readonly string _20;
-
 	public static readonly string _21;
 
 	static _0()
@@ -271,7 +250,8 @@ For example,there define a winform , and the source code just like this:
 ```C#
 private void InitializeComponent()
 {
-	System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SampleWinApp.frmMain));
+	System.ComponentModel.ComponentResourceManager resources 
+			= new System.ComponentModel.ComponentResourceManager(typeof(SampleWinApp.frmMain));
 	pictureBox1 = new System.Windows.Forms.PictureBox();
 	btnAbout = new System.Windows.Forms.Button();
 	btnDoWork = new System.Windows.Forms.Button();
@@ -445,7 +425,8 @@ internal class Resource1
 		{
 			if (resourceMan == null)
 			{
-				ResourceManager temp = resourceMan = new ResourceManager("SampleWinApp.Resource1", typeof(Resource1).Assembly);
+				ResourceManager temp = resourceMan = 
+					new ResourceManager("SampleWinApp.Resource1", typeof(Resource1).Assembly);
 			}
 			return resourceMan;
 		}
