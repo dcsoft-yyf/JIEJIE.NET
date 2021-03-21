@@ -13,7 +13,7 @@ It has following features.
 
 ## 1 , Encrypt all string values define in assembly.
 DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
-For example , the old code is :
+<br/>For example , the old code is :
 ```C#
 private string GetLicenseMessage()
 {
@@ -101,7 +101,8 @@ internal static class _0
     }
 }
 ```
-Additional, this process can avoid a kind of performance problem cause by assembly obfuscation. for example, use the following code:
+Additional, this process can avoid a kind of performance problem cause by assembly obfuscation. 
+<br/>For example, use the following code:
 ```C#
 public static byte[] ParseUpperHexString(string hexs)
 {
@@ -237,8 +238,8 @@ This code avoid the performance problem.
 
 ## 2 , Encrypt *.resources file.
  Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
-  DC.NET Protector can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
-For example, your a define a WinFrom , and the InitializeComponent() function code is :
+<br/>  DC.NET Protector can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
+<br/>For example, your a define a WinFrom , and the InitializeComponent() function code is :
 ```C#
 private void InitializeComponent()
 {
@@ -398,7 +399,8 @@ internal class _Res1 : ComponentResourceManager, IDisposable
 And remove the embeded resource "SampleWinApp.frmMain.resources". after do these, new code is very difficulty to crack.
 
    Additional,If software is design for globalization with multiple UI language,The software will include specify UI language resource dll files.My tools will prompt operator to select a UI language and merge UI language resource data to IL code .and remove embeded .resources file. This will provide a more fast lanuch speed and without UI language resouce dll.
-   My also can change the resource package class code.For example, This is a resource package class code:
+<br/>My tool also can change the resource package class code.
+<br/>For example, This is a resource package class code:
 ```C#
 [GeneratedCode("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
 [DebuggerNonUserCode]
@@ -479,7 +481,7 @@ The resouce data aleady has been encrypted, and hard to crack.
 
 ## 3 ,Hidden allocation call stack.
 Hackers can search key information by using memory profiler tools , etc. Scitech .NET memory Profiler.but DC.NET Protector can change this stack,puzzle hackers.
-For example, I use the follow code to display software license info.
+<br/>For example, I use the follow code to display software license info.
 ```C#
 private void btnAbout_Click(object sender, EventArgs e)
 {
@@ -555,7 +557,7 @@ It is more difficuted to find out the key call stack.This feature help you hidde
     XXXXXXX other members XXXXXX
 ```
 When hakers capture one key member,for example `_RegisterCode` , and analyse other members nearby, maby can get more information.
-But DC.NET Protector can obfuscate order of class's members , just like this:
+<br/>But DC.NET Protector can obfuscate order of class's members , just like this:
 ```C#
     private string _RegisterCode = null;
     XXXXXXX other members XXXXXX
