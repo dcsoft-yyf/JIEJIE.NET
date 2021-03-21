@@ -400,15 +400,18 @@ internal class _Res1 : ComponentResourceManager, IDisposable
 
 	public _Res1()
 	{
-		_Data = InnerAssemblyHelper20210315.LoadResourceSet(_BytesContainer__._2(), 224, gzip: true);
+		_Data = InnerAssemblyHelper20210315.LoadResourceSet(
+				_BytesContainer__._2(), 224, gzip: true);
 	}
 
-	public override ResourceSet GetResourceSet(CultureInfo culture, bool createIfNotExists, bool tryParents)
+	public override ResourceSet GetResourceSet(
+				CultureInfo culture, bool createIfNotExists, bool tryParents)
 	{
 		return _Data;
 	}
 
-	protected override ResourceSet InternalGetResourceSet(CultureInfo culture, bool createIfNotExists, bool tryParents)
+	protected override ResourceSet InternalGetResourceSet(
+				CultureInfo culture, bool createIfNotExists, bool tryParents)
 	{
 		return _Data;
 	}
