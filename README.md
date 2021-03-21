@@ -413,8 +413,8 @@ internal class Resource1
 		{
 			if (resourceMan == null)
 			{
-				ResourceManager temp = resourceMan = 
-					new ResourceManager("SampleWinApp.Resource1", typeof(Resource1).Assembly);
+				ResourceManager temp = resourceMan =  new ResourceManager(
+					"SampleWinApp.Resource1", typeof(Resource1).Assembly);
 			}
 			return resourceMan;
 		}
