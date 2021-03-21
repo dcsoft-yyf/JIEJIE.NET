@@ -2,7 +2,8 @@
   An open source tool to encrypt .NET assembly file, against crack, protect your software copyright.
 
 ## Background
-Many .net developers are worry about their software has been cracked , so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.So I write DC.NET Protector to provide more powerful .net IL code protection and it is open source.
+Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
+<br/>So I write DC.NET Protector can encrypt .NET assembly deeply,help people protect their copyright.and this tool is open source.
 It is a console .NET application, the UI is :
 <br/>
 <img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/snapshort.png"/>
@@ -477,7 +478,7 @@ internal class Resource1
 The resouce data aleady has been encrypted, and hard to crack.
 
 ## NO.3 ,Hidden allocation call stack.
-Haker can seach key information by using memory profiler tools , etc. Scitech .NET memory Profiler.
+Hackers can search key information by using memory profiler tools , etc. Scitech .NET memory Profiler.but DC.NET Protector can change this stack,puzzle hackers.
 For example, I use the follow code to display software license info.
 ```C#
 private void btnAbout_Click(object sender, EventArgs e)
