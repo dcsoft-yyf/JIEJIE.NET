@@ -17,7 +17,7 @@ For example , the old code is :
 private string GetLicenseMessage()
 {
 
-	return "This software license to :" + Environment.UserName;
+    return "This software license to :" + Environment.UserName;
 }
 ```
  After use DC.NET Protector , the new code is :
@@ -25,79 +25,79 @@ private string GetLicenseMessage()
 ```C#
 private string GetLicenseMessage()
 {
-	string text = _0._6 + Environment.UserName;
-	return text;
+    string text = _0._6 + Environment.UserName;
+    return text;
 }
 //  also create a new class, contains all string value in assembly in random order.
 internal static class _0
 {
-	public static readonly string _0;
-	public static readonly string _1;
-	public static readonly string _2;
-	public static readonly string _3;
-	public static readonly string _4;
-	public static readonly string _5;
-	public static readonly string _6;
-	public static readonly string _7;
-	public static readonly string _8;
-	public static readonly string _9;
-	public static readonly string _10;
-	public static readonly string _11;
-	public static readonly string _12;
-	public static readonly string _13;
-	public static readonly string _14;
-	public static readonly string _15;
-	public static readonly string _16;
-	public static readonly string _17;
-	public static readonly string _18;
-	public static readonly string _19;
-	public static readonly string _20;
-	public static readonly string _21;
+    public static readonly string _0;
+    public static readonly string _1;
+    public static readonly string _2;
+    public static readonly string _3;
+    public static readonly string _4;
+    public static readonly string _5;
+    public static readonly string _6;
+    public static readonly string _7;
+    public static readonly string _8;
+    public static readonly string _9;
+    public static readonly string _10;
+    public static readonly string _11;
+    public static readonly string _12;
+    public static readonly string _13;
+    public static readonly string _14;
+    public static readonly string _15;
+    public static readonly string _16;
+    public static readonly string _17;
+    public static readonly string _18;
+    public static readonly string _19;
+    public static readonly string _20;
+    public static readonly string _21;
 
-	static _0()
-	{
-		byte[] datas = _BytesContainer__._0();
-		_11 = GetStringByLong(datas, 151732605047602L);
-		_20 = GetStringByLong(datas, 450799767951810L);
-		_7 = GetStringByLong(datas, 101155071172227L);
-		_4 = GetStringByLong(datas, 47279000500949L);
-		_15 = GetStringByLong(datas, 415615395474299L);
-		_5 = GetStringByLong(datas, 54975582493063L);
-		_2 = GetStringByLong(datas, 17592187197342L);
-		_14 = GetStringByLong(datas, 206708198516324L);
-		_8 = GetStringByLong(datas, 124244814685054L);
-		_21 = GetStringByLong(datas, 459595860893446L);
-		_6 = GetStringByLong(datas, 72567769190975L);
-		_13 = GetStringByLong(datas, 182518931688172L);
-		_18 = GetStringByLong(datas, 433207581847376L);
-		_16 = GetStringByLong(datas, 417814419099513L);
-		_3 = GetStringByLong(datas, 36283884381871L);
-		_1 = GetStringByLong(datas, 9895605165436L);
-		_9 = GetStringByLong(datas, 136339442622330L);
-		_19 = GetStringByLong(datas, 440904163377248L);
-		_17 = GetStringByLong(datas, 426610511995160L);
-		_0 = GetStringByLong(datas, 598562L);
-		_10 = GetStringByLong(datas, 148434069970387L);
-		_12 = GetStringByLong(datas, 158329675868829L);
-	}
-	private static string GetStringByLong(byte[] datas, long key)
-	{
-		int num = (int)(key & 0xFFFF) ^ 0xEF83;
-		key >>= 16;
-		int num2 = (int)(key & 0xFFFFF);
-		key >>= 24;
-		int num3 = (int)key;
-		char[] array = new char[num2];
-		int num4 = 0;
-		while (num4 < num2)
-		{
-			int num5 = num4 + num3 << 1;
-			array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
-			num4++;
-			num++;
-		}
-		return new string(array);
-	}
+    static _0()
+    {
+        byte[] datas = _BytesContainer__._0();
+        _11 = GetStringByLong(datas, 151732605047602L);
+        _20 = GetStringByLong(datas, 450799767951810L);
+        _7 = GetStringByLong(datas, 101155071172227L);
+        _4 = GetStringByLong(datas, 47279000500949L);
+        _15 = GetStringByLong(datas, 415615395474299L);
+        _5 = GetStringByLong(datas, 54975582493063L);
+        _2 = GetStringByLong(datas, 17592187197342L);
+        _14 = GetStringByLong(datas, 206708198516324L);
+        _8 = GetStringByLong(datas, 124244814685054L);
+        _21 = GetStringByLong(datas, 459595860893446L);
+        _6 = GetStringByLong(datas, 72567769190975L);
+        _13 = GetStringByLong(datas, 182518931688172L);
+        _18 = GetStringByLong(datas, 433207581847376L);
+        _16 = GetStringByLong(datas, 417814419099513L);
+        _3 = GetStringByLong(datas, 36283884381871L);
+        _1 = GetStringByLong(datas, 9895605165436L);
+        _9 = GetStringByLong(datas, 136339442622330L);
+        _19 = GetStringByLong(datas, 440904163377248L);
+        _17 = GetStringByLong(datas, 426610511995160L);
+        _0 = GetStringByLong(datas, 598562L);
+        _10 = GetStringByLong(datas, 148434069970387L);
+        _12 = GetStringByLong(datas, 158329675868829L);
+    }
+    private static string GetStringByLong(byte[] datas, long key)
+    {
+        int num = (int)(key & 0xFFFF) ^ 0xEF83;
+        key >>= 16;
+        int num2 = (int)(key & 0xFFFFF);
+        key >>= 24;
+        int num3 = (int)key;
+        char[] array = new char[num2];
+        int num4 = 0;
+        while (num4 < num2)
+        {
+            int num5 = num4 + num3 << 1;
+            array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
+            num4++;
+            num++;
+        }
+        return new string(array);
+    }
 }
 ```
 Additional, this process can avoid a kind of performance problem cause by assembly obfuscation. for example, use the following code:
@@ -241,157 +241,157 @@ For example, your a define a WinFrom , and the InitializeComponent() function co
 ```C#
 private void InitializeComponent()
 {
-	System.ComponentModel.ComponentResourceManager resources 
-			= new System.ComponentModel.ComponentResourceManager(typeof(SampleWinApp.frmMain));
-	pictureBox1 = new System.Windows.Forms.PictureBox();
-	btnAbout = new System.Windows.Forms.Button();
-	btnDoWork = new System.Windows.Forms.Button();
-	label1 = new System.Windows.Forms.Label();
-	button1 = new System.Windows.Forms.Button();
-	((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
-	SuspendLayout();
-	pictureBox1.Image = (System.Drawing.Image)resources.GetObject("pictureBox1.Image");
-	pictureBox1.Location = new System.Drawing.Point(150, 21);
-	pictureBox1.Name = "pictureBox1";
-	pictureBox1.Size = new System.Drawing.Size(64, 64);
-	pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
-	pictureBox1.TabIndex = 1;
-	pictureBox1.TabStop = false;
-	btnAbout.Location = new System.Drawing.Point(21, 188);
-	btnAbout.Name = "btnAbout";
-	btnAbout.Size = new System.Drawing.Size(299, 64);
-	btnAbout.TabIndex = 2;
-	btnAbout.Text = "About...";
-	btnAbout.UseVisualStyleBackColor = true;
-	btnAbout.Click += new System.EventHandler(btnAbout_Click);
-	btnDoWork.Location = new System.Drawing.Point(21, 109);
-	btnDoWork.Name = "btnDoWork";
-	btnDoWork.Size = new System.Drawing.Size(299, 64);
-	btnDoWork.TabIndex = 3;
-	btnDoWork.Text = "Do work";
-	btnDoWork.UseVisualStyleBackColor = true;
-	btnDoWork.Click += new System.EventHandler(btnDoWork_Click);
-	label1.AutoSize = true;
-	label1.Location = new System.Drawing.Point(13, 43);
-	label1.Name = "label1";
-	label1.Size = new System.Drawing.Size(131, 12);
-	label1.TabIndex = 4;
-	label1.Text = "This is a logo image:";
-	button1.Location = new System.Drawing.Point(21, 275);
-	button1.Name = "button1";
-	button1.Size = new System.Drawing.Size(299, 63);
-	button1.TabIndex = 5;
-	button1.Text = "Get string in resource";
-	button1.UseVisualStyleBackColor = true;
-	button1.Click += new System.EventHandler(button1_Click);
-	base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
-	base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-	base.ClientSize = new System.Drawing.Size(414, 365);
-	base.Controls.Add(button1);
-	base.Controls.Add(label1);
-	base.Controls.Add(btnDoWork);
-	base.Controls.Add(btnAbout);
-	base.Controls.Add(pictureBox1);
-	base.Name = "frmMain";
-	Text = "frmMain";
-	base.Load += new System.EventHandler(frmMain_Load);
-	((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
-	ResumeLayout(false);
-	PerformLayout();
+    System.ComponentModel.ComponentResourceManager resources 
+            = new System.ComponentModel.ComponentResourceManager(typeof(SampleWinApp.frmMain));
+    pictureBox1 = new System.Windows.Forms.PictureBox();
+    btnAbout = new System.Windows.Forms.Button();
+    btnDoWork = new System.Windows.Forms.Button();
+    label1 = new System.Windows.Forms.Label();
+    button1 = new System.Windows.Forms.Button();
+    ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+    SuspendLayout();
+    pictureBox1.Image = (System.Drawing.Image)resources.GetObject("pictureBox1.Image");
+    pictureBox1.Location = new System.Drawing.Point(150, 21);
+    pictureBox1.Name = "pictureBox1";
+    pictureBox1.Size = new System.Drawing.Size(64, 64);
+    pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+    pictureBox1.TabIndex = 1;
+    pictureBox1.TabStop = false;
+    btnAbout.Location = new System.Drawing.Point(21, 188);
+    btnAbout.Name = "btnAbout";
+    btnAbout.Size = new System.Drawing.Size(299, 64);
+    btnAbout.TabIndex = 2;
+    btnAbout.Text = "About...";
+    btnAbout.UseVisualStyleBackColor = true;
+    btnAbout.Click += new System.EventHandler(btnAbout_Click);
+    btnDoWork.Location = new System.Drawing.Point(21, 109);
+    btnDoWork.Name = "btnDoWork";
+    btnDoWork.Size = new System.Drawing.Size(299, 64);
+    btnDoWork.TabIndex = 3;
+    btnDoWork.Text = "Do work";
+    btnDoWork.UseVisualStyleBackColor = true;
+    btnDoWork.Click += new System.EventHandler(btnDoWork_Click);
+    label1.AutoSize = true;
+    label1.Location = new System.Drawing.Point(13, 43);
+    label1.Name = "label1";
+    label1.Size = new System.Drawing.Size(131, 12);
+    label1.TabIndex = 4;
+    label1.Text = "This is a logo image:";
+    button1.Location = new System.Drawing.Point(21, 275);
+    button1.Name = "button1";
+    button1.Size = new System.Drawing.Size(299, 63);
+    button1.TabIndex = 5;
+    button1.Text = "Get string in resource";
+    button1.UseVisualStyleBackColor = true;
+    button1.Click += new System.EventHandler(button1_Click);
+    base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
+    base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+    base.ClientSize = new System.Drawing.Size(414, 365);
+    base.Controls.Add(button1);
+    base.Controls.Add(label1);
+    base.Controls.Add(btnDoWork);
+    base.Controls.Add(btnAbout);
+    base.Controls.Add(pictureBox1);
+    base.Name = "frmMain";
+    Text = "frmMain";
+    base.Load += new System.EventHandler(frmMain_Load);
+    ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+    ResumeLayout(false);
+    PerformLayout();
 }
 ```
 After use DC.NET Protector, the code change to :
 ```C#
 private void InitializeComponent()
 {
-	__DC20210205._Res1 res = new __DC20210205._Res1();
-	pictureBox1 = new System.Windows.Forms.PictureBox();
-	btnAbout = new System.Windows.Forms.Button();
-	btnDoWork = new System.Windows.Forms.Button();
-	label1 = new System.Windows.Forms.Label();
-	button1 = new System.Windows.Forms.Button();
-	((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
-	SuspendLayout();
-	pictureBox1.Image = (System.Drawing.Image)res.GetObject(__DC20210205._0._2);
-	pictureBox1.Location = new System.Drawing.Point(150, 21);
-	pictureBox1.Name = __DC20210205._0._8;
-	pictureBox1.Size = new System.Drawing.Size(64, 64);
-	pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
-	pictureBox1.TabIndex = 1;
-	pictureBox1.TabStop = false;
-	btnAbout.Location = new System.Drawing.Point(21, 188);
-	btnAbout.Name = __DC20210205._0._16;
-	btnAbout.Size = new System.Drawing.Size(299, 64);
-	btnAbout.TabIndex = 2;
-	btnAbout.Text = __DC20210205._0._20;
-	btnAbout.UseVisualStyleBackColor = true;
-	btnAbout.Click += new System.EventHandler(btnAbout_Click);
-	btnDoWork.Location = new System.Drawing.Point(21, 109);
-	btnDoWork.Name = __DC20210205._0._0;
-	btnDoWork.Size = new System.Drawing.Size(299, 64);
-	btnDoWork.TabIndex = 3;
-	btnDoWork.Text = __DC20210205._0._21;
-	btnDoWork.UseVisualStyleBackColor = true;
-	btnDoWork.Click += new System.EventHandler(btnDoWork_Click);
-	label1.AutoSize = true;
-	label1.Location = new System.Drawing.Point(13, 43);
-	label1.Name = __DC20210205._0._11;
-	label1.Size = new System.Drawing.Size(131, 12);
-	label1.TabIndex = 4;
-	label1.Text = __DC20210205._0._7;
-	button1.Location = new System.Drawing.Point(21, 275);
-	button1.Name = __DC20210205._0._4;
-	button1.Size = new System.Drawing.Size(299, 63);
-	button1.TabIndex = 5;
-	button1.Text = __DC20210205._0._13;
-	button1.UseVisualStyleBackColor = true;
-	button1.Click += new System.EventHandler(button1_Click);
-	base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
-	base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-	base.ClientSize = new System.Drawing.Size(414, 365);
-	base.Controls.Add(button1);
-	base.Controls.Add(label1);
-	base.Controls.Add(btnDoWork);
-	base.Controls.Add(btnAbout);
-	base.Controls.Add(pictureBox1);
-	base.Name = __DC20210205._0._18;
-	Text = __DC20210205._0._18;
-	base.Load += new System.EventHandler(frmMain_Load);
-	((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
-	ResumeLayout(false);
-	PerformLayout();
+    __DC20210205._Res1 res = new __DC20210205._Res1();
+    pictureBox1 = new System.Windows.Forms.PictureBox();
+    btnAbout = new System.Windows.Forms.Button();
+    btnDoWork = new System.Windows.Forms.Button();
+    label1 = new System.Windows.Forms.Label();
+    button1 = new System.Windows.Forms.Button();
+    ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+    SuspendLayout();
+    pictureBox1.Image = (System.Drawing.Image)res.GetObject(__DC20210205._0._2);
+    pictureBox1.Location = new System.Drawing.Point(150, 21);
+    pictureBox1.Name = __DC20210205._0._8;
+    pictureBox1.Size = new System.Drawing.Size(64, 64);
+    pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+    pictureBox1.TabIndex = 1;
+    pictureBox1.TabStop = false;
+    btnAbout.Location = new System.Drawing.Point(21, 188);
+    btnAbout.Name = __DC20210205._0._16;
+    btnAbout.Size = new System.Drawing.Size(299, 64);
+    btnAbout.TabIndex = 2;
+    btnAbout.Text = __DC20210205._0._20;
+    btnAbout.UseVisualStyleBackColor = true;
+    btnAbout.Click += new System.EventHandler(btnAbout_Click);
+    btnDoWork.Location = new System.Drawing.Point(21, 109);
+    btnDoWork.Name = __DC20210205._0._0;
+    btnDoWork.Size = new System.Drawing.Size(299, 64);
+    btnDoWork.TabIndex = 3;
+    btnDoWork.Text = __DC20210205._0._21;
+    btnDoWork.UseVisualStyleBackColor = true;
+    btnDoWork.Click += new System.EventHandler(btnDoWork_Click);
+    label1.AutoSize = true;
+    label1.Location = new System.Drawing.Point(13, 43);
+    label1.Name = __DC20210205._0._11;
+    label1.Size = new System.Drawing.Size(131, 12);
+    label1.TabIndex = 4;
+    label1.Text = __DC20210205._0._7;
+    button1.Location = new System.Drawing.Point(21, 275);
+    button1.Name = __DC20210205._0._4;
+    button1.Size = new System.Drawing.Size(299, 63);
+    button1.TabIndex = 5;
+    button1.Text = __DC20210205._0._13;
+    button1.UseVisualStyleBackColor = true;
+    button1.Click += new System.EventHandler(button1_Click);
+    base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
+    base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+    base.ClientSize = new System.Drawing.Size(414, 365);
+    base.Controls.Add(button1);
+    base.Controls.Add(label1);
+    base.Controls.Add(btnDoWork);
+    base.Controls.Add(btnAbout);
+    base.Controls.Add(pictureBox1);
+    base.Name = __DC20210205._0._18;
+    Text = __DC20210205._0._18;
+    base.Load += new System.EventHandler(frmMain_Load);
+    ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+    ResumeLayout(false);
+    PerformLayout();
 }
 // And auto create a new class:
 internal class _Res1 : ComponentResourceManager, IDisposable
 {
-	private ResourceSet _Data;
+    private ResourceSet _Data;
 
-	public _Res1()
-	{
-		_Data = InnerAssemblyHelper20210315.LoadResourceSet(
-				_BytesContainer__._2(), 224, gzip: true);
-	}
+    public _Res1()
+    {
+        _Data = InnerAssemblyHelper20210315.LoadResourceSet(
+                _BytesContainer__._2(), 224, gzip: true);
+    }
 
-	public override ResourceSet GetResourceSet(
-				CultureInfo culture, bool createIfNotExists, bool tryParents)
-	{
-		return _Data;
-	}
+    public override ResourceSet GetResourceSet(
+                CultureInfo culture, bool createIfNotExists, bool tryParents)
+    {
+        return _Data;
+    }
 
-	protected override ResourceSet InternalGetResourceSet(
-				CultureInfo culture, bool createIfNotExists, bool tryParents)
-	{
-		return _Data;
-	}
+    protected override ResourceSet InternalGetResourceSet(
+                CultureInfo culture, bool createIfNotExists, bool tryParents)
+    {
+        return _Data;
+    }
 
-	public void Dispose()
-	{
-		if (_Data != null)
-		{
-			_Data.Close();
-			_Data = null;
-		}
-	}
+    public void Dispose()
+    {
+        if (_Data != null)
+        {
+            _Data.Close();
+            _Data = null;
+        }
+    }
 }
 ```
 And remove the embeded resource "SampleWinApp.frmMain.resources". after do these, new code is very difficulty to crack.
@@ -404,74 +404,74 @@ And remove the embeded resource "SampleWinApp.frmMain.resources". after do these
 [CompilerGenerated]
 internal class Resource1
 {
-	private static ResourceManager resourceMan;
-	private static CultureInfo resourceCulture;
-	[EditorBrowsable(EditorBrowsableState.Advanced)]
-	internal static ResourceManager ResourceManager
-	{
-		get
-		{
-			if (resourceMan == null)
-			{
-				ResourceManager temp = resourceMan =  new ResourceManager(
-					"SampleWinApp.Resource1", typeof(Resource1).Assembly);
-			}
-			return resourceMan;
-		}
-	}
-	[EditorBrowsable(EditorBrowsableState.Advanced)]
-	internal static CultureInfo Culture
-	{
-		get
-		{
-			return resourceCulture;
-		}
-		set
-		{
-			resourceCulture = value;
-		}
-	}
-	internal static Bitmap blue96
-	{
-		get
-		{
-			object obj = ResourceManager.GetObject("blue96", resourceCulture);
-			return (Bitmap)obj;
-		}
-	}
-	internal static string String2 {
-		get{ return ResourceManager.GetString("String2", resourceCulture);}
-	}
-	internal static string StringValue {
-		get{ return ResourceManager.GetString("StringValue", resourceCulture);}
-	}
-	internal Resource1()
-	{
-	}
+    private static ResourceManager resourceMan;
+    private static CultureInfo resourceCulture;
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    internal static ResourceManager ResourceManager
+    {
+        get
+        {
+            if (resourceMan == null)
+            {
+                ResourceManager temp = resourceMan =  new ResourceManager(
+                    "SampleWinApp.Resource1", typeof(Resource1).Assembly);
+            }
+            return resourceMan;
+        }
+    }
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    internal static CultureInfo Culture
+    {
+        get
+        {
+            return resourceCulture;
+        }
+        set
+        {
+            resourceCulture = value;
+        }
+    }
+    internal static Bitmap blue96
+    {
+        get
+        {
+            object obj = ResourceManager.GetObject("blue96", resourceCulture);
+            return (Bitmap)obj;
+        }
+    }
+    internal static string String2 {
+        get{ return ResourceManager.GetString("String2", resourceCulture);}
+    }
+    internal static string StringValue {
+        get{ return ResourceManager.GetString("StringValue", resourceCulture);}
+    }
+    internal Resource1()
+    {
+    }
 }
 ```
 After use my tool , It change to :
 ```C#
 internal class Resource1
 {
-	private static readonly byte[] _Datas = _BytesContainer__._1();
-	private static Bitmap _blue96;
-	public static Bitmap get_blue96()
-	{
-		if (_blue96 == null)
-		{
-			_blue96 = InnerAssemblyHelper20210315.GetBitmap(_Datas, 0, 36918, 1807292644);
-		}
-		return _blue96;
-	}
-	internal static string get_String2()
-	{
-		return InnerAssemblyHelper20210315.GetString(_Datas, 37002, 98, 614997590);
-	}
-	internal static string get_StringValue()
-	{
-		return InnerAssemblyHelper20210315.GetString(_Datas, 36918, 84, 57466195);
-	}
+    private static readonly byte[] _Datas = _BytesContainer__._1();
+    private static Bitmap _blue96;
+    public static Bitmap get_blue96()
+    {
+        if (_blue96 == null)
+        {
+            _blue96 = InnerAssemblyHelper20210315.GetBitmap(_Datas, 0, 36918, 1807292644);
+        }
+        return _blue96;
+    }
+    internal static string get_String2()
+    {
+        return InnerAssemblyHelper20210315.GetString(_Datas, 37002, 98, 614997590);
+    }
+    internal static string get_StringValue()
+    {
+        return InnerAssemblyHelper20210315.GetString(_Datas, 36918, 84, 57466195);
+    }
 }
 ```
 The resouce data aleady has been encrypted, and hard to crack.
@@ -546,26 +546,26 @@ It is more difficuted to find out the key call stack.This feature help you hidde
 ## NO.4 . Obfuscate class's members order.
    When we write a large class's code , usual ,field or method for the same target is very nearby.for example:
 ```C#
-	private string _RegisterCode = null;
-	private bool _IsRegisteredFlag = false;
-	public void SetRegisterCode( string code ){};
-	pulbic bool IsRegisterdCodeOK( string code ){};
-	public string GetErrorMessageForRegister();
-	XXXXXXX other members XXXXXX
+    private string _RegisterCode = null;
+    private bool _IsRegisteredFlag = false;
+    public void SetRegisterCode( string code ){};
+    pulbic bool IsRegisterdCodeOK( string code ){};
+    public string GetErrorMessageForRegister();
+    XXXXXXX other members XXXXXX
 ```
 When hakers capture one key member,for example `_RegisterCode` , and analyse other members nearby, maby can get more information.
 But DC.NET Protector can obfuscate order of class's members , just like this:
 ```C#
-	private string _RegisterCode = null;
-	XXXXXXX other members XXXXXX
-	private bool _IsRegisteredFlag = false;
-	XXXXXXX other members XXXXXX
-	public string GetErrorMessageForRegister();
-	XXXXXXX other members XXXXXX
-	pulbic bool IsRegisterdCodeOK( string code ){};
-	XXXXXXX other members XXXXXX
-	public void SetRegisterCode( string code ){};
-	XXXXXXX other members XXXXXX
+    private string _RegisterCode = null;
+    XXXXXXX other members XXXXXX
+    private bool _IsRegisteredFlag = false;
+    XXXXXXX other members XXXXXX
+    public string GetErrorMessageForRegister();
+    XXXXXXX other members XXXXXX
+    pulbic bool IsRegisterdCodeOK( string code ){};
+    XXXXXXX other members XXXXXX
+    public void SetRegisterCode( string code ){};
+    XXXXXXX other members XXXXXX
 ```
  Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
 
