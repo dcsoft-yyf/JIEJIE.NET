@@ -1,5 +1,5 @@
 # DC.NET Protector
-  An open source tool to encrypt .NET assembly file, against crack, protect your software copyright.
+  An open source tool to encrypt .NET assembly file, help people protect theirs copyright.
 
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
