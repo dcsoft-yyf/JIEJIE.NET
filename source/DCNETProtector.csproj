@@ -39,34 +39,13 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ByteArrayDataContainer.cs" />
-    <Compile Include="ComponentResourceManagerInfo.cs" />
-    <Compile Include="ConsoleProgram.cs" />
-    <Compile Include="DCILClass.cs" />
-    <Compile Include="DCILCustomAttribute.cs" />
-    <Compile Include="DCILDocument.cs" />
-    <Compile Include="DCILGroup.cs" />
-    <Compile Include="DCILMethod.cs" />
-    <Compile Include="DCILMResource.cs" />
-    <Compile Include="DCILProperty.cs" />
-    <Compile Include="DCProtectEngine.cs" />
-    <Compile Include="DCStringValueDefine.cs" />
-    <Compile Include="DCUtils.cs" />
-    <Compile Include="ResourceFileHelper.cs" />
-    <Compile Include="SampleInnerAssemblyHelper20210315.cs" />
-    <Compile Include="StringValueContainer.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="snapshort\snapshort.png" />
-    <Content Include="snapshort\winformdemo.png" />
-    <Content Include="snapshort\winformdemo2.png" />
-    <Content Include="snapshort\winformdemo3.png" />
+    <Compile Include="Just one source code file.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
