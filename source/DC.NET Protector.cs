@@ -31,6 +31,7 @@ using System.Reflection;
 
 namespace DCNETProtector
 {
+#if !DCSoftInner
     static class ConsoleProgram
     {
         static void Main(string[] args)
@@ -61,7 +62,7 @@ namespace DCNETProtector
      Site :https://github.com/dcsoft-yyf/DCNETProtector
      Last update 2021-3-22
      You can use this software unlimited,but CAN NOT modify source code anytime.
-     Any good idears you can write to 28348092@qq.com.
+     If you have good idears you can write to 28348092@qq.com.
      Support command line argument :
         input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
         output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
@@ -154,6 +155,7 @@ namespace DCNETProtector
         }
     }
 
+#endif
 
     internal static class DCProtectEngine
     {
@@ -4085,7 +4087,7 @@ namespace DCNETProtector
             var bmp = new System.Drawing.Bitmap(ms);
             return bmp;
         }
-
+        
         /// <summary>
         /// 从字节数组中加载资源数据
         /// </summary>
