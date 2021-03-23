@@ -595,4 +595,4 @@ This new tool's finall target is protect all .NET software copyright.Of cause,it
 DC.NET Protector use GPL-2.0 License.
 
 
-Donate <!-- by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> ,--> by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>.
+Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>.
