@@ -15,7 +15,8 @@ It has following features.
 DC.NET Protector can anlyse IL Code, and obfuscate then randomly, It let code is hard to read, some times it will cause crack tool error.
 <br />For example , the old code is :
 ```C#
-public static string[] AnalyseVariableString(string strText, string strHead, string strEnd, bool EnableEmptyItem)
+public static string[] AnalyseVariableString(string strText, string strHead,
+      string strEnd, bool EnableEmptyItem)
 {
    if (strText == null || strHead == null || strEnd == null 
       || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
@@ -77,7 +78,8 @@ public static string[] AnalyseVariableString(string strText, string strHead, str
 ```
 After use DC.NET Protector, use ILSpy , these code change to :
 ```C#
-public static string[] AnalyseVariableString(string strText, string strHead, string strEnd, bool EnableEmptyItem)
+public static string[] AnalyseVariableString(string strText, string strHead, 
+      string strEnd, bool EnableEmptyItem)
 {
    //Discarded unreachable code: IL_01ff
    //IL_008a: Invalid comparison between Unknown and O
@@ -779,8 +781,8 @@ This new tool's finall target is protect all .NET software copyright.Of cause,it
 ## License
 DC.NET Protector use GPL-2.0 License.
 
-## log
+## update log
 <br/> 2021-3-22 First publish.
 <br/> 2021-4-2  Add feature: Obfuscate control flow.
-
+<hr />
 Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>.
