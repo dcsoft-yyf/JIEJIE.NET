@@ -17,7 +17,8 @@ DC.NET Protector can anlyse IL Code, and obfuscate then randomly, It let code is
 ```C#
 public static string[] AnalyseVariableString(string strText, string strHead, string strEnd, bool EnableEmptyItem)
 {
-	if (strText == null || strHead == null || strEnd == null || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
+	if (strText == null || strHead == null || strEnd == null 
+		|| strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
 	{
 		return new string[1]
 		{
@@ -92,7 +93,8 @@ public static string[] AnalyseVariableString(string strText, string strHead, str
 	//IL_01f5: Incompatible stack heights: 1 vs 3
 	//IL_01ff: Incompatible stack heights: 1 vs 0
 	string[] array;
-	if (strText == null || strHead == null || strEnd == null || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
+	if (strText == null || strHead == null || strEnd == null 
+		|| strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
 	{
 		array = new string[1]
 		{
@@ -193,7 +195,7 @@ public static string[] AnalyseVariableString(string strText, string strHead, str
 	goto IL_017f;
 }
 ```
-
+Look, the code has many goto , and ILSpy has error ` /*Error near IL_008c: Stack underflow*/ `.
 ## 2 , Encrypt all string values define in assembly.
 DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 <br/>For example , the old code is :
@@ -712,12 +714,12 @@ SampleWinApp!SampleWinApp.Program.Main() Program.cs
          
 private string GetLicenseMessage()
 {
-    var str = "Yuan_yong_fu_dao_ci_yi_you";// no used,just let DC.NET Protector know the owner method need change.
+    var str = "DC.NET Protector Options:HiddenAllocationCallStack";;// no used,just let DC.NET Protector know the owner method need change.
     string msg = "This software license to :" + Environment.UserName;
     return msg;
 }
 ```
-At there,the code `var str = "Yuan_yong_fu_dao_ci_yi_you";` do nothing, just let DC.NET Protector know this is a key method, need to change, the value is case sensitive.
+At there,the code `var str = "DC.NET Protector Options:HiddenAllocationCallStack";";` do nothing, just let DC.NET Protector know this is a key method, need to change, the value is case sensitive.
 <br/>My tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
