@@ -28,7 +28,7 @@ private void btnAbout_Click(object sender, EventArgs e)
          
 private string GetLicenseMessage()
 {
-    var str = "Yuan_yong_fu_dao_ci_yi_you";
+    var str = "DC.NET Protector Options:HiddenAllocationCallStack";
     string msg = "This software license to :" + Environment.UserName;
     return msg;
 }

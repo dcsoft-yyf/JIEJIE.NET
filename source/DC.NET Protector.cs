@@ -18,6 +18,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Reflection;
 
+
 [assembly: AssemblyTitle("DC.NET Protector console application")]
 [assembly: AssemblyDescription("Protect your .NET software copyright powerfull.")]
 [assembly: AssemblyConfiguration("")]
@@ -27,21 +28,18 @@ using System.Reflection;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.1.0.0")]
+
+[assembly: AssemblyVersion(DCNETProtector.ConsoleProgram.ProductVersion)]
 
 namespace DCNETProtector
 {
 #if !DCSoftInner
     static class ConsoleProgram
     {
+        public const string ProductVersion = "1.1.0.1";
+
         static void Main(string[] args)
         {
-            //args = new string[] {
-            //    @"input=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\bin_netcore\debug\netcoreapp3.0\DCSoft.Writer.ForASPNETCore.dll",
-            //    @"output=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\bin_netcore\debug\netcoreapp3.0\DCSoft.Writer.ForASPNETCore_2.dll",
-            //    @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
-            //    "pause"
-            //};
             string inputAssmblyFileName = null;
             string outputAssemblyFileName = null;
             string snkFileName = null;
@@ -57,22 +55,23 @@ namespace DCNETProtector
  |_____/ \_____(_)_| \_|______|  |_|    |_|   |_|  \___/ \__\___|\___|\__\___/|_|   
                                                                                     
 
-     DC.NET Protector v1.1 ,encrypt .NET assembly file, help you protect copyright.
+     DC.NET Protector v" + ProductVersion + @" ,encrypt .NET assembly file, help you protect copyright.
      Author:yuan yong fu from CHINA . mail: 28348092@qq.com
      Site :https://github.com/dcsoft-yyf/DCNETProtector
-     Last update 2021-3-22
+     Last update 2021-4-2
      You can use this software unlimited,but CAN NOT modify source code anytime.
-     If you have good idears you can write to 28348092@qq.com.
+     Any good idears you can write to 28348092@qq.com.
      Support command line argument :
-        input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
+        input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
         output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
         snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
+        options=[optional,developing,multi-options split by ',',support EnableControlFlow,EnableControlFlow,EnableResources,DisableResources,EnableStrings,DisableStrings,HiddenAllocationCallStack]
         pause =[optional,pause the console after finish process.]
 
      Example 1, protect d:\a.dll ,this will modify dll file.
-        >DCNETProtector.exe input=d:\a.dll  
-     Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name.
-        >DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
+        >DCNETProtector.exe d:\a.dll  
+     Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
+        >DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk options=EnableControlFlow,DisableResources
 　　　　　　　　　　　　　　　　　　　　
 *******************************************************************************");
             Console.ResetColor();
@@ -103,11 +102,18 @@ namespace DCNETProtector
                             case "pause":
                                 pause = true;
                                 break;
+                            case "options":
+                                DCProtectEngine.GlobalOptions = new DCProtectOptions(argValue, null);
+                                break;
                         }
                     }
                     else if (string.Compare(arg, "pause", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         pause = true;
+                    }
+                    else if (arg != null && arg.Length > 0 && Path.IsPathRooted(arg) && File.Exists(arg))
+                    {
+                        inputAssmblyFileName = arg;
                     }
                 }
             }
@@ -156,7 +162,68 @@ namespace DCNETProtector
     }
 
 #endif
+    /// <summary>
+    /// options of protect
+    /// </summary>
+    internal class DCProtectOptions
+    {
+        public DCProtectOptions()
+        {
 
+        }
+        public DCProtectOptions(string args, DCProtectOptions baseOptions)
+        {
+            if (baseOptions != null)
+            {
+                this.ObfuscateControlFlow = baseOptions.ObfuscateControlFlow;
+                this.EncryptResources = baseOptions.EncryptResources;
+                this.EncryptStrings = baseOptions.EncryptStrings;
+            }
+            if (args != null)
+            {
+                var items = args.Split(',');
+                foreach (var item in items)
+                {
+                    var item2 = item.Trim();
+                    if (item2.Equals("EnableControlFlow", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.ObfuscateControlFlow = true;
+                    }
+                    else if (item2.Equals("DisableControlFlow", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.ObfuscateControlFlow = false;
+                    }
+                    else if (item2.Equals("EnableResources", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.EncryptResources = true;
+                    }
+                    else if (item2.Equals("DisableResources", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.ObfuscateControlFlow = false;
+                    }
+                    else if (item2.Equals("EnableStrings", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.EncryptStrings = true;
+                    }
+                    else if (item2.Equals("DisableStrings", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.EncryptStrings = false;
+                    }
+                    else if (item2.Equals("HiddenAllocationCallStack", StringComparison.OrdinalIgnoreCase))
+                    {
+                        this.HiddenAllocationCallStack = true;
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool ObfuscateControlFlow = true;
+        public bool EncryptStrings = true;
+        public bool EncryptResources = true;
+        public bool HiddenAllocationCallStack = false;
+    }
     internal static class DCProtectEngine
     {
         internal static void Test()
@@ -282,6 +349,7 @@ namespace DCNETProtector
             return null;
         }
 
+        public static DCProtectOptions GlobalOptions = new DCProtectOptions();
 
         public static bool ExecuteAssemblyFile(string asmFileName, string snkFileName, string outputFileName = null, Version fwVersion = null)
         {
@@ -367,7 +435,22 @@ namespace DCNETProtector
                         Directory.CreateDirectory(dir3);
                     }
                 }
-                var args = "\"" + ilFileName + "\" \"/output=" + outputFileName + "\" ";
+                string tempFileName3 = outputFileName;
+                bool useTempFileName = false;
+                if (File.Exists(outputFileName))
+                {
+                    useTempFileName = true;
+                    tempFileName3 = outputFileName + ".new.dat";
+                }
+                else
+                {
+                    useTempFileName = false;
+                }
+                if (File.Exists(tempFileName3))
+                {
+                    File.Delete(tempFileName3);
+                }
+                var args = "\"" + ilFileName + "\" \"/output=" + tempFileName3 + "\" ";
                 if (System.Diagnostics.Debugger.IsAttached == false)
                 {
                     args = args + " /quiet ";
@@ -393,6 +476,24 @@ namespace DCNETProtector
                 if (Directory.Exists(tempPath) == false)
                 {
                     Directory.Delete(tempPath, true);
+                }
+                if (useTempFileName)
+                {
+                    // 使用临时文件
+                    if (File.Exists(tempFileName3) == false)
+                    {
+                        return false;
+                    }
+                    File.Copy(tempFileName3, outputFileName, true);
+                    File.Delete(tempFileName3);
+                }
+                else
+                {
+                    // 没有临时文件
+                    if (File.Exists(outputFileName) == false)
+                    {
+                        return false;
+                    }
                 }
                 if (snkFileName != null && File.Exists(snkFileName))
                 {
@@ -464,7 +565,7 @@ namespace DCNETProtector
             ByteArrayDataContainer.FullClassName = _ClassNamePrefix + "BytesContainer__";
 
             Console.WriteLine("Analysing " + inputILFileName + " ...");
-            _Document = new DCILDocument(inputILFileName, txtEncoding);
+            _Document = new DCILDocument(inputILFileName, txtEncoding, GlobalOptions);
             if (_Document.StringDefines.Count == 0)
             {
                 Console.WriteLine("To this assembly, I can not do anything.");
@@ -481,13 +582,13 @@ namespace DCNETProtector
             var nativeStringDefine = _Document.StringDefines.Count;
 
             // 进行项目合并
-            var strValues = new Dictionary<string, List<DCStringValueDefine>>();
+            var strValues = new Dictionary<string, List<DCILOperCodeLoadString>>();
             foreach (var item in _Document.StringDefines)
             {
-                List<DCStringValueDefine> list = null;
+                List<DCILOperCodeLoadString> list = null;
                 if (strValues.TryGetValue(item.FinalValue, out list) == false)
                 {
-                    list = new List<DCStringValueDefine>();
+                    list = new List<DCILOperCodeLoadString>();
                     strValues[item.FinalValue] = list;
                 }
                 list.Add(item);
@@ -510,6 +611,31 @@ namespace DCNETProtector
             var sourceLines = _Document.SourceLines;
             foreach (var items in strValues.Values)
             {
+                foreach (var item in items)
+                {
+                    int valueIndex = valueIndexs[item.FinalValue];// strList.BinarySearch(item.Value);// .IndexOf(item.Value);
+                    var newILCode = new DCILOperCode(
+                        item.LabelID,
+                        "ldsfld",
+                        "string " + _ClassNamePrefix + Convert.ToString(valueIndex / stringGroupSize)
+                            + "::_" + valueIndex.ToString());
+                    item.ReplaceCode = newILCode;
+                    item.OwnerMethod.ILCodesModified = true;
+                    //var strNewLine = new StringBuilder();
+                    //strNewLine.Append("    " + item.LabelID + ": ldsfld string ");
+                    //strNewLine.Append(_ClassNamePrefix + Convert.ToString(valueIndex / stringGroupSize)
+                    //    + "::_" + valueIndex.ToString());
+                    //sourceLines[item.LineIndex] = strNewLine.ToString();
+                    if (item.EndLineIndex > item.LineIndex)
+                    {
+                        for (int iCount2 = item.LineIndex; iCount2 <= item.EndLineIndex; iCount2++)
+                        {
+                            sourceLines[iCount2] = string.Empty;
+                        }
+                    }
+                    _ModifiedCount++;
+                }
+
                 foreach (var item in items)
                 {
                     int valueIndex = valueIndexs[item.FinalValue];// strList.BinarySearch(item.Value);// .IndexOf(item.Value);
@@ -622,23 +748,34 @@ namespace DCNETProtector
                 foreach (var methodInfo in _Document.SecurityMethods)
                 {
                     var method = methodInfo.Item1;
-                    for (int iCount9 = method.EndLineIndex; iCount9 >= method.StartLineIndex; iCount9--)
+                    for (int ilIndex = method.OperCodes.Count - 1; ilIndex >= 0; ilIndex--)
                     {
-                        var line9 = _Document.SourceLines[iCount9];
-                        if (line9.Contains("ret"))
+                        var ilcode = method.OperCodes[ilIndex];
+                        if (ilcode.OperCode == "ret")
                         {
-                            string labelID = null;
-                            string operData = null;
-                            var operCode = DCILDocument.GetILCode(line9, ref labelID, ref operData);
-                            if (operCode == "ret")
-                            {
-                                line9 = "IL_zzzzz: call string DCSoft.Common.InnerAssemblyHelper20210315::CloneStringCrossThead(string)\r\n" + line9;
-                                _Document.SourceLines[iCount9] = line9;
-                                _ModifiedCount++;
-                                break;
-                            }
+                            method.ILCodesModified = true;
+                            method.OperCodes.Insert(ilIndex, new DCILOperCode("IL_zzzzz", "call", "string DCSoft.Common.InnerAssemblyHelper20210315::CloneStringCrossThead(string)"));
+                            _ModifiedCount++;
+                            break;
                         }
                     }
+                    //for (int iCount9 = method.EndLineIndex; iCount9 >= method.StartLineIndex; iCount9--)
+                    //{
+                    //    var line9 = _Document.SourceLines[iCount9];
+                    //    if (line9.Contains("ret"))
+                    //    {
+                    //        string labelID = null;
+                    //        string operData = null;
+                    //        var operCode = DCILOperCode.GetILCode(line9, ref labelID, ref operData);
+                    //        if (operCode == "ret")
+                    //        {
+                    //            line9 = "IL_zzzzz: call string DCSoft.Common.InnerAssemblyHelper20210315::CloneStringCrossThead(string)\r\n" + line9;
+                    //            _Document.SourceLines[iCount9] = line9;
+                    //            _ModifiedCount++;
+                    //            break;
+                    //        }
+                    //    }
+                    //}
                 }
             }
             if (_Document.ResouceFiles.Count > 0)
@@ -647,6 +784,7 @@ namespace DCNETProtector
                 ApplyComponentResourceManagers();
 
             }
+            ObfuscateFlowEngine.ObfuscateAndUpdateMethodILCode(_Document);
             if (ByteArrayDataContainer.HasData())
             {
                 var strDatas = new StringBuilder();
@@ -706,6 +844,10 @@ namespace DCNETProtector
                     for (int iCount = 0; iCount < lineNum; iCount++)
                     {
                         string line = _Document.SourceLines[iCount];
+                        if (line == null || line.Length == 0)
+                        {
+                            continue;
+                        }
                         if (_NewClassCodes.Count > 0 && line.StartsWith(".class", StringComparison.Ordinal))
                         {
                             classIndex++;
@@ -739,8 +881,8 @@ namespace DCNETProtector
                 var byteTotalLength = 0;
                 foreach (var item in _Document.StringDefines)
                 {
-                    totalStrLength += item.Value.Length;
-                    byteTotalLength += utf8.GetByteCount(item.Value);
+                    totalStrLength += item.FinalValue.Length;
+                    byteTotalLength += utf8.GetByteCount(item.FinalValue);
                 }
                 Console.WriteLine("Define :" + _Document.StringDefines.Count
                     + " string values ,total length:" + totalStrLength + "(" + DCUtils.FormatByteSize(byteTotalLength) + ")");
@@ -761,6 +903,328 @@ namespace DCNETProtector
             {
                 Console.WriteLine("No change " + inputILFileName);
                 return false;
+            }
+        }
+
+        private static class ObfuscateFlowEngine
+        {
+            private static int _LableIDCounter = 0;
+            private static string CreataLableID()
+            {
+                _LableIDCounter++;
+                return "IL_Z" + _LableIDCounter.ToString("X4");// Convert.ToString(_LableIDCounter++);
+            }
+            public static void ObfuscateAndUpdateMethodILCode(DCILDocument document)
+            {
+                if (document.ProtectedOptions.ObfuscateControlFlow == false)
+                {
+                    return;
+                }
+                foreach (var cls in document.AllClasses)
+                {
+                    foreach (var cld in cls.ChildNodes)
+                    {
+                        if (cld is DCILMethod)
+                        {
+                            DCILMethod method = (DCILMethod)cld;
+
+                            if (method.ProtectedOptions != null && method.ProtectedOptions.ObfuscateControlFlow == false)
+                            {
+                                continue;
+                            }
+                            //if(method.InstanceIndex ==8809)
+                            //{
+
+                            //}
+                            //if (method.Name == "GetFontDataUseWin32API")
+                            //{
+
+                            //}
+                            _LableIDCounter = 0;
+                            if (Obfuscate(method.OperCodes))
+                            {
+                                method.ILCodesModified = true;
+                            }
+                            if (method.ILCodesModified)
+                            {
+                                for (int iCount = method.OperCodes.StartLineIndex; iCount < method.EndLineIndex; iCount++)
+                                {
+                                    document.SourceLines[iCount] = string.Empty;
+                                }
+                                var strCode = new System.Text.StringBuilder();
+                                method.OperCodes.WriteTo(strCode, 1);
+                                document.SourceLines[method.OperCodes.StartLineIndex] = strCode.ToString();
+                                for (int iCount = 0; iCount < 10; iCount++)
+                                {
+                                    var line = document.SourceLines[method.StartLineIndex + iCount].Trim();
+                                    if (line.StartsWith(".maxstack"))
+                                    {
+                                        var v = Convert.ToInt32(line.Substring(9).Trim());
+                                        document.SourceLines[method.StartLineIndex + iCount] = "   .maxstack " + Convert.ToString(v + 4);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            private static bool Obfuscate(DCILOperCodeList items)
+            {
+                //return false;
+
+                if (items == null || items.Count == 0)
+                {
+                    return false;
+                }
+                bool result = false;
+                foreach (var item in items)
+                {
+                    if (item is DCILOperCode_Try_Catch_Finally)
+                    {
+                        var tcf = (DCILOperCode_Try_Catch_Finally)item;
+                        if (tcf._Try != null && Obfuscate(tcf._Try.OperCodes))
+                        {
+                            result = true;
+                        }
+                    }
+                }
+                var groupMaxLen = _Random.Next(20, 50);
+                if (groupMaxLen >= items.Count)
+                {
+                    // 指令数量太少，不管了。
+                    if (result)
+                    {
+                        ChangeJumpCode(items);
+                    }
+                    return result;
+                }
+                int oldItemsCount = items.Count;
+                DCILOperCode retCode = null;
+                if (items[items.Count - 1].OperCode == "ret")
+                {
+                    retCode = items[items.Count - 1];
+                    items.RemoveAt(items.Count - 1);
+                }
+                var groups = new List<List<DCILOperCode>>();
+                var group = new List<DCILOperCode>();
+                var firstGroup = group;
+                groups.Add(group);
+                foreach (var item in items)
+                {
+                    group.Add(item);
+                    if (item.OperCode != "volatile." && item.OperCode != "constrained.")
+                    {
+                        if (group.Count > groupMaxLen)
+                        {
+                            group = new List<DCILOperCode>();
+                            groups.Add(group);
+                            groupMaxLen = _Random.Next(20, 50);
+                            //if (item is DCILOperCode_Try_Catch_Finally)
+                            //{
+                            //    group.Add(new DCILOperCode(CreataLableID(), "nop", null));
+                            //}
+                        }
+                    }
+                    //if (_Random.Next(0, 100) < 2)
+                    //{
+                    //    // 小概率插入无效跳转指令
+                    //    string rndLableID = items[_Random.Next(0, items.Count - 1)].LabelID;
+                    //    if (rndLableID != null && rndLableID.Length > 0)
+                    //    {
+                    //        //if( rndLableID == "IL_0001")
+                    //        //{
+
+                    //        //}
+                    //        group.Add(new DCILOperCodeComment("no used"));
+                    //        group.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+                    //        group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+                    //        group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+                    //        group.Add(new DCILOperCode(CreataLableID(), "brtrue", rndLableID));
+                    //        addCount += 4;
+                    //    }
+                    //}
+                }
+                if (groups[groups.Count - 1].Count == 0)
+                {
+                    groups.RemoveAt(groups.Count - 1);
+                }
+                for (int iCount = 0; iCount < groups.Count - 1; iCount++)
+                {
+                    // 每条指令组后面添加跳到下一个指令组的指令
+                    group = groups[iCount];
+                    var nextGroup = groups[iCount + 1];
+                    group.Add(new DCILOperCodeComment("jump random"));
+                    var nextGroupLableID = nextGroup[0].LabelID;
+                    if (nextGroupLableID == null || nextGroupLableID.Length == 0)
+                    {
+                        nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "nop", null));
+                        nextGroupLableID = nextGroup[0].LabelID;
+                    }
+                    group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+                    //// 输出无效的垃圾代码
+                    //group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", "1"));
+                    ////group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next().ToString()));
+                    //group.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+
+                    ////group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+
+                    //group.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+                    //if (_Random.Next(0, 1) == 0)
+                    //{
+                    //    group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+                    //    group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+                    //    group.Add(new DCILOperCode(CreataLableID(), "brfalse", nextGroupLableID));
+                    //}
+                    //else
+                    //{
+                    //    group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetUnZeroIndex().ToString()));
+                    //    group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+                    //    group.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+                    //}
+                }
+
+                if (retCode != null)
+                {
+                    groups[groups.Count - 1].Add(new DCILOperCode(CreataLableID(), "br", retCode.LabelID));
+                }
+                //var lastCode = new DCILOperCode(CreataLableID(), "nop", null);
+                //var lastGroup = groups[groups.Count - 1];
+                //lastGroup.Add(new DCILOperCode(CreataLableID(), "br", lastCode.LabelID));
+                DCUtils.ObfuseListOrder(groups);
+                items.Clear();
+                items.Add(new DCILOperCode(CreataLableID(), "nop", null));
+                if (firstGroup != groups[0])
+                {
+                    var nextGroupLableID = firstGroup[0].LabelID;
+                    if (nextGroupLableID == null || nextGroupLableID.Length == 0)
+                    {
+
+                    }
+                    items.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+
+                    //items.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+                    //if (_Random.Next(0, 1) == 0)
+                    //{
+                    //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+                    //    items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+                    //    items.Add(new DCILOperCode(CreataLableID(), "brfalse", nextGroupLableID));
+                    //}
+                    //else
+                    //{
+                    //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetUnZeroIndex().ToString()));
+                    //    items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+                    //    items.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+                    //}
+                }
+                foreach (var group2 in groups)
+                {
+                    foreach (var item in group2)
+                    {
+                        items.Add(item);
+                        //if ( items.Count > 10 && _Random.Next(0, 100) < 2)
+                        //{
+                        //    // 小概率插入无效跳转指令
+                        //    string rndLableID = items[_Random.Next(0, items.Count - 1)].LabelID;
+                        //    if (rndLableID != null && rndLableID.Length > 0)
+                        //    {
+                        //        //if( rndLableID == "IL_0001")
+                        //        //{
+
+                        //        //}
+                        //        items.Add(new DCILOperCodeComment("no used"));
+                        //        items.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+                        //        items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+                        //        items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+                        //        items.Add(new DCILOperCode(CreataLableID(), "brtrue", rndLableID));
+                        //    }
+                        //}
+                    }
+                }
+
+                if (retCode != null)
+                {
+                    var newRetlabelID = CreataLableID();
+                    items.Add(new DCILOperCode(retCode.LabelID, "br.s", newRetlabelID));
+                    items.Add(new DCILOperCode(CreataLableID(), "nop", null));
+                    retCode.LabelID = newRetlabelID;
+                    items.Add(retCode);
+                }
+                ChangeJumpCode(items);
+                int addCount = items.Count - oldItemsCount;
+                return true;
+            }
+
+            private static void ChangeJumpCode(DCILOperCodeList list)
+            {
+                foreach (var item in list)
+                {
+                    var code = item.OperCode;
+                    if (code != null
+                        &&
+                        code.Length > 3
+                        && code[code.Length - 2] == '.'
+                        && code[code.Length - 1] == 's')
+                    {
+                        if (code == "beq.s"
+                            || code == "bge.s"
+                            || code == "bge.un.s"
+                            || code == "bgt.s"
+                            || code == "bgt.un.s"
+                            || code == "ble.s"
+                            || code == "ble.un.s"
+                            || code == "blt.s"
+                            || code == "blt.un.s"
+                            || code == "bne.un.s"
+                            || code == "br.s"
+                            || code == "brfalse.s"
+                            || code == "brtrue.s")
+                        {
+                            item.OperCode = code.Substring(0, code.Length - 2);
+                        }
+                    }
+                }
+            }
+
+            public static readonly string FieldName = null;
+            private static readonly byte[] _Values = null;
+            private static readonly int[] ZeroIndexs = null;
+            private static readonly int[] UnZeroIndexs = null;
+
+            private static readonly Random _Random = new Random();
+            static ObfuscateFlowEngine()
+            {
+                _Values = new byte[_Random.Next(512, 1024)];
+                _Random.NextBytes(_Values);
+                var indexs2 = new List<int>();
+                var indexs4 = new List<int>();
+                for (int iCount = 0; iCount < _Values.Length; iCount++)
+                {
+                    if (_Random.Next(1, 100) > 60)
+                    {
+                        _Values[iCount] = 0;
+                    }
+                    if (_Values[iCount] == 0)
+                    {
+                        indexs2.Add(iCount);
+                    }
+                    else
+                    {
+                        indexs4.Add(iCount);
+                    }
+                }
+                ZeroIndexs = indexs2.ToArray();
+                UnZeroIndexs = indexs4.ToArray();
+                FieldName = ByteArrayDataContainer.GetFieldName(_Values);
+            }
+            public static int GetZeroIndex()
+            {
+                return ZeroIndexs[_Random.Next(0, ZeroIndexs.Length - 1)];
+            }
+            public static int GetUnZeroIndex()
+            {
+                return UnZeroIndexs[_Random.Next(0, UnZeroIndexs.Length - 1)];
             }
         }
 
@@ -1642,14 +2106,26 @@ namespace DCNETProtector
                     }
                     _NewClassCodes.Add(strNewClassCode);
                     _ModifiedCount++;
-                    var line = _Document.SourceLines[item.LineIndex];
-                    string labelID = null;
-                    string operData = null;
-                    string operCode = DCILDocument.GetILCode(line, ref labelID, ref operData);
-                    line = labelID + " : newobj     instance void " + clsName + "::.ctor()";
-                    _Document.SourceLines[item.LineIndex - 2] = string.Empty;
-                    _Document.SourceLines[item.LineIndex - 1] = string.Empty;
-                    _Document.SourceLines[item.LineIndex] = line;
+
+                    item.KeyOperCode.OperCode = "newobj";
+                    item.KeyOperCode.OperData = "instance void " + clsName + "::.ctor()";
+                    item.KeyOperCode.OwnerMethod.ILCodesModified = true;
+                    var list3 = item.KeyOperCode.OwnerList;
+
+                    var index = list3.IndexOf(item.KeyOperCode);
+                    list3.RemoveAt(index - 1);
+                    list3.RemoveAt(index - 2);
+                    //list3[index - 1].Enabled = false;
+                    //list3[index - 2].Enabled = false;
+
+                    //var line = _Document.SourceLines[item.LineIndex];
+                    //string labelID = null;
+                    //string operData = null;
+                    //string operCode = DCILOperCode.GetILCode(line, ref labelID, ref operData);
+                    //line = labelID + " : newobj     instance void " + clsName + "::.ctor()";
+                    //_Document.SourceLines[item.LineIndex - 2] = string.Empty;
+                    //_Document.SourceLines[item.LineIndex - 1] = string.Empty;
+                    //_Document.SourceLines[item.LineIndex] = line;
                     _ModifiedCount += 3;
                     for (int iCount = 0; iCount < 100; iCount++)
                     {
@@ -1904,6 +2380,7 @@ namespace DCNETProtector
                 {
                     _ModifiedCount += _Document.ClearContent(group);
                     _Document.AllClasses.Remove(group);
+                    _Document.ChildNodes.Remove(group);
                 }
             }//foreach
         }
@@ -2021,6 +2498,16 @@ namespace DCNETProtector
     {
         public static string FullClassName = "DCSoft20210314.ByteArrayDataContainer";
         public static string LibName_mscorlib = "mscorlib";
+        private static List<int> _FieldIndexs = new List<int>();
+        public static string GetFieldName(byte[] data)
+        {
+            var index = IndexOf(data);
+            if (_FieldIndexs.Contains(index) == false)
+            {
+                _FieldIndexs.Add(index);
+            }
+            return FullClassName + "::_" + index;
+        }
         public static string GetMethodName(byte[] data)
         {
             return GetMethodName(IndexOf(data));
@@ -2125,8 +2612,46 @@ namespace DCNETProtector
             {
                 str.AppendLine(".field assembly static initonly valuetype " + FullClassName + "/_DATA" + iCount + " _Field" + iCount + " at I_BDC" + iCount);
             }
+            if (_FieldIndexs != null && _FieldIndexs.Count > 0)
+            {
+                foreach (var index in _FieldIndexs)
+                {
+                    str.AppendLine("	.field private static initonly uint8[] _" + index);
+                }
+                str.AppendLine(@".method private hidebysig specialname rtspecialname static  void .cctor () cil managed 
+{
+	.maxstack 8");
+                int labelIndex = 10;
+                foreach (var index in _FieldIndexs)
+                {
+                    labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ldc.i4 " + _Datas[index].Length);
+                    labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": newarr [" + LibName_mscorlib + "]System.Byte");
+                    labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": dup");
+                    labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ldtoken field valuetype " + FullClassName + @"/_DATA" + index + " " + FullClassName + @"::_Field" + index);
+                    labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": call void [" + LibName_mscorlib + @"]System.Runtime.CompilerServices.RuntimeHelpers::InitializeArray(class [" + LibName_mscorlib + @"]System.Array, valuetype [" + LibName_mscorlib + @"]System.RuntimeFieldHandle)");
+                    labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": stsfld uint8[] " + FullClassName + "::_" + index);
+                }
+                labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ret");
+                str.AppendLine("}// end of method .cctor ");
+                //	// (no C# code)
+                //	IL_0000: ldc.i4.s 11
+                //	IL_0002: newarr [mscorlib]System.Byte
+                //	IL_0007: dup
+                //	IL_0008: ldtoken field valuetype '<PrivateImplementationDetails>'/'__StaticArrayInitTypeSize=11' '<PrivateImplementationDetails>'::'5BCAE92B79178C81E4F5D04B52475E0D9CABE3C2'
+                //	IL_000d: call void [mscorlib]System.Runtime.CompilerServices.RuntimeHelpers::InitializeArray(class [mscorlib]System.Array, valuetype [mscorlib]System.RuntimeFieldHandle)
+
+                //	IL_0012: stsfld uint8[] SampleWinApp.frmMain::_Switchs
+                //	// }
+                //	IL_0017: ret
+                //} // end of method frmMain::.cctor");
+
+            }
             for (int iCount = 0; iCount < _Datas.Count; iCount++)
             {
+                if (_FieldIndexs.Contains(iCount))
+                {
+                    continue;
+                }
                 str.AppendLine(@".method public hidebysig static uint8[] _" + iCount + @"() cil managed 
 {
 	// Method begins at RVA 0x2b64
@@ -2154,6 +2679,7 @@ namespace DCNETProtector
 
     internal class ComponentResourceManagerInfo
     {
+        public DCILOperCode KeyOperCode = null;
         public int LineIndex = 0;
         public DCILMethod Method = null;
         public DCILClass MyClass = null;
@@ -2180,7 +2706,7 @@ namespace DCNETProtector
         public static readonly string Name_get = ".get";
         public static readonly string Name_set = ".set";
 
-        public DCILDocument(string ilFileName, Encoding encod)
+        public DCILDocument(string ilFileName, Encoding encod, DCProtectOptions options = null)
         {
             if (ilFileName == null)
             {
@@ -2190,6 +2716,7 @@ namespace DCNETProtector
             {
                 throw new FileNotFoundException(ilFileName);
             }
+            this.ProtectedOptions = options;
             this.FileSize = (int)new FileInfo(ilFileName).Length;
             if (encod == null)
             {
@@ -2221,6 +2748,8 @@ namespace DCNETProtector
             this.Parse();
             this.OwnerDocument = this;
         }
+
+        public readonly DCProtectOptions ProtectedOptions = null;
 
         /// <summary>
         /// 获得所有支持的语言信息对象
@@ -2266,7 +2795,7 @@ namespace DCNETProtector
         public string LibName_mscorlib = "mscorlib";
         public int ModifiedCount = 0;
         public List<ComponentResourceManagerInfo> ComponentResourceManagers = new List<ComponentResourceManagerInfo>();
-        public List<DCStringValueDefine> StringDefines = new List<DCStringValueDefine>();
+        public List<DCILOperCodeLoadString> StringDefines = new List<DCILOperCodeLoadString>();
         public List<DCILGroup> AllGroups = new List<DCILGroup>();
         public List<DCILClass> AllClasses = new List<DCILClass>();
         public List<string> ReferenceAssemblies = new List<string>();
@@ -2332,7 +2861,7 @@ namespace DCNETProtector
                     break;
                 }
             }
-            ReadAllDefines(this, 0);
+            ParseILGroup(this, 0);
             if (this.LibName_mscorlib == null)
             {
                 this.LibName_mscorlib = "mscorlib";
@@ -2340,7 +2869,7 @@ namespace DCNETProtector
             tick = Math.Abs(Environment.TickCount - tick);
         }
 
-        private void ReadAllDefines(DCILGroup rootGroup, int startLineIndex)
+        private void ParseILGroup(DCILGroup rootGroup, int startLineIndex)
         {
             int lineNum = this.SourceLines.Length;
             //List<StringDefine> strDefines = new List<StringDefine>();
@@ -2350,8 +2879,13 @@ namespace DCNETProtector
                 currentMethodName = rootGroup.Name;
             }
             int currentLevel = 0;
+            DCILMethod currentMethod = rootGroup.GetOwnerMethod();
             for (int iCount = startLineIndex; iCount < lineNum; iCount++)
             {
+                if (iCount == 30238)
+                {
+
+                }
                 var line = this.SourceLines[iCount];
                 if (line.Length == 0)
                 {
@@ -2393,14 +2927,47 @@ namespace DCNETProtector
                 if (firstWord.StartsWith("IL_", StringComparison.Ordinal))
                 {
                     // 执行代码行
-                    string strOperData = null;
-                    string strLabelID = null;
-                    string strILCode = GetILCode(line, ref strLabelID, ref strOperData);
-                    if (strOperData == null || strOperData.Length == 0)
+                    var operInfo = new DCILOperCode(line, iCount);
+                    DCILOperCodeList operInfoList = rootGroup.OperCodes;
+                    if (operInfoList.StartLineIndex == 0)
+                    {
+                        operInfoList.StartLineIndex = iCount;
+                    }
+                    operInfo.OwnerMethod = currentMethod;
+                    operInfo.OwnerList = operInfoList;
+                    operInfoList.Add(operInfo);
+
+                    if (operInfo.OperData == null || operInfo.OperData.Length == 0)
                     {
                         continue;
                     }
-                    if (strILCode == "call")
+                    if (operInfo.OperCode == "call"
+                        || operInfo.OperCode == "callvirt"
+                        || operInfo.OperCode == "newobj"
+                        || operInfo.OperCode == "ldftn"
+                        || operInfo.OperCode == "ldvirtftn")
+                    {
+                        if (DCUtils.StringEndWithChar(operInfo.OperData, ')') == false)
+                        {
+                            var strData = new StringBuilder();
+                            strData.Append(operInfo.OperData);
+                            for (iCount++; iCount < lineNum; iCount++)
+                            {
+                                var line2 = this.SourceLines[iCount].Trim();
+                                if (line2.Length > 0)
+                                {
+                                    strData.Append(line2);
+                                    if (line2[line2.Length - 1] == ')')
+                                    {
+                                        operInfo.OperData = strData.ToString();
+                                        operInfo.EndLineIndex = iCount;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (operInfo.OperCode == "call")
                     {
 
                         //if (strOperData.StartsWith("string", StringComparison.Ordinal))
@@ -2427,41 +2994,52 @@ namespace DCNETProtector
                         //    }
                         //}
                     }
-                    else if (strILCode == "newobj")
+                    else if (operInfo.OperCode == "newobj")
                     {
-                        if (strOperData.Contains("ComponentResourceManager::.ctor")
+                        if (operInfo.OperData.Contains("ComponentResourceManager::.ctor")
                             && rootGroup.Name == "InitializeComponent")
                         {
                             var line2 = this.SourceLines[iCount - 2];
-
-                            string labelID2 = null;
-                            string operData2 = null;
-                            string operCode2 = GetILCode(line2, ref labelID2, ref operData2);
-                            if (operCode2 == "ldtoken")
+                            var code3 = new DCILOperCode(line2, 0);
+                            //string labelID2 = null;
+                            //string operData2 = null;
+                            //string operCode2 = DCILOperCode.GetILCode(line2, ref labelID2, ref operData2);
+                            if (code3.OperCode == "ldtoken")
                             {
                                 ComponentResourceManagerInfo info = new ComponentResourceManagerInfo();
                                 info.LineIndex = iCount;
-                                info.Method = (DCILMethod)rootGroup;
-                                info.ClassName = operData2;
+                                info.KeyOperCode = operInfo;
+                                info.Method = currentMethod;
+                                info.ClassName = code3.OperData;
                                 this.ComponentResourceManagers.Add(info);
                             }
                         }
                     }
-                    else if (strILCode == "ldstr")
+                    else if (operInfo.OperCode == "ldstr")
                     {
-                        var strDif = new DCStringValueDefine();
-                        strDif.NativeSourcde = this.SourceLines[iCount];
-                        strDif.LabelID = strLabelID;
-                        strDif.MethodName = currentMethodName;
-                        strDif.LineIndex = iCount;
-                        strDif.EndLineIndex = iCount;
+                        var strOperData = operInfo.OperData;
+
+                        var ldstrOper = new DCILOperCodeLoadString(operInfo);
+
+                        operInfoList.RemoveAt(operInfoList.Count - 1);
+
+                        //var strDif = new DCStringValueDefine();
+                        //strDif.NativeSourcde = this.SourceLines[iCount];
+                        //strDif.LabelID = operInfo.LabelID;
+                        //strDif.MethodName = currentMethodName;
+                        //strDif.LineIndex = iCount;
+                        //strDif.EndLineIndex = iCount;
                         if (strOperData[0] == '"')
                         {
-                            strDif.IsBinary = false;
+                            ldstrOper.IsBinary = false;
                             if (strOperData.Length == 2 && strOperData[1] == '"')
                             {
                                 // use string.Empty
-                                this.SourceLines[iCount] = strLabelID + ":ldsfld     string [" + this.LibName_mscorlib + "]System.String::Empty";
+                                //this.SourceLines[iCount] = operInfo.LabelID + ":ldsfld     string [" + this.LibName_mscorlib + "]System.String::Empty";
+                                operInfo.OperCode = "ldsfld";
+                                operInfo.OperData = "string [" + this.LibName_mscorlib + "]System.String::Empty";
+                                this.SourceLines[iCount] = operInfo.ToString();
+                                operInfoList.Add(operInfo);
                                 this.ModifiedCount++;
                                 continue;
                             }
@@ -2475,7 +3053,7 @@ namespace DCNETProtector
                                     //line2 = RemoveComment(line2).Trim();
                                     strOperData = strOperData + Environment.NewLine + line2;
                                     GetFinalValue(line2, strFinalValue);
-                                    strDif.EndLineIndex = iCount2;
+                                    ldstrOper.EndLineIndex = iCount2;
                                     iCount++;
                                 }
                                 else
@@ -2483,13 +3061,13 @@ namespace DCNETProtector
                                     break;
                                 }
                             }
-                            strDif.Value = strOperData;
-                            strDif.FinalValue = strFinalValue.ToString();
+                            ldstrOper.OperData = strOperData;
+                            ldstrOper.FinalValue = strFinalValue.ToString();
                         }
                         else if (strOperData.StartsWith("bytearray", StringComparison.Ordinal))
                         {
                             _HexCharNum = 0;
-                            strDif.IsBinary = true;
+                            ldstrOper.IsBinary = true;
                             bool hasFinish = false;
                             var strOperDataLength = strOperData.Length;
                             for (int iCount2 = 9; iCount2 < strOperDataLength; iCount2++)
@@ -2508,16 +3086,13 @@ namespace DCNETProtector
                                     }
                                 }
                             }
-                            if (hasFinish)
+                            if (hasFinish == false)
                             {
-                                // 光靠一行就结束了
-                                strDif.Value = GetHexString();
-                            }
-                            else
-                            {
+                                // 有多行定义
                                 for (iCount++; iCount < lineNum; iCount++)
                                 {
                                     string line2 = this.SourceLines[iCount];
+                                    strOperData = strOperData + Environment.NewLine + line2;
                                     int len2 = line2.Length;
                                     for (int iCount4 = 0; iCount4 < len2; iCount4++)
                                     {
@@ -2532,52 +3107,143 @@ namespace DCNETProtector
                                             else if (c == ')')
                                             {
                                                 // 结束定义字符串
-                                                strDif.EndLineIndex = iCount;
+                                                ldstrOper.EndLineIndex = iCount;
                                                 goto EndReadStringDefine;
                                             }
                                         }
                                     }
                                 }
                             EndReadStringDefine:;
-                                strDif.Value = GetHexString();
+                                ldstrOper.OperData = strOperData;
                             }
-                            var bsText = HexToBinary(strDif.Value);
+                            ldstrOper.OperData = strOperData;
+                            var bsText = HexToBinary(GetHexString());
                             if (bsText != null && bsText.Length > 0)
                             {
-                                strDif.FinalValue = Encoding.Unicode.GetString(bsText);
+                                ldstrOper.FinalValue = Encoding.Unicode.GetString(bsText);
                             }
                             else
                             {
-                                strDif.FinalValue = string.Empty;
+                                ldstrOper.FinalValue = string.Empty;
                             }
                         }
 
-                        if (strDif.FinalValue == null)
+                        if (ldstrOper.FinalValue == null)
                         {
                         }
-                        if (strDif.FinalValue == SecurityMethodFlags && rootGroup is DCILMethod)
+                        if (currentMethod != null &&
+                            ldstrOper.FinalValue.StartsWith("DC.NET Protector Options:", StringComparison.OrdinalIgnoreCase))
                         {
-                            // is Securty method
-                            var method9 = (DCILMethod)rootGroup;
-                            if (method9.ReturnType == "string")
+                            var strOptions = ldstrOper.FinalValue.Substring("DC.NET Protector Options:".Length);
+                            currentMethod.ProtectedOptions = new DCProtectOptions(strOptions, this.ProtectedOptions);
+                            if (currentMethod.ProtectedOptions.HiddenAllocationCallStack && currentMethod.ReturnType == "string")
                             {
-                                this.SecurityMethods.Add(new Tuple<DCILMethod, int>((DCILMethod)rootGroup, iCount));
-                                strDif.FinalValue = DateTime.Now.Second.ToString();
-                                strDif.Value = '"' + strDif.FinalValue + '"';
+                                this.SecurityMethods.Add(new Tuple<DCILMethod, int>(currentMethod, iCount));
+                                ldstrOper.FinalValue = DateTime.Now.Second.ToString();
+                                ldstrOper.OperData = '"' + ldstrOper.FinalValue + '"';
                             }
                         }
-                        this.StringDefines.Add(strDif);
-                        if (iCount < lineNum && currentMethodName == ".cctor")
+                        operInfoList.Add(ldstrOper);
+                        this.StringDefines.Add(ldstrOper);
+                        if (iCount < lineNum && currentMethod?.Name == ".cctor")
                         {
-                            string nextLine = this.SourceLines[iCount + 1];
-                            strILCode = GetILCode(nextLine, ref strLabelID, ref strOperData);
-                            if (strILCode == "stsfld")
+                            var nextCode = new DCILOperCode(this.SourceLines[iCount + 1], 0);
+                            if (nextCode.OperCode == "stsfld")
                             {
-                                strDif.IsSetStaticField = true;
+                                ldstrOper.IsSetStaticField = true;
                             }
                         }
                     }
+                    else if (operInfo.OperCode == "switch")
+                    {
+                        if (DCUtils.StringEndWithChar(operInfo.OperData, ')') == false)
+                        {
+                            var strData = new StringBuilder();
+                            strData.Append(operInfo.OperData);
+                            for (iCount++; iCount < lineNum; iCount++)
+                            {
+                                var line2 = this.SourceLines[iCount];
+                                strData.AppendLine(line2);
+                                if (DCUtils.StringEndWithChar(line2, ')'))
+                                {
+                                    operInfo.EndLineIndex = iCount;
+                                    operInfo.OperData = strData.ToString();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (firstWord == ".try"
+                    || firstWord == "catch"
+                    || firstWord == "finally"
+                    || firstWord == "fault")
+                {
 
+                    DCILOperCodeList operInfoList = rootGroup.OperCodes;
+                    if (operInfoList.StartLineIndex == 0)
+                    {
+                        operInfoList.StartLineIndex = iCount;
+                    }
+                    int groupStartLineIndex = iCount + 1;
+                    for (int iCount2 = iCount + 1; iCount2 < lineNum; iCount2++)
+                    {
+                        if (DCUtils.StringStartWithChar(this.SourceLines[iCount2], '{'))
+                        {
+                            groupStartLineIndex = iCount2 + 1;
+                            break;
+                        }
+                    }
+                    DCILOperCode_Try_Catch_Finally tryBlock = null;
+                    if (firstWord == ".try")
+                    {
+                        tryBlock = new DCILOperCode_Try_Catch_Finally();
+                        operInfoList.Add(tryBlock);
+                        tryBlock._Try = new DCILGroup();
+                        tryBlock._Try.Name = ".try";
+                        tryBlock._Try.OperCodes = new DCILOperCodeList();
+                        tryBlock._Try.Parent = rootGroup;
+                        tryBlock._Try.StartLineIndex = iCount;
+                        ParseILGroup(tryBlock._Try, groupStartLineIndex);
+                        iCount = tryBlock._Try.EndLineIndex;
+                    }
+                    else if (firstWord == "catch")
+                    {
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList[operInfoList.Count - 1];
+                        var catch2 = new DCILCatchBlock();
+                        catch2.ExcpetionTypeName = line.Trim().Substring(6).Trim();
+                        catch2.Parent = rootGroup;
+                        catch2.StartLineIndex = iCount;
+                        if (tryBlock._Catchs == null)
+                        {
+                            tryBlock._Catchs = new List<DCILCatchBlock>();
+                        }
+                        tryBlock._Catchs.Add(catch2);
+                        ParseILGroup(catch2, groupStartLineIndex);
+                        iCount = catch2.EndLineIndex;
+                    }
+                    else if (firstWord == "fault")
+                    {
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList[operInfoList.Count - 1];
+                        tryBlock._fault = new DCILGroup();
+                        tryBlock._fault.Name = "fault";
+                        tryBlock._fault.OperCodes = new DCILOperCodeList();
+                        tryBlock._fault.Parent = rootGroup;
+                        tryBlock._fault.StartLineIndex = iCount;
+                        ParseILGroup(tryBlock._fault, groupStartLineIndex);
+                        iCount = tryBlock._fault.EndLineIndex;
+                    }
+                    else // finally
+                    {
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList[operInfoList.Count - 1];
+                        tryBlock._Finally = new DCILGroup();
+                        tryBlock._Finally.Name = "finally";
+                        tryBlock._Finally.OperCodes = new DCILOperCodeList();
+                        tryBlock._Finally.Parent = rootGroup;
+                        tryBlock._Finally.StartLineIndex = iCount;
+                        ParseILGroup(tryBlock._Finally, groupStartLineIndex);
+                        iCount = tryBlock._Finally.EndLineIndex;
+                    }
                 }
                 else if (firstWord == ".field")
                 {
@@ -2603,6 +3269,7 @@ namespace DCNETProtector
                     if (firstWord == Name_method)
                     {
                         group = new DCILMethod();
+                        ((DCILMethod)group).ProtectedOptions = this.ProtectedOptions;
                     }
                     else if (firstWord == Name_property)
                     {
@@ -2613,6 +3280,7 @@ namespace DCNETProtector
                         group = new DCILClass();
                         this.AllClasses.Add((DCILClass)group);
                     }
+                    group.Parent = rootGroup;
                     group.OwnerDocument = this;
                     group.Type = firstWord;
                     this.AllGroups.Add(group);
@@ -2634,7 +3302,8 @@ namespace DCNETProtector
                     group.SetHeader(strHeader.ToString());
                     rootGroup.ChildNodes.Add(group);
                     int back = this.ComponentResourceManagers.Count;
-                    ReadAllDefines(group, group.BodyLineIndex + 1);
+                    ParseILGroup(group, group.BodyLineIndex + 1);
+                    //group.GetILCodeString();
                     iCount = group.EndLineIndex;
                 }
                 else if (firstWord == Name_get)
@@ -2740,6 +3409,20 @@ namespace DCNETProtector
                 }
             }
         }
+
+        private int GetGroupStartLineIndex(int startIndex)
+        {
+            for (int iCount = startIndex; iCount < this.SourceLines.Length; iCount++)
+            {
+                var line = this.SourceLines[iCount].Trim();
+                if (line.Length > 0 && line[0] == '{')
+                {
+                    return iCount;
+                }
+            }
+            return -1;
+        }
+
         private bool IsEmptyLine(string line)
         {
             if (line.Length > 0)
@@ -2972,6 +3655,253 @@ namespace DCNETProtector
             return null;
         }
 
+
+
+    }
+    internal class DCILOperCodeList : List<DCILOperCode>
+    {
+        public DCILOperCode GetByLabelID(string labelID)
+        {
+            foreach (var item in this)
+            {
+                if (item.LabelID == labelID)
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+        public int StartLineIndex = 0;
+
+        public void WriteTo(StringBuilder str, int indentLevel)
+        {
+            foreach (var item in this)
+            {
+                item.WriteTo(str, indentLevel);
+            }
+        }
+    }
+
+    internal class DCILOperCode_Try_Catch_Finally : DCILOperCode
+    {
+        public DCILGroup _Try = null;
+        public List<DCILCatchBlock> _Catchs = null;
+        public DCILGroup _Finally = null;
+        public DCILGroup _fault = null;
+        public int TotalOperCodesCount
+        {
+            get
+            {
+                int result = 0;
+                if (this._Try != null)
+                {
+                    result = this._Try.TotalOperCodesCount;
+                }
+                if (this._Catchs != null)
+                {
+                    foreach (var item in this._Catchs)
+                    {
+                        result += item.TotalOperCodesCount;
+                    }
+                }
+                if (this._Finally != null)
+                {
+                    result += this._Finally.TotalOperCodesCount;
+                }
+                if (this._fault != null)
+                {
+                    result += this._fault.TotalOperCodesCount;
+                }
+                return result;
+            }
+        }
+        public override string ToString()
+        {
+            var str = new StringBuilder();
+            WriteText(str, "try", this._Try.OperCodes);
+            if (this._Catchs != null && this._Catchs.Count > 0)
+            {
+                foreach (var item in this._Catchs)
+                {
+                    WriteText(str, "catch " + item.ExcpetionTypeName, item.OperCodes);
+                }
+            }
+            if (this._Finally != null)
+            {
+                WriteText(str, "finally", this._Finally.OperCodes);
+            }
+            if (this._fault != null)
+            {
+                WriteText(str, "fault", this._fault.OperCodes);
+            }
+            return str.ToString();
+        }
+
+        private void WriteText(StringBuilder str, string name, DCILOperCodeList list)
+        {
+            str.Append(name);
+            str.Append("{");
+            if (list != null && list.Count > 0)
+            {
+                str.Append(list.Count.ToString());
+            }
+            str.Append("}");
+        }
+        public override void WriteTo(StringBuilder str, int indentLevel)
+        {
+            if (this.Enabled == false)
+            {
+                return;
+            }
+            var strIndent = string.Empty;
+            if (indentLevel > 0)
+            {
+                strIndent = new string(' ', indentLevel);
+            }
+            str.AppendLine(strIndent + ".try");
+            str.AppendLine(strIndent + "{");
+            int nextLevel = indentLevel + 3;
+            foreach (var item in this._Try.OperCodes)
+            {
+                item.WriteTo(str, nextLevel);
+            }
+            str.AppendLine(strIndent + "}");
+            if (this._Catchs != null && this._Catchs.Count > 0)
+            {
+                foreach (var item in this._Catchs)
+                {
+                    str.AppendLine(strIndent + "catch " + item.ExcpetionTypeName);
+                    str.AppendLine(strIndent + "{");
+                    foreach (var item2 in item.OperCodes)
+                    {
+                        item2.WriteTo(str, nextLevel);
+                    }
+                    str.AppendLine(strIndent + "}");
+                }
+            }
+            if (this._fault != null && this._fault.OperCodes != null && this._fault.OperCodes.Count > 0)
+            {
+                str.AppendLine(strIndent + "fault");
+                str.AppendLine(strIndent + "{");
+                foreach (var itemi in this._fault.OperCodes)
+                {
+                    itemi.WriteTo(str, nextLevel);
+                }
+                str.AppendLine(strIndent + "}");
+            }
+            if (this._Finally != null)
+            {
+                str.AppendLine(strIndent + "finally");
+                str.AppendLine(strIndent + "{");
+                foreach (var itemi in this._Finally.OperCodes)
+                {
+                    itemi.WriteTo(str, nextLevel);
+                }
+                str.AppendLine(strIndent + "}");
+            }
+        }
+    }
+
+    internal class DCILCatchBlock : DCILGroup
+    {
+        public DCILCatchBlock()
+        {
+            this.Name = "catch";
+            this.OperCodes = new DCILOperCodeList();
+        }
+        public string ExcpetionTypeName = null;
+        public override string ToString()
+        {
+            return "catch " + this.ExcpetionTypeName;
+        }
+    }
+    internal class DCILOperCodeComment : DCILOperCode
+    {
+        public DCILOperCodeComment()
+        {
+
+        }
+        public DCILOperCodeComment(string txt)
+        {
+            this.Text = txt;
+        }
+        public override void WriteTo(StringBuilder str, int indentLevel)
+        {
+            if (this.Text != null && this.Text.Length > 0)
+            {
+                str.Append(' ', indentLevel);
+                str.AppendLine("//" + this.Text);
+            }
+        }
+        public override string ToString()
+        {
+            return "//" + this.Text;
+        }
+        public string Text = null;
+    }
+    internal class DCILOperCode
+    {
+        public DCILOperCode()
+        {
+
+        }
+        public DCILOperCode(string vlabelID, string voperCode, string voperData)
+        {
+            this.LabelID = vlabelID;
+            this.OperCode = voperCode;
+            this.OperData = voperData;
+        }
+        public DCILOperCode(string line, int vLineIndex)
+        {
+            if (line == null || line.Length == 0)
+            {
+                throw new ArgumentNullException("line");
+            }
+            this.OperCode = GetILCode(line, ref this.LabelID, ref this.OperData);
+            this.LineIndex = vLineIndex;
+            this.EndLineIndex = vLineIndex;
+            this.NativeSource = line;
+        }
+        public virtual void WriteTo(StringBuilder str, int indentLevel)
+        {
+            if (this.Enabled == false)
+            {
+                return;
+            }
+            if (indentLevel > 0)
+            {
+                str.Append(' ', indentLevel);
+            }
+            str.Append(this.LabelID);
+            str.Append(": ");
+            if (this.LabelID.Length < 10)
+            {
+                str.Append(' ', 10 - this.LabelID.Length);
+            }
+            str.Append(this.OperCode);
+            if (this.OperData != null && this.OperData.Length > 0)
+            {
+                str.Append(' ', Math.Max(1, 10 - this.OperCode.Length));
+                str.Append(this.OperData);
+            }
+            str.AppendLine();
+
+        }
+        private static int _InstanceIndexCounter = 0;
+        public int InstanceIndex = _InstanceIndexCounter++;
+        public bool Enabled = true;
+        public DCILOperCodeList OwnerList = null;
+        public DCILMethod OwnerMethod = null;
+        public string NativeSource = null;
+        public string LabelID = null;
+        public string OperCode = null;
+        public string OperData = null;
+        public int LineIndex = 0;
+        public int EndLineIndex = 0;
+        public override string ToString()
+        {
+            return this.LabelID + " : " + this.OperCode + "     " + this.OperData;
+        }
         /// <summary>
         /// get IL opercode from a IL code line
         /// </summary>
@@ -3020,7 +3950,49 @@ namespace DCNETProtector
         }
 
     }
+    internal class DCILOperCodeLoadString : DCILOperCode
+    {
+        public DCILOperCodeLoadString(DCILOperCode code)
+        {
+            this.OperCode = "ldstr";
+            this.LabelID = code.LabelID;
+            this.OperData = code.OperData;
+            this.LineIndex = code.LineIndex;
+            this.EndLineIndex = code.EndLineIndex;
+            this.NativeSource = code.NativeSource;
+            this.OwnerList = code.OwnerList;
+            this.OwnerMethod = code.OwnerMethod;
+        }
+        public string FinalValue = null;
+        /// <summary>
+        /// 是否采用二进制格式来定义
+        /// </summary>
+        public bool IsBinary = false;
+        /// <summary>
+        /// 是否为了设置静态字段
+        /// </summary>
+        public bool IsSetStaticField = false;
+        /// <summary>
+        /// 替换的指令
+        /// </summary>
+        public DCILOperCode ReplaceCode = null;
+        public override void WriteTo(StringBuilder str, int indentLevel)
+        {
+            if (this.Enabled == false)
+            {
+                return;
+            }
+            if (this.ReplaceCode != null)
+            {
+                this.ReplaceCode.WriteTo(str, indentLevel);
+            }
+            else
+            {
+                base.WriteTo(str, indentLevel);
+            }
+        }
 
+    }
     internal class DCILClass : DCILGroup
     {
         public DCILClass()
@@ -3143,6 +4115,8 @@ namespace DCNETProtector
 
     internal class DCILGroup
     {
+        private static int _InstanceIndexCounter = 0;
+        public int InstanceIndex = _InstanceIndexCounter++;
         public DCILDocument OwnerDocument = null;
         public string Name = null;
         public string Type = null;
@@ -3154,9 +4128,48 @@ namespace DCNETProtector
         public int StartLineIndex = 0;
         public int BodyLineIndex = 0;
         public int EndLineIndex = 0;
+        public int LineSpan
+        {
+            get
+            {
+                return this.EndLineIndex - this.StartLineIndex;
+            }
+        }
+        public DCILOperCodeList OperCodes = null;
+        public string GetILCodeString()
+        {
+            var str = new StringBuilder();
+            if (this.OperCodes != null)
+            {
+                this.OperCodes.WriteTo(str, 0);
+            }
+            string txt = str.ToString();
+            System.Diagnostics.Debug.WriteLine(txt);
+            return txt;
+        }
         public List<DCILGroup> ChildNodes = null;
+        public DCILGroup Parent = null;
         public List<DCILCustomAttribute> CustomAttributes = null;
         public int Level = 0;
+        public int TotalOperCodesCount
+        {
+            get
+            {
+                int result = 0;
+                if (this.OperCodes != null && this.OperCodes.Count > 0)
+                {
+                    result = this.OperCodes.Count;
+                    foreach (var item in this.OperCodes)
+                    {
+                        if (item is DCILOperCode_Try_Catch_Finally)
+                        {
+                            result += ((DCILOperCode_Try_Catch_Finally)item).TotalOperCodesCount;
+                        }
+                    }
+                }
+                return result;
+            }
+        }
         public override string ToString()
         {
             if (this.ChildNodes != null && this.ChildNodes.Count > 0)
@@ -3168,11 +4181,40 @@ namespace DCNETProtector
                 return this.Type + "#" + this.Name;
             }
         }
+        public virtual DCILMethod GetOwnerMethod()
+        {
+            var p = this;
+            while (p != null)
+            {
+                if (p is DCILMethod)
+                {
+                    return (DCILMethod)p;
+                }
+                p = p.Parent;
+            }
+            return null;
+        }
+    }
+    internal class DCILOperCodeBlock : DCILGroup
+    {
+        public DCILOperCodeBlock()
+        {
+            base.OperCodes = new DCILOperCodeList();
+        }
 
     }
-
     internal class DCILMethod : DCILGroup
     {
+        public DCILMethod()
+        {
+            base.OperCodes = new DCILOperCodeList();
+        }
+
+        public int ILCodeStartLineIndex = 0;
+        public bool ILCodesModified = false;
+
+        public DCProtectOptions ProtectedOptions = null;
+
         public string ReturnType = null;
         internal override void SetHeader(string strHeader)
         {
@@ -3186,10 +4228,18 @@ namespace DCNETProtector
                 {
                     this.Name = item.Substring(0, index10);
                     this.ReturnType = items[itemCount - 1];
+                    if (this.Name == "GetFontDataUseWin32API")
+                    {
+
+                    }
                     //currentMethodName = group.Name;
                     break;
                 }
             }
+        }
+        public override DCILMethod GetOwnerMethod()
+        {
+            return this;
         }
         //public int ComponentResourceManagerLineIndex = -1;
         public override string ToString()
@@ -3242,26 +4292,66 @@ namespace DCNETProtector
         }
     }
 
-    internal class DCStringValueDefine
-    {
-        public string NativeSourcde = null;
-        public bool IsSetStaticField = false;
-        public string MethodName = null;
-        public int LineIndex = -1;
-        public int EndLineIndex = -1;
-        public string Value = null;
-        public string FinalValue = null;
-        public bool IsBinary = false;
-        public string LabelID = null;
-        public override string ToString()
-        {
-            return this.LineIndex + " : " + this.Value + "  #" + this.NativeSourcde;
-        }
+    //internal class DCStringValueDefine
+    //{
+    //    public string NativeSourcde = null;
+    //    public bool IsSetStaticField = false;
+    //    public string MethodName = null;
+    //    public int LineIndex = -1;
+    //    public int EndLineIndex = -1;
+    //    public string Value = null;
+    //    public string FinalValue = null;
+    //    public bool IsBinary = false;
+    //    public string LabelID = null;
+    //    public override string ToString()
+    //    {
+    //        return this.LineIndex + " : " + this.Value + "  #" + this.NativeSourcde;
+    //    }
 
-    }
+    //}
 
     internal static class DCUtils
     {
+        public static bool StringStartWithChar(string text, char c)
+        {
+            int len = text.Length;
+            for (int iCount = 0; iCount < len; iCount++)
+            {
+                var c2 = text[iCount];
+                if (c2 != ' ' && c2 != '\t')
+                {
+                    if (c2 == c)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            return false;
+        }
+        public static bool StringEndWithChar(string text, char c)
+        {
+            for (int iCount = text.Length - 1; iCount >= 0; iCount--)
+            {
+                var c2 = text[iCount];
+                if (c2 != ' ' && c2 != '\t')
+                {
+                    if (c2 == c)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static string SearchFileDeeply(string rootDir, string fileName)
         {
             if (File.Exists(Path.Combine(rootDir, fileName)))
@@ -3417,6 +4507,7 @@ namespace DCNETProtector
         private static readonly Dictionary<string, string> _AllocID_Values = new Dictionary<string, string>();
         private static readonly Random _Random = new Random();
         private static readonly string _IDChars = "0123456789abcdefghijklmnopqrstuvwxyz";
+        private static readonly string _IDFirstChars = "abcdefghijklmnopqrstuvwxyz";
         public static string AllocID(int length = 6)
         {
             if (length <= 0)
@@ -3426,7 +4517,8 @@ namespace DCNETProtector
             var chrs = new char[length];
             while (true)
             {
-                for (int iCount = 0; iCount < length; iCount++)
+                chrs[0] = _IDFirstChars[_Random.Next(0, _IDFirstChars.Length - 1)];
+                for (int iCount = 1; iCount < length; iCount++)
                 {
                     chrs[iCount] = _IDChars[_Random.Next(0, _IDChars.Length - 1)];
                 }
@@ -4087,7 +5179,7 @@ namespace DCNETProtector
             var bmp = new System.Drawing.Bitmap(ms);
             return bmp;
         }
-        
+
         /// <summary>
         /// 从字节数组中加载资源数据
         /// </summary>

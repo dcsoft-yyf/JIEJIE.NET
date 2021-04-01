@@ -11,7 +11,190 @@ It is a console .NET application, the UI is :
 ## Features
 It has following features.
 
-## 1 , Encrypt all string values define in assembly.
+## 1 , Obfuscate control-flow.
+DC.NET Protector can anlyse IL Code, and obfuscate then randomly, It let code is hard to read, some times it will cause crack tool error.
+<br />For example , the old code is :
+```C#
+public static string[] AnalyseVariableString(string strText, string strHead, string strEnd, bool EnableEmptyItem)
+{
+	if (strText == null || strHead == null || strEnd == null || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
+	{
+		return new string[1]
+		{
+			strText
+		};
+	}
+	int index = strText.IndexOf(strHead);
+	if (index < 0)
+	{
+		return new string[1]
+		{
+			strText
+		};
+	}
+	List<string> myList = new List<string>();
+	int LastIndex = 0;
+	do
+	{
+		int index2 = strText.IndexOf(strEnd, index + 1);
+		if (index2 > index)
+		{
+			index = LastIndexOfRange(strText, strHead, LastIndex, index2);
+			if (index == -1)
+			{
+				break;
+			}
+			int len = index2 - index - strHead.Length;
+			if (len < 0 || (len == 0 && !EnableEmptyItem))
+			{
+				break;
+			}
+			string strKey = strText.Substring(index + strHead.Length, len);
+			if (LastIndex < index)
+			{
+				string strItem = strText.Substring(LastIndex, index - LastIndex);
+				myList.Add(strItem);
+			}
+			else
+			{
+				myList.Add(string.Empty);
+			}
+			myList.Add(strKey);
+			index = index2 + strEnd.Length;
+			LastIndex = index;
+			continue;
+		}
+		break;
+	}
+	while (index >= 0 && index < strText.Length);
+	if (LastIndex < strText.Length)
+	{
+		myList.Add(strText.Substring(LastIndex));
+	}
+	return myList.ToArray();
+}
+```
+After use DC.NET Protector, use ILSpy , these code change to :
+```C#
+public static string[] AnalyseVariableString(string strText, string strHead, string strEnd, bool EnableEmptyItem)
+{
+	//Discarded unreachable code: IL_01ff
+	//IL_008a: Invalid comparison between Unknown and O
+	//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+	//IL_010b: Expected I4, but got Unknown
+	//IL_0135: Incompatible stack heights: 0 vs 2
+	//IL_014d: Incompatible stack heights: 0 vs 1
+	//IL_014d: Incompatible stack heights: 1 vs 0
+	//IL_017d: Incompatible stack heights: 2 vs 0
+	//IL_0194: Incompatible stack heights: 1 vs 4
+	//IL_0194: Incompatible stack heights: 3 vs 1
+	//IL_01f5: Incompatible stack heights: 3 vs 1
+	//IL_01f5: Incompatible stack heights: 1 vs 3
+	//IL_01ff: Incompatible stack heights: 1 vs 0
+	string[] array;
+	if (strText == null || strHead == null || strEnd == null || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
+	{
+		array = new string[1]
+		{
+			strText
+		};
+		goto IL_002a;
+	}
+	if (1 == 0)
+	{
+		goto IL_008a;
+	}
+	goto IL_0152;
+	IL_013a:
+	int num;
+	bool flag = num < strText.Length;
+	List<string> list;
+	if (true)
+	{
+		if ((int)/*Error near IL_000b: Stack underflow*/ != 0)
+		{
+			list.Add(strText.Substring(num));
+		}
+		array = list.ToArray();
+		goto IL_002a;
+	}
+	goto IL_0152;
+	IL_002a:
+	string[] result = array;
+	goto IL_0200;
+	IL_017f:
+	int num2;
+	int num3 = strText.IndexOf(strEnd, num2 + 1);
+	if (true)
+	{
+		goto IL_008a;
+	}
+	goto IL_0199;
+	IL_008a:
+	int num4;
+	int num5;
+	if ((object)/*Error near IL_008c: Stack underflow*/ > strText)
+	{
+		num2 = LastIndexOfRange(strText, strHead, num, num3);
+		if (num2 != -1)
+		{
+			num4 = num3 - num2 - strHead.Length;
+			if (num4 >= 0 && (num4 != 0 || EnableEmptyItem))
+			{
+				num5 = num2;
+				if (1 == 0)
+				{
+					goto IL_0103;
+				}
+				goto IL_0199;
+			}
+		}
+	}
+	goto IL_013a;
+	IL_0200:
+	return result;
+	IL_0152:
+	num2 = strText.IndexOf(strHead);
+	if (num2 < 0)
+	{
+		array = new string[1]
+		{
+			strText
+		};
+		goto IL_002a;
+	}
+	list = new List<string>();
+	num = 0;
+	goto IL_017f;
+	IL_0199:
+	string item = strText.Substring(num5 + strHead.Length, num4);
+	if (num < num2)
+	{
+		string item2 = strText.Substring(num, num2 - num);
+		list.Add(item2);
+	}
+	else
+	{
+		list.Add(string.Empty);
+	}
+	list.Add(item);
+	if (true)
+	{
+		goto IL_0103;
+	}
+	goto IL_0200;
+	IL_0103:
+	num2 = (int)(strHead + strEnd.Length);
+	num = num2;
+	if (num2 < 0 || num2 >= strText.Length)
+	{
+		goto IL_013a;
+	}
+	goto IL_017f;
+}
+```
+
+## 2 , Encrypt all string values define in assembly.
 DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 <br/>For example , the old code is :
 ```C#
@@ -236,7 +419,7 @@ public static byte[] z0ZzZzbu(string A_0)
 ```
 This code avoid the performance problem.
 
-## 2 , Encrypt *.resources file.
+## 3 , Encrypt *.resources file.
  Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
 <br/>  DC.NET Protector can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
 <br/>For example, your a define a WinFrom , and the InitializeComponent() function code is :
@@ -479,7 +662,7 @@ internal class Resource1
 ```
 The resouce data aleady has been encrypted, and hard to crack.
 
-## 3 ,Hidden allocation call stack.
+## 4 ,Hidden allocation call stack.
 Hackers can search key information by using memory profiler tools , etc. Scitech .NET memory Profiler.but DC.NET Protector can change this stack,puzzle hackers.
 <br/>For example, I use the follow code to display software license info.
 ```C#
@@ -546,7 +729,7 @@ mscorlib!System.Threading.ThreadHelper.ThreadStart()
 ```
 It is more difficuted to find out the key call stack.This feature help you hidden your weakness, protect your software copyright.
 
-## 4 , Obfuscate class's members order.
+## 5 , Obfuscate class's members order.
    When we write a large class's code , usual ,field or method for the same target is very nearby.for example:
 ```C#
     private string _RegisterCode = null;
@@ -572,7 +755,7 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 ```
  Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
 
-## 5 , Easy to use.
+## 6 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -586,7 +769,7 @@ My new tool is a .NET framework console  application.
    DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
 ```
 
-## So many cool features! But DC.NET Protector has no more than 5000 lines C# code!
+## So many cool features! But DC.NET Protector has no more than 6000 lines C# code!
 
 ## Exclude
 This new tool's finall target is protect all .NET software copyright.Of cause,it does not do all things, it does not support renaming,flow-obfuscate, For those function you can seach other tools.
@@ -594,5 +777,8 @@ This new tool's finall target is protect all .NET software copyright.Of cause,it
 ## License
 DC.NET Protector use GPL-2.0 License.
 
+## log
+<br/> 2021-3-22 First publish.
+<br/> 2021-4-2  Add feature: Obfuscate control flow.
 
 Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>.
