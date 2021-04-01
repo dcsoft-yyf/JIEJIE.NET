@@ -76,7 +76,7 @@ public static string[] AnalyseVariableString(string strText, string strHead,
    return myList.ToArray();
 }
 ```
-After use DC.NET Protector, use ILSpy , these code change to :
+After use DC.NET Protector, these code display in ILSpy is:
 ```C#
 public static string[] AnalyseVariableString(string strText, string strHead, 
       string strEnd, bool EnableEmptyItem)
