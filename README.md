@@ -12,7 +12,7 @@ It is a console .NET application, the UI is :
 It has following features.
 
 ## 1 , Obfuscate control-flow.
-DC.NET Protector can anlyse IL Code, and obfuscate then randomly, It let code is hard to read, some times it will cause crack tool error.
+DC.NET Protector can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It let codes are very hard to read, some times it will cause crack tool error.
 <br />For example , the old code is :
 ```C#
 public static string[] AnalyseVariableString(string strText, string strHead,
@@ -197,7 +197,7 @@ public static string[] AnalyseVariableString(string strText, string strHead,
    goto IL_017f;
 }
 ```
-Look, the code has many goto , and ILSpy has error ` /*Error near IL_008c: Stack underflow*/ `.
+Look, the code has many goto , and ILSpy has error ` /*Error near IL_008c: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
 ## 2 , Encrypt all string values define in assembly.
 DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 <br/>For example , the old code is :
