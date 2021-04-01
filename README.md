@@ -776,7 +776,7 @@ My new tool is a .NET framework console  application.
 ## So many cool features! But DC.NET Protector has no more than 6000 lines C# code!
 
 ## Exclude
-This new tool's finall target is protect all .NET software copyright.Of cause,it does not do all things, it does not support renaming,flow-obfuscate, For those function you can seach other tools.
+This new tool's finall target is protect all .NET software copyright.Of cause,it does not do all things, it does not support renaming, For those function you can seach other tools.
 
 ## License
 DC.NET Protector use GPL-2.0 License.
