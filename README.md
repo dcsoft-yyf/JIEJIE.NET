@@ -775,8 +775,9 @@ My new tool is a .NET framework console  application.
 
 ## So many cool features! But DC.NET Protector has no more than 6000 lines C# code!
 
-## Exclude
-This new tool's finall target is protect all .NET software copyright.Of cause,it does not do all things, it does not support renaming, For those function you can seach other tools.
+## In the future
+
+It will support class and member rename randomly.remove private const fields(also include private enum const field).Please pay attention to me.
 
 ## License
 DC.NET Protector use GPL-2.0 License.
@@ -785,4 +786,4 @@ DC.NET Protector use GPL-2.0 License.
 <br/> 2021-3-22 First publish.
 <br/> 2021-4-2  Add feature: Obfuscate control flow.
 <hr />
-Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>.
+Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>,help author to feed twins born in 2020.
