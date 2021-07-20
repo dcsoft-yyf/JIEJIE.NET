@@ -1,9 +1,10 @@
-# DC.NET Protector
+# JieJie.NET
   An open source tool to encrypt .NET assembly file, help people protect theirs copyright.
-
+  Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
+  
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
-<br/>So I write DC.NET Protector can encrypt .NET assembly deeply,help people protect their copyright.and this tool is open source.
+<br/>So I write JieJie.NET can encrypt .NET assembly deeply,help people protect their copyright.and this tool is open source.
 It is a console .NET application, the UI is :
 <br/>
 <img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/snapshort.png"/>
@@ -11,8 +12,78 @@ It is a console .NET application, the UI is :
 ## Features
 It has following features.
 
-## 1 , Obfuscate control-flow.
-DC.NET Protector can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It let codes are very hard to read, some times it will cause crack tool error.
+## 1 , Rename type and member.
+JieJie can change type and member's name.This can make more difficute to understand the meaning of API.
+<br />For example, the old code is :
+```C#
+    public abstract class XTextDocumentContentElement : XTextContentElement
+    {
+        public override void AfterLoad(ElementLoadEventArgs args);
+        [DCPublishAPI]
+        public override void Clear();
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public override XTextElement Clone(bool Deeply);
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public override XTextDocument CreateContentDocument(bool includeThis);
+        public XTextSelection CreateSelection(int startIndex, int length);
+        public override void Dispose();
+        public override void DrawContent(InnerDocumentPaintEventArgs args);
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public override void EditorRefreshViewExt(bool fastMode);
+        public float FixPageLinePosition(int pos);
+        [DCPublishAPI]
+        public override void Focus();
+        [DCPublishAPI]
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public XTextLineList GetAllLines();
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public virtual XTextRange GetRange(int StartIndex, int EndIndex);
+        public void InnerGetSelectionBorderElement(ref XTextElement startElement, ref XTextElement endElement);
+        public void InvalidateSpecifyLayoutElements();
+        [DCPublishAPI]
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public virtual bool IsSelected(XTextElement element);
+        public void RefreshParagraphListState(bool checkFlag, bool updateListIndex);
+        public XTextParagraphFlagElement RootParagraphFlag();
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public bool SetSelection(int startIndex, int length);
+        [Obfuscation(Exclude = true, ApplyToMembers = true)]
+        public bool SetSelectionRange(int firstIndex, int lastIndex);
+    }
+```
+After rename, these code change to:
+```C#
+    public abstract class XTextDocumentContentElement : XTextContentElement
+    {
+        [DCPublishAPI]
+        public override void Clear();
+        public override XTextElement Clone(bool Deeply);
+        public override XTextDocument CreateContentDocument(bool includeThis);
+        public override void Dispose();
+        public override void EditorRefreshViewExt(bool fastMode);
+        [DCPublishAPI]
+        public override void Focus();
+        [DCPublishAPI]
+        public XTextLineList GetAllLines();
+        public virtual XTextRange GetRange(int StartIndex, int EndIndex);
+        [DCPublishAPI]
+        public virtual bool IsSelected(XTextElement element);
+        public bool SetSelection(int startIndex, int length);
+        public bool SetSelectionRange(int firstIndex, int lastIndex);
+        public XTextParagraphFlagElement z0ZzZzbmm1mO001();
+        public XTextSelection z0ZzZzbmm1mO011(int startIndex, int length);
+        public void z0ZzZzbmm1mO01O();
+        public float z0ZzZzbmm1mOOm1(int pos);
+        public void z0ZzZzbmm1mOOmn(ref XTextElement startElement, ref XTextElement endElement);
+        public void z0ZzZzbmm1mOOmO(bool checkFlag, bool updateListIndex);
+        public override void z0ZzZzbmmOO11nn(z0ZzZzbm0mmlm1O args);
+        public override void z0ZzZzbmmOOl0nO(ElementLoadEventArgs args);
+    }
+```
+You can see , some API's name obfuscated.This make software more difficute to cract.
+
+## 2 , Obfuscate control-flow.
+JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It let codes are very hard to read, some times it will cause crack tool error.
 <br />For example , the old code is :
 ```C#
 public static string[] AnalyseVariableString(string strText, string strHead,
@@ -76,7 +147,7 @@ public static string[] AnalyseVariableString(string strText, string strHead,
    return myList.ToArray();
 }
 ```
-After use DC.NET Protector, these code display in ILSpy is:
+After use JieJie.NET, these code display in ILSpy is:
 ```C#
 public static string[] AnalyseVariableString(string strText, string strHead, 
       string strEnd, bool EnableEmptyItem)
@@ -198,8 +269,8 @@ public static string[] AnalyseVariableString(string strText, string strHead,
 }
 ```
 Look, the code has many goto , and ILSpy has error ` /*Error near IL_008c: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
-## 2 , Encrypt all string values define in assembly.
-DC.NET Protector can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
+## 3 , Encrypt all string values define in assembly.
+JieJie.NET can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 <br/>For example , the old code is :
 ```C#
 private string GetLicenseMessage()
@@ -208,7 +279,7 @@ private string GetLicenseMessage()
     return "This software license to :" + Environment.UserName;
 }
 ```
- After use DC.NET Protector , the new code is :
+ After use JieJie.NET , the new code is :
   
 ```C#
 private string GetLicenseMessage()
@@ -369,7 +440,7 @@ internal unsafe static string z0ZzZzbbz.b(string A_0, int A_1)
   goto IL_005c;
 }
 ```
-This cause a serious performance problem.To solve the problem, by use DC.NET Proector, this code change to :
+This cause a serious performance problem.To solve the problem, by use JieJie.NET, this code change to :
 ```C#
 private static readonly string _HexChars = _0._11 ;
 public static byte[] ParseUpperHexString(string hexs)
@@ -423,9 +494,9 @@ public static byte[] z0ZzZzbu(string A_0)
 ```
 This code avoid the performance problem.
 
-## 3 , Encrypt *.resources file.
+## 4 , Encrypt *.resources file.
  Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
-<br/>  DC.NET Protector can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
+<br/>  JieJie.NET can encrypt *.resouces files and hidden it, It is more hard to modify copyright UI.So it can protect your copyright.
 <br/>For example, your a define a WinFrom , and the InitializeComponent() function code is :
 ```C#
 private void InitializeComponent()
@@ -489,7 +560,7 @@ private void InitializeComponent()
     PerformLayout();
 }
 ```
-After use DC.NET Protector, the code change to :
+After use JieJie.NET, the code change to :
 ```C#
 private void InitializeComponent()
 {
@@ -666,8 +737,8 @@ internal class Resource1
 ```
 The resouce data aleady has been encrypted, and hard to crack.
 
-## 4 ,Hidden allocation call stack.
-Hackers can search key information by using memory profiler tools , etc. Scitech .NET memory Profiler.but DC.NET Protector can change this stack,puzzle hackers.
+## 5 ,Hidden allocation call stack.
+Hackers can search key information by using memory profiler tools , etc. Scitech .NET memory Profiler.but JieJie.NET can change this stack,puzzle hackers.
 <br/>For example, I use the follow code to display software license info.
 ```C#
 private void btnAbout_Click(object sender, EventArgs e)
@@ -716,12 +787,12 @@ SampleWinApp!SampleWinApp.Program.Main() Program.cs
          
 private string GetLicenseMessage()
 {
-    var str = "DC.NET Protector Options:HiddenAllocationCallStack";;// no used,just let DC.NET Protector know the owner method need change.
+    var str = "JIEJIE.NET:HiddenAllocationCallStack";;// no used,just let JieJie.NET know the owner method need change.
     string msg = "This software license to :" + Environment.UserName;
     return msg;
 }
 ```
-At there,the code `var str = "DC.NET Protector Options:HiddenAllocationCallStack";";` do nothing, just let DC.NET Protector know this is a key method, need to change, the value is case sensitive.
+At there,the code `var str = "JieJie.NET Options:HiddenAllocationCallStack";";` do nothing, just let JieJie.NET know this is a key method, need to change, the value is case sensitive.
 <br/>My tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
@@ -733,7 +804,7 @@ mscorlib!System.Threading.ThreadHelper.ThreadStart()
 ```
 It is more difficuted to find out the key call stack.This feature help you hidden your weakness, protect your software copyright.
 
-## 5 , Obfuscate class's members order.
+## 6 , Obfuscate class's members order.
    When we write a large class's code , usual ,field or method for the same target is very nearby.for example:
 ```C#
     private string _RegisterCode = null;
@@ -744,7 +815,7 @@ It is more difficuted to find out the key call stack.This feature help you hidde
     XXXXXXX other members XXXXXX
 ```
 When hakers capture one key member,for example `_RegisterCode` , and analyse other members nearby, maby can get more information.
-<br/>But DC.NET Protector can obfuscate order of class's members , just like this:
+<br/>But JieJie.NET can obfuscate order of class's members , just like this:
 ```C#
     private bool _IsRegisteredFlag = false;
     XXXXXXX other members XXXXXX
@@ -759,7 +830,7 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 ```
  Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
 
-## 6 , Easy to use.
+## 7 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -773,17 +844,18 @@ My new tool is a .NET framework console  application.
    DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
 ```
 
-## So many cool features! But DC.NET Protector has no more than 6000 lines C# code!
+## So many cool features! But JieJie.NET has no more than 20000 lines C# code!
 
 ## In the future
 
-It will support class and member rename randomly.remove private const fields(also include private enum const field).Please pay attention to me.
+It will support remove private const fields(also include private enum const field) or other advanced features.Please pay attention to me.
 
 ## License
-DC.NET Protector use GPL-2.0 License.
+JieJie.NET use GPL-2.0 License.
 
 ## update log
 <br/> 2021-3-22 First publish.
 <br/> 2021-4-2  Add feature: Obfuscate control flow.
+<br/> 2021-7-20 Add feature: type or member rename.
 <hr />
 Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>,help author to feed twins born in 2020.
