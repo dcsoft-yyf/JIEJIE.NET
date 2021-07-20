@@ -80,7 +80,7 @@ After rename, these code change to:
         public override void z0ZzZzbmmOOl0nO(ElementLoadEventArgs args);
     }
 ```
-You can see , some API's name obfuscated.This make software more difficute to cract.
+You can see , some API's name obfuscated.
 
 ## 2 , Obfuscate control-flow.
 JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It let codes are very hard to read, some times it will cause crack tool error.
@@ -792,7 +792,7 @@ private string GetLicenseMessage()
     return msg;
 }
 ```
-At there,the code `var str = "JieJie.NET Options:HiddenAllocationCallStack";";` do nothing, just let JieJie.NET know this is a key method, need to change, the value is case sensitive.
+At there,the code `var str = "JieJie.NET Options:+allocationcallstack";";` do nothing, just let JieJie.NET know this is a key method, need to change, the value is case sensitive.
 <br/>My tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
