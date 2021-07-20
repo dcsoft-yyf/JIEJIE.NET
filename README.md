@@ -834,14 +834,25 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
-  input =[required,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
-  output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
-  snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
-  pause =[optional,pause the console after finish process.]
- Example 1, protect d:\a.dll ,this will modify dll file.
-   DCNETProtector.exe input=d:\a.dll  
- Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name.
-   DCNETProtector.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk
+        input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
+        output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
+        snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
+        switch=[optional,multi-switch split by ',',also can be define in [System.Reflection.ObfuscationAttribute.Feature]. It support :
+                +contorlfow    = enable obfuscate control flow in method body.
+                -contorlfow    = disable obfuscate control flow in method body.
+                +/-strings     = enable/disable encrypt string value.
+                +/-resources   = enable/disable encrypt resources data.
+                +/-memberorder = enable/disable member list order in type.
+                +/-rename      = enable/disable rename type or member's name.
+                +/-allocationcallstack  = enable/disable encrypt string value allocation callstack.
+            ]
+        pause =[optional,pause the console after finish process.]
+
+     Example 1, protect d:\a.dll ,this will modify dll file.
+        >JIEJIE.NET.exe d:\a.dll  
+     Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
+        >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk options=+contorlfow,-resources
+
 ```
 
 ## So many cool features! But JieJie.NET has no more than 20000 lines C# code!
