@@ -13,72 +13,64 @@ It is a console .NET application, the UI is :
 It has following features.
 
 ## 1 , Rename type and member.
-JieJie can change type and member's name.This can make more difficute to understand the meaning of API.
+JieJie can change type and member's name.This can make more difficute to understand the meaning of API.And effect by `[System.Reflection.ObfuscationAttribute]`.
 <br />For example, the old code is :
 ```C#
-    public abstract class XTextDocumentContentElement : XTextContentElement
-    {
-        public override void AfterLoad(ElementLoadEventArgs args);
-        [DCPublishAPI]
-        public override void Clear();
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public override XTextElement Clone(bool Deeply);
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public override XTextDocument CreateContentDocument(bool includeThis);
-        public XTextSelection CreateSelection(int startIndex, int length);
-        public override void Dispose();
-        public override void DrawContent(InnerDocumentPaintEventArgs args);
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public override void EditorRefreshViewExt(bool fastMode);
-        public float FixPageLinePosition(int pos);
-        [DCPublishAPI]
-        public override void Focus();
-        [DCPublishAPI]
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public XTextLineList GetAllLines();
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public virtual XTextRange GetRange(int StartIndex, int EndIndex);
-        public void InnerGetSelectionBorderElement(ref XTextElement startElement, ref XTextElement endElement);
-        public void InvalidateSpecifyLayoutElements();
-        [DCPublishAPI]
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public virtual bool IsSelected(XTextElement element);
-        public void RefreshParagraphListState(bool checkFlag, bool updateListIndex);
-        public XTextParagraphFlagElement RootParagraphFlag();
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public bool SetSelection(int startIndex, int length);
-        [Obfuscation(Exclude = true, ApplyToMembers = true)]
-        public bool SetSelectionRange(int firstIndex, int lastIndex);
-    }
+public abstract class XTextDocumentContentElement : XTextContentElement
+{
+    public override void AfterLoad(ElementLoadEventArgs args);
+    public override void Clear();
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public override XTextElement Clone(bool Deeply);
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public override XTextDocument CreateContentDocument(bool includeThis);
+    public XTextSelection CreateSelection(int startIndex, int length);
+    public override void Dispose();
+    public override void DrawContent(InnerDocumentPaintEventArgs args);
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public override void EditorRefreshViewExt(bool fastMode);
+    public float FixPageLinePosition(int pos);
+    public override void Focus();
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public XTextLineList GetAllLines();
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public virtual XTextRange GetRange(int StartIndex, int EndIndex);
+    public void InnerGetSelectionBorderElement(ref XTextElement startElement, ref XTextElement endElement);
+    public void InvalidateSpecifyLayoutElements();
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public virtual bool IsSelected(XTextElement element);
+    public void RefreshParagraphListState(bool checkFlag, bool updateListIndex);
+    public XTextParagraphFlagElement RootParagraphFlag();
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public bool SetSelection(int startIndex, int length);
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public bool SetSelectionRange(int firstIndex, int lastIndex);
+}
 ```
 After rename, these code change to:
 ```C#
-    public abstract class XTextDocumentContentElement : XTextContentElement
-    {
-        [DCPublishAPI]
-        public override void Clear();
-        public override XTextElement Clone(bool Deeply);
-        public override XTextDocument CreateContentDocument(bool includeThis);
-        public override void Dispose();
-        public override void EditorRefreshViewExt(bool fastMode);
-        [DCPublishAPI]
-        public override void Focus();
-        [DCPublishAPI]
-        public XTextLineList GetAllLines();
-        public virtual XTextRange GetRange(int StartIndex, int EndIndex);
-        [DCPublishAPI]
-        public virtual bool IsSelected(XTextElement element);
-        public bool SetSelection(int startIndex, int length);
-        public bool SetSelectionRange(int firstIndex, int lastIndex);
-        public XTextParagraphFlagElement z0ZzZzbmm1mO001();
-        public XTextSelection z0ZzZzbmm1mO011(int startIndex, int length);
-        public void z0ZzZzbmm1mO01O();
-        public float z0ZzZzbmm1mOOm1(int pos);
-        public void z0ZzZzbmm1mOOmn(ref XTextElement startElement, ref XTextElement endElement);
-        public void z0ZzZzbmm1mOOmO(bool checkFlag, bool updateListIndex);
-        public override void z0ZzZzbmmOO11nn(z0ZzZzbm0mmlm1O args);
-        public override void z0ZzZzbmmOOl0nO(ElementLoadEventArgs args);
-    }
+public abstract class XTextDocumentContentElement : XTextContentElement
+{
+    public override void Clear();
+    public override XTextElement Clone(bool Deeply);
+    public override XTextDocument CreateContentDocument(bool includeThis);
+    public override void Dispose();
+    public override void EditorRefreshViewExt(bool fastMode);
+    public override void Focus();
+    public XTextLineList GetAllLines();
+    public virtual XTextRange GetRange(int StartIndex, int EndIndex);
+    public virtual bool IsSelected(XTextElement element);
+    public bool SetSelection(int startIndex, int length);
+    public bool SetSelectionRange(int firstIndex, int lastIndex);
+    public XTextParagraphFlagElement z0ZzZzbmm1mO001();
+    public XTextSelection z0ZzZzbmm1mO011(int startIndex, int length);
+    public void z0ZzZzbmm1mO01O();
+    public float z0ZzZzbmm1mOOm1(int pos);
+    public void z0ZzZzbmm1mOOmn(ref XTextElement startElement, ref XTextElement endElement);
+    public void z0ZzZzbmm1mOOmO(bool checkFlag, bool updateListIndex);
+    public override void z0ZzZzbmmOO11nn(z0ZzZzbm0mmlm1O args);
+    public override void z0ZzZzbmmOOl0nO(ElementLoadEventArgs args);
+}
 ```
 You can see , some API's name obfuscated.
 
@@ -834,10 +826,12 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
-        input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
+        input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll,
+                 currenttly only support .NET framework 2.0 or later]
         output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
         snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
-        switch=[optional,multi-switch split by ',',also can be define in [System.Reflection.ObfuscationAttribute.Feature]. It support :
+        switch=[optional,multi-switch split by ',',also can be define in [System.Reflection.ObfuscationAttribute.Feature].
+                It support :
                 +contorlfow    = enable obfuscate control flow in method body.
                 -contorlfow    = disable obfuscate control flow in method body.
                 +/-strings     = enable/disable encrypt string value.
