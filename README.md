@@ -1,6 +1,6 @@
 # JieJie.NET
   An open source tool to encrypt .NET assembly file, help people protect theirs copyright.
-  Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
+  <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
   
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
