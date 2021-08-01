@@ -41,12 +41,12 @@ namespace JIEJIE
         static void Main(string[] args)
         {
             //Test();return;
-            args = new string[] {
-                @"d:\temp2\DCSoft.Writer.ForWinForm.dll",
-                @"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib\DCSoft.Writer.ForWinForm.dll",
-                @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
-                "pause"
-            };
+            //args = new string[] {
+            //    @"d:\temp2\DCSoft.Writer.ForWinForm.dll",
+            //    @"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib\DCSoft.Writer.ForWinForm.dll",
+            //    @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
+            //    "pause"
+            //};
             string inputAssmblyFileName = null;
             string outputAssemblyFileName = null;
             bool pause = false;
