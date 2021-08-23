@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>JieJie.NET Core console application</PackageId>
+    <Authors>YYF</Authors>
+    <Company>DCSoft</Company>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DOTNETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DCSoft.ResourceFileHelper.NetCore\**" />
+    <Compile Remove="JIEJIENETForCore\**" />
+    <Compile Remove="pub v1.3\**" />
+    <Compile Remove="SampleWinApp\**" />
+    <Compile Remove="snapshort\**" />
+    <EmbeddedResource Remove="DCSoft.ResourceFileHelper.NetCore\**" />
+    <EmbeddedResource Remove="JIEJIENETForCore\**" />
+    <EmbeddedResource Remove="pub v1.3\**" />
+    <EmbeddedResource Remove="SampleWinApp\**" />
+    <EmbeddedResource Remove="snapshort\**" />
+    <None Remove="DCSoft.ResourceFileHelper.NetCore\**" />
+    <None Remove="JIEJIENETForCore\**" />
+    <None Remove="pub v1.3\**" />
+    <None Remove="SampleWinApp\**" />
+    <None Remove="snapshort\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ByteArrayDataContainer.cs" />
+    <Compile Remove="ComponentResourceManagerInfo.cs" />
+    <Compile Remove="ConsoleProgram.cs" />
+    <Compile Remove="DCILClass.cs" />
+    <Compile Remove="DCILCustomAttribute.cs" />
+    <Compile Remove="DCILDocument.cs" />
+    <Compile Remove="DCILGroup.cs" />
+    <Compile Remove="DCILMethod.cs" />
+    <Compile Remove="DCILMResource.cs" />
+    <Compile Remove="DCILProperty.cs" />
+    <Compile Remove="DCProtectEngine.cs" />
+    <Compile Remove="DCStringValueDefine.cs" />
+    <Compile Remove="DCUtils.cs" />
+    <Compile Remove="JIEJIE - 副本 %282%29.cs" />
+    <Compile Remove="JIEJIE - 副本.cs" />
+    <Compile Remove="ResourceFileHelper.cs" />
+    <Compile Remove="SampleInnerAssemblyHelper20210315.cs" />
+    <Compile Remove="StringValueContainer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="app.config" />
+    <None Remove="DCNETProtector.psess" />
+    <None Remove="DCNETProtector1.psess" />
+    <None Remove="DCNETProtector2.psess" />
+    <None Remove="DCNETProtector210430%281%29.vspx" />
+    <None Remove="DCNETProtector210430%282%29.vspx" />
+    <None Remove="DCNETProtector210430%283%29.vspx" />
+    <None Remove="DCNETProtector210430.vspx" />
+    <None Remove="DCNETProtector210501%281%29.vspx" />
+    <None Remove="DCNETProtector210501.vspx" />
+    <None Remove="DCNETProtector210502.vspx" />
+    <None Remove="DCNETProtector210530%281%29.vspx" />
+    <None Remove="DCNETProtector210530%282%29.vspx" />
+    <None Remove="DCNETProtector210530%283%29.vspx" />
+    <None Remove="DCNETProtector210530%284%29.vspx" />
+    <None Remove="DCNETProtector210530.vspx" />
+    <None Remove="UpgradeLog.htm" />
+    <None Remove="UpgradeLog2.htm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>
