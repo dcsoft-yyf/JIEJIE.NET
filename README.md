@@ -862,5 +862,6 @@ JieJie.NET use GPL-2.0 License.
 <br/> 2021-3-22 First publish.
 <br/> 2021-4-2  Add feature: Obfuscate control flow.
 <br/> 2021-7-20 Add feature: type or member rename.
+<br/> 2021-8-23 Add feature: Support .NET core,fix some bugs.
 <hr />
 Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>,help author to feed twins born in 2020.
