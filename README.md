@@ -858,7 +858,7 @@ My new tool is a .NET framework console  application.
 
 ## In the future
 
-   It will support remove private const fields(also include private enum const field) or other advanced features.Please pay attention to me.
+   It will support upgrad assembly file from .NET Framework to .NET Core without any source code.Please pay attention to me.
 
 ## License
 JieJie.NET use GPL-2.0 License. 
