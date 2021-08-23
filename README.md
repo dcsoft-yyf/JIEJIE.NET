@@ -822,7 +822,10 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 ```
  Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
 
-## 7 , Easy to use.
+## 7 , Support .NET Core 3.1
+   JIEJIE.NET now support .NET Core 3.1.
+
+## 8 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -849,11 +852,13 @@ My new tool is a .NET framework console  application.
 
 ```
 
-## So many cool features! But JieJie.NET has no more than 20000 lines C# code!
+## So many cool features! But JieJie.NET only has 12000 lines C# code!
+   
+   So it is small and without any third party component.
 
 ## In the future
 
-It will support remove private const fields(also include private enum const field) or other advanced features.Please pay attention to me.
+   It will support remove private const fields(also include private enum const field) or other advanced features.Please pay attention to me.
 
 ## License
 JieJie.NET use GPL-2.0 License. 
