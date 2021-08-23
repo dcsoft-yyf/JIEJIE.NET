@@ -845,7 +845,7 @@ My new tool is a .NET framework console  application.
      Example 1, protect d:\a.dll ,this will modify dll file.
         >JIEJIE.NET.exe d:\a.dll  
      Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
-        >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk options=+contorlfow,-resources
+        >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk switch=+contorlfow,-resources
 
 ```
 
