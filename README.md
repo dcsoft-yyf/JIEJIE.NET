@@ -1,5 +1,5 @@
-# JieJie.NET
-  An open source tool to encrypt .NET assembly file, help people protect theirs copyright.
+# JIEJIE.NET
+  An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
   
 ## Background
@@ -869,4 +869,4 @@ JieJie.NET use GPL-2.0 License.
 <br/> 2021-7-20 Add feature: type or member rename.
 <br/> 2021-8-23 Add feature: Support .NET core,fix some bugs.
 <hr />
-Donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>,help author to feed twins born in 2020.
+JIEJIE.NET can save tens of thousands of US dollars for your team. so you can donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>,help author to feed twins born in 2020.
