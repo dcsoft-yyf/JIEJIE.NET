@@ -856,7 +856,7 @@ My new tool is a .NET framework console  application.
 It will support remove private const fields(also include private enum const field) or other advanced features.Please pay attention to me.
 
 ## License
-JieJie.NET use GPL-2.0 License.
+JieJie.NET use GPL-2.0 License. 
 
 ## update log
 <br/> 2021-3-22 First publish.
