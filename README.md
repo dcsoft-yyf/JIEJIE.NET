@@ -779,7 +779,7 @@ SampleWinApp!SampleWinApp.Program.Main() Program.cs
          
 private string GetLicenseMessage()
 {
-    var str = "JIEJIE.NET:HiddenAllocationCallStack";;// no used,just let JieJie.NET know the owner method need change.
+    var str = "JieJie.NET Options:+allocationcallstack";;// no used,just let JieJie.NET know the owner method need change.
     string msg = "This software license to :" + Environment.UserName;
     return msg;
 }
