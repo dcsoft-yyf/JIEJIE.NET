@@ -161,8 +161,8 @@ namespace JIEJIE
                 var strInfoMore = @"     Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
      Author:yuan yong fu . mail: 28348092@qq.com
      Site :https://github.com/dcsoft-yyf/JIEJIE.NET
-     Last update 2021-8-10
-     You can use this software unlimited,but CAN NOT modify source code anytime.
+     Last update 2021-8-26
+     You can use this software free forever,but CAN NOT modify source code anytime.
      Any good idears you can write to 28348092@qq.com.
      Support command line argument :
         input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll, currenttly only support .NET framework 2.0 or later]
@@ -266,10 +266,12 @@ namespace JIEJIE
                             eng.DeleteTemplateDirecotry();
                         }
                         eng.Close();
+#if ! DOTNETCORE
                         if (taskDomain != null)
                         {
                             System.AppDomain.Unload(taskDomain);
                         }
+#endif
                     }
                     else
                     {
@@ -2332,7 +2334,7 @@ namespace JIEJIE
             }
         } 
         private int _ModifiedCount = 0;
-        private static readonly string _OptionPrefix = "JIEJIE.NET:";
+        
         /// <summary>
         /// 是否处于调试模式
         /// </summary>
@@ -3896,6 +3898,9 @@ namespace JIEJIE
                 }
             }//for
         }
+
+        private static readonly string _SwitchPrefix = "JIEJIE.NET.SWITCH:";
+
         private Dictionary<object, JieJieSwitchs> _RuntimeSwitchs = new Dictionary<object, JieJieSwitchs>();
 
         private JieJieSwitchs GetRuntimeSwitchs(DCILClass cls, JieJieSwitchs parent)
@@ -3907,9 +3912,9 @@ namespace JIEJIE
             }
             if (cls.ObfuscationSettings != null
                 && cls.ObfuscationSettings.Feature != null
-                && cls.ObfuscationSettings.Feature.StartsWith(_OptionPrefix, StringComparison.OrdinalIgnoreCase))
+                && cls.ObfuscationSettings.Feature.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                string strSettings = cls.ObfuscationSettings.Feature.Substring(_OptionPrefix.Length);
+                string strSettings = cls.ObfuscationSettings.Feature.Substring(_SwitchPrefix.Length);
                 result = new JieJieSwitchs(strSettings, parent);
             }
             else
@@ -3925,9 +3930,9 @@ namespace JIEJIE
                             if (cv != null && cv.Length > 3 && cv[0] == '"')
                             {
                                 cv = cv.Substring(1, cv.Length - 2);
-                                if (cv.StartsWith(_OptionPrefix, StringComparison.OrdinalIgnoreCase))
+                                if (cv.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    string strSettings = cv.Substring(_OptionPrefix.Length);
+                                    string strSettings = cv.Substring(_SwitchPrefix.Length);
                                     result = new JieJieSwitchs(strSettings, parent);
                                     break;
                                 }
@@ -3953,9 +3958,9 @@ namespace JIEJIE
             }
             if (method.ObfuscationSettings != null
                 && method.ObfuscationSettings.Feature != null
-                && method.ObfuscationSettings.Feature.StartsWith(_OptionPrefix, StringComparison.OrdinalIgnoreCase))
+                && method.ObfuscationSettings.Feature.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                string strSettings = method.ObfuscationSettings.Feature.Substring(_OptionPrefix.Length);
+                string strSettings = method.ObfuscationSettings.Feature.Substring(_SwitchPrefix.Length);
                 result = new JieJieSwitchs(strSettings, parent);
             }
             else if (method.OperCodes != null && method.OperCodes.Count > 0)
@@ -3968,10 +3973,10 @@ namespace JIEJIE
                         var code = ((DCILOperCode_LoadString)method.OperCodes[iCount]);
                         var strCode = code.FinalValue;
                         code.FinalValue = string.Empty;
-                        if (strCode != null && strCode.StartsWith(_OptionPrefix, StringComparison.OrdinalIgnoreCase))
+                        if (strCode != null && strCode.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
                         {
                             //code.OperCode = "\"\"";
-                            string strSettings = strCode.Substring(_OptionPrefix.Length);
+                            string strSettings = strCode.Substring(_SwitchPrefix.Length);
                             result = new JieJieSwitchs(strSettings, parent);
                             break;
                         }

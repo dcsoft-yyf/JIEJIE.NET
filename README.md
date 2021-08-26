@@ -779,12 +779,12 @@ SampleWinApp!SampleWinApp.Program.Main() Program.cs
          
 private string GetLicenseMessage()
 {
-    var str = "JieJie.NET Options:+allocationcallstack";;// no used,just let JieJie.NET know the owner method need change.
+    var str = "JIEJIE.NET.SWITCH:+allocationcallstack";;// no used,just let JieJie.NET know the owner method need change.
     string msg = "This software license to :" + Environment.UserName;
     return msg;
 }
 ```
-At there,the code `var str = "JieJie.NET Options:+allocationcallstack";";` do nothing, just let JieJie.NET know this is a key method, need to change, the value is case sensitive.
+At there,the code `var str = "JIEJIE.NET.SWITCH:+allocationcallstack";";` do nothing, just let JieJie.NET know this is a key method, need to change, the value is ignore case.
 <br/>My tool can change this call stack to this:
 ```
 mscorlib!System.String.CtorCharArray( char[] )
