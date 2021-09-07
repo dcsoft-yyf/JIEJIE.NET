@@ -44,10 +44,12 @@ namespace JIEJIE
             // test data
 
             //args = new string[] {
+            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Common\bin\Debug\DCSoft.Common.dll",//D:\temp2\DCSoft.Writer.ForWinForm.dll",//D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\bin\Debug\netcoreapp3.1\DCSoft.Writer.ForASPNETCore.dll",
             //    @"D:\temp2\DCSoft.Writer.ForWinForm.dll",//D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\bin\Debug\netcoreapp3.1\DCSoft.Writer.ForASPNETCore.dll",
-            //    @"output=D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo",
+            //    @"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib",
             //    @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
             //    //"switch=-rename,-controlfow,-strings,-resources,-memberorder,-removemember,-allocationcallstack" 
+            //    //"switch=-rename" ,
             //    "",
             //    "prefixfortyperename=zzz.z0ZzZz",
             //    "prefixformemberrename=z0",
@@ -576,6 +578,13 @@ namespace JIEJIE
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(asmFileName);
                 Console.ResetColor();
+                if(this._SourceAssemblyFileSize > 0 )
+                {
+                    Console.Write(" Source file size : " + DCUtils.FormatByteSize(this._SourceAssemblyFileSize) + " ,");
+                }
+                var newFileLength = new FileInfo(asmFileName).Length;
+                Console.WriteLine(" Result file size : " + DCUtils.FormatByteSize(newFileLength));
+                
                 return true;
             }
             else
@@ -589,6 +598,7 @@ namespace JIEJIE
         private string _InputAssemblyDirectory = null;
 
         internal string _UseAnotherExeName = null;
+        private int _SourceAssemblyFileSize = 0;
 
         /// <summary>
         /// 加载程序集文件
@@ -605,6 +615,7 @@ namespace JIEJIE
             {
                 throw new FileNotFoundException(asmFileName);
             }
+            this._SourceAssemblyFileSize = 0;
             if (this.ContentEncoding == null)
             {
                 this.ContentEncoding = Encoding.UTF8;
@@ -642,6 +653,8 @@ namespace JIEJIE
             }
             else
             {
+                this._SourceAssemblyFileSize = (int)(new FileInfo(asmFileName).Length);
+
                 // 调用 ildasm.exe 将程序集文件反编译为 il 文件。
                 Console.WriteLine("Loading assembly file " + asmFileName);
                 ilFileName = Path.Combine(this.TempDirectory, Path.GetFileName(asmFileName) + ".il");
@@ -2358,7 +2371,7 @@ namespace JIEJIE
                             new DCILOperCode(
                                 "IL_zzzzz", 
                                 "call", 
-                                "string DCSoft.Common.InnerAssemblyHelper20210315::CloneStringCrossThead(string)"));
+                                "string " + _ClassName_InnerAssemblyHelper20210315 + "::CloneStringCrossThead(string)"));
                         _ModifiedCount++;
                         break;
                     }
@@ -2719,7 +2732,7 @@ namespace JIEJIE
 	IL_0013: ldc.i4 " + item.StartIndex + @"
 	IL_0018: ldc.i4 " + item.BsLength + @"
 	IL_001d: ldc.i4 " + item.Key + @"
-	IL_0022: call class " + bmpTypeName + @" DCSoft.Common.InnerAssemblyHelper20210315::GetBitmap(uint8[], int32, int32, int32)
+	IL_0022: call class " + bmpTypeName +  @" " + _ClassName_InnerAssemblyHelper20210315 + @"::GetBitmap(uint8[], int32, int32, int32)
 	IL_0027: stsfld class " + bmpTypeName + @" " + clsName + @"::_" + item.Name + @"
 	IL_002c: nop
 
@@ -2751,7 +2764,7 @@ namespace JIEJIE
 	IL_0006: ldc.i4 " + item.StartIndex + @"
 	IL_000b: ldc.i4 " + item.BsLength + @"
 	IL_0010: ldc.i4 " + item.Key + @"
-	IL_0015: call string DCSoft.Common.InnerAssemblyHelper20210315::GetString(uint8[], int32, int32, int32)
+	IL_0015: call string "+ _ClassName_InnerAssemblyHelper20210315 + @"::GetString(uint8[], int32, int32, int32)
 	IL_001a: stloc.0
 	IL_001b: br.s IL_001d
 	IL_001d: ldloc.0
@@ -3060,17 +3073,90 @@ namespace JIEJIE
             code = code.Replace("[mscorlib]" + typeName, name2);
             return code;
         }
+        private static readonly string _ClassName_InnerAssemblyHelper20210315 = "DCSoft.Common.InnerAssemblyHelper20210315";
+
         private static readonly string _Code_Template_InnerAssemblyHelper20210315 = @"
 .class private auto ansi abstract sealed beforefieldinit DCSoft.Common.InnerAssemblyHelper20210315
 	extends [mscorlib]System.Object
 {
 	// Fields
+	.field private static initonly object _NullObject 
 	.field private static class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_Thread
 	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event
 	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
 	.field private static string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_CurrentValue
+ 
+    .method public hidebysig specialname static 
+	    string Object_ToString (
+		    object a
+	    ) cil managed 
+    {
+	    .maxstack 8
+	    IL_0000: ldarg.0
+	    IL_0002: callvirt instance string [mscorlib]System.Object::ToString()
+	    IL_0007: ret
+    }
+ 
+    .method public hidebysig specialname static 
+	    void Monitor_Enter (
+		    object a
+	    ) cil managed 
+    {
+	    .maxstack 8
+	    IL_0000: ldarg.0
+	    IL_0002: call void [mscorlib]System.Threading.Monitor::Enter(object)
+	    IL_0007: ret
+    }
+    .method public hidebysig specialname static 
+	    void Monitor_Exit (
+		    object a
+	    ) cil managed 
+    {
+	    .maxstack 8
+	    IL_0000: ldarg.0
+	    IL_0002: call void [mscorlib]System.Threading.Monitor::Exit(object)
+	    IL_0007: ret
+    }
+    .method public hidebysig static 
+	    string String_Concat(
+		    object a,
+		    object b
+	    ) cil managed 
+    {
+	    .maxstack 8
+	    IL_0000: ldarg.0
+	    IL_0001: ldarg.1
+	    IL_0002: call string [mscorlib]System.String::Concat(object, object)
+	    IL_0007: ret
+    }
 
-	// Methods
+    .method public hidebysig static 
+	    string String_Concat(
+		    string a,
+		    string b
+	    ) cil managed 
+    {
+	    .maxstack 8
+	    IL_0000: ldarg.0
+	    IL_0001: ldarg.1
+	    IL_0002: call string [mscorlib]System.String::Concat(string, string)
+	    IL_0007: ret
+    }
+
+
+    .method public hidebysig specialname static 
+	    bool String_Equality (
+		    string a,
+		    string b
+	    ) cil managed 
+    {
+	    .maxstack 8
+	    IL_0000: ldarg.0
+	    IL_0001: ldarg.1
+	    IL_0002: call bool [mscorlib]System.String::Equals(string, string)
+	    IL_0007: ret
+    }
+
 	.method public hidebysig static 
 		string CloneStringCrossThead (
 			string txt
@@ -3717,6 +3803,9 @@ namespace JIEJIE
 		IL_001e: ldnull
 		IL_001f: volatile.
 		IL_0021: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+		IL_0022: ldnull
+		IL_0023: volatile.
+		IL_0024: stsfld object DCSoft.Common.InnerAssemblyHelper20210315::_NullObject
 		// }
 		IL_0026: ret
 	} // end of method InnerAssemblyHelper20210315::.cctor
@@ -4097,14 +4186,90 @@ namespace JIEJIE
         }
         public bool ObfuscateOperCodeList(DCILMethod method)
         {
-            if (ObfuscateOperCodeList(method.OperCodes))
+            if (ObfuscateOperCodeList( method, method.OperCodes , false , null ))
             {
+                method.Maxstack += 2;
                 ChangeShortInstruction(method.OperCodes);
                 return true;
             }
             return false;
         }
-        public bool ObfuscateOperCodeList(DCILOperCodeList items, bool isInTryBlock = false)
+        private DCILTypeReference _Type_InnerAssemblyHelper20210315 = null;
+        private void ChangeSpecifyCallTarget( DCILOperCodeList items )
+        {
+            if( items == null  || items.Count == 0 )
+            {
+                return;
+            }
+            if(_Type_InnerAssemblyHelper20210315 == null )
+            {
+                _Type_InnerAssemblyHelper20210315 = new DCILTypeReference(_ClassName_InnerAssemblyHelper20210315, DCILTypeMode.Class);
+            }
+            // 进行特定方法调用信息的替换
+            foreach (var code in items)
+            {
+                //if( code.OperCode == "callvirt")
+                //{
+                //    var info = ((DCILOperCode_HandleMethod)code).InvokeInfo;
+                //    var methodName = info.MethodName;
+                //    if (methodName == "ToString")
+                //    {
+                //        if (info.ParametersCount == 0 && info.OwnerType?.Name == "System.Object")
+                //        {
+                //            info = info.Clone();
+                //            ((DCILOperCode_HandleMethod)code).InvokeInfo = info;
+                //            code.OperCode = "call";
+                //            info.IsInstance = false;
+                //            info.OwnerType = new DCILTypeReference(_ClassName_InnerAssemblyHelper20210315, DCILTypeMode.Class);
+                //            info.MethodName = "Object_ToString";
+                //            info.Paramters = new List<DCILMethodParamter>();
+                //            var p2 = new DCILMethodParamter();
+                //            p2.ValueType = DCILTypeReference.Type_Object;
+                //            info.Paramters.Add(p2);
+                //        }
+                //    }
+                //}
+                if (code.OperCode == "call")
+                {
+                    var callCode = (DCILOperCode_HandleMethod)code;
+                    var info = callCode.InvokeInfo;
+                    var methodName = info.MethodName;
+                    var ownerTypeName = info.OwnerType?.Name;
+                    if (methodName == "op_Equality") // 混淆字符串相等符号
+                    {
+                        if (info.ParametersCount == 2
+                            && ownerTypeName == "System.String")
+                        {
+                            callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "String_Equality");
+                        }
+                    }
+                    else if (methodName == "Concat")
+                    {
+                        if (info.ParametersCount == 2
+                            && ownerTypeName == "System.String")
+                        {
+                            callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "String_Concat");
+                        }
+                    }
+                    else if (methodName == "Enter" || methodName == "Exit")
+                    {
+                        if (ownerTypeName == "System.Threading.Monitor"
+                            && info.ParametersCount == 1)
+                        {
+                            if (methodName == "Enter")
+                            {
+                                callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "Monitor_Enter");
+                            }
+                            else
+                            {
+                                callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "Monitor_Exit");
+                            }
+                        }
+                    }
+                }
+            }//foreach
+        }
+        public bool ObfuscateOperCodeList( DCILMethod method , DCILOperCodeList items, bool isInTryBlock , DCILOperCodeList parentList )
         {
             if (items == null || items.Count == 0)
             {
@@ -4116,13 +4281,21 @@ namespace JIEJIE
                 if (item is DCILOperCode_Try_Catch_Finally)
                 {
                     var tcf = (DCILOperCode_Try_Catch_Finally)item;
-                    if (tcf._Try != null && ObfuscateOperCodeList(tcf._Try.OperCodes, true))
+                    if (tcf._Try != null && ObfuscateOperCodeList(method, tcf._Try.OperCodes, true, items))
                     {
                         result = true;
                     }
+                    if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20210315)
+                    {
+                        ChangeSpecifyCallTarget(tcf._Finally?.OperCodes);
+                    }
                 }
             }
-            var groupMaxLen = _Random.Next(20, 50);
+            if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20210315)
+            {
+                ChangeSpecifyCallTarget(items);
+            }
+            var groupMaxLen = _Random.Next(20, 30);
             if (groupMaxLen >= items.Count)
             {
                 // 指令数量太少，不管了。
@@ -4137,86 +4310,136 @@ namespace JIEJIE
             if (items[items.Count - 1].OperCode == "ret")
             {
                 retCode = items[items.Count - 1];
-                items.RemoveAt(items.Count - 1);
+                items[items.Count - 1] = new DCILOperCode(CreataLableID(), "br", retCode.LabelID);
+                //items.RemoveAt(items.Count - 1);
             }
+
+            // 进行指令分组
             var groups = new List<List<DCILOperCode>>();
             var group = new List<DCILOperCode>();
             var firstGroup = group;
             groups.Add(group);
+            List<DCILOperCode> preGroup = null;
+
             foreach (var item in items)
             {
+                if(group.Count == 0 && item.HasLabelID() == false )
+                {
+                    group.Add(new DCILOperCode(CreataLableID(), "nop", null));
+                }
                 group.Add(item);
+                if(preGroup != null )
+                {
+                    preGroup.Add(new DCILOperCode(CreataLableID(), "br", group[0].LabelID));
+                    preGroup.Add(new DCILOperCodeComment("goto next group"));
+                    preGroup = null;
+                    //if (_Random.Next(0, 100) < 30 && items.Count > 40)
+                    //{
+                    //    // 小概率插入花指令
+                    //    for (int iCount2 = _Random.Next(10, items.Count - 10); iCount2 < items.Count; iCount2++)
+                    //    {
+                    //        if (items[iCount2].HasLabelID() && items[iCount2].IsPrefixOperCode() == false)
+                    //        {
+                    //            group.Insert( 0, new DCILOperCode(CreataLableID(), "br", items[iCount2].LabelID));
+                    //            break;
+                    //        }
+                    //    }
+                    //}
+                }
                 if (item.IsPrefixOperCode() == false)// item.OperCode != "volatile." && item.OperCode != "constrained.")
                 {
                     if (group.Count > groupMaxLen)
                     {
+                        preGroup = group;
                         group = new List<DCILOperCode>();
                         groups.Add(group);
-                        groupMaxLen = _Random.Next(20, 50);
+                        groupMaxLen = _Random.Next(20, 30);
                     }
                 }
-                //if (_Random.Next(0, 100) < 2)
-                //{
-                //    // 小概率插入无效跳转指令
-                //    string rndLableID = items[_Random.Next(0, items.Count - 1)].LabelID;
-                //    if (rndLableID != null && rndLableID.Length > 0)
-                //    {
-                //        //if( rndLableID == "IL_0001")
-                //        //{
-
-                //        //}
-                //        group.Add(new DCILOperCodeComment("no used"));
-                //        group.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
-                //        group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
-                //        group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
-                //        group.Add(new DCILOperCode(CreataLableID(), "brtrue", rndLableID));
-                //        addCount += 4;
-                //    }
-                //}
             }
-            if (groups[groups.Count - 1].Count == 0)
+           
+            var lastGroup = groups[groups.Count - 1];
+            if( lastGroup.Count == 0 )
             {
+                // 删除最后一个内容为空的指令组
                 groups.RemoveAt(groups.Count - 1);
+                lastGroup = groups[groups.Count - 1];
             }
-            for (int iCount = 0; iCount < groups.Count - 1; iCount++)
-            {
-                // 每条指令组后面添加跳到下一个指令组的指令
-                group = groups[iCount];
-                var nextGroup = groups[iCount + 1];
-                group.Add(new DCILOperCodeComment("jump random"));
-                var nextGroupLableID = nextGroup[0].LabelID;
-                if (nextGroupLableID == null || nextGroupLableID.Length == 0)
-                {
-                    nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "nop", null));
-                    nextGroupLableID = nextGroup[0].LabelID;
-                }
-                group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
-                //// 输出无效的垃圾代码
-                //group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", "1"));
-                ////group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next().ToString()));
-                //group.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+           
 
-                ////group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+            //for (int iCount = 0; iCount < groups.Count - 1; iCount++)
+            //{
+            //    // 每条指令组后面添加跳到下一个指令组的指令
+            //    group = groups[iCount];
+            //    var nextGroup = groups[iCount + 1];
+            //    var nextGroupLableID = nextGroup[0].LabelID;
+            //    //if (nextGroupLableID == null || nextGroupLableID.Length == 0)
+            //    //{
+            //    //    nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "nop", null));
+            //    //    nextGroupLableID = nextGroup[0].LabelID;
+            //    //}
+            //    //foreach (var item3 in group)
+            //    //{
+            //    //    if (item3.LabelID != null && item3.LabelID.Length > 0)
+            //    //    {
+            //    //        nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "ble", item3.LabelID));
+            //    //        break;
+            //    //    }
+            //    //}
+            //    //if (method != null && method.Locals != null && method.Locals.Count > 0)
+            //    //{
+            //    //    nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "ldloc.0", null));
+            //    //}
+            //    //else
+            //    //{
+            //    //    nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next().ToString()));
+            //    //}
+            //    //if (parentList != null && isInTryBlock)
+            //    //{
+            //    //    foreach (var item2 in parentList)
+            //    //    {
+            //    //        if (_Random.Next(0, 100) > 90
+            //    //            && item2.LabelID != null
+            //    //            && item2.LabelID.Length > 0)
+            //    //        {
+            //    //            nextGroup.Insert(0, new DCILOperCode(CreataLableID(), "leave", item2.LabelID));
+            //    //            break;
+            //    //        }
+            //    //    }
+            //    //}
+                 
+            //        group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+            //    group.Add(new DCILOperCodeComment("jump next group"));
 
-                //group.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
-                //if (_Random.Next(0, 1) == 0)
-                //{
-                //    group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
-                //    group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
-                //    group.Add(new DCILOperCode(CreataLableID(), "brfalse", nextGroupLableID));
-                //}
-                //else
-                //{
-                //    group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetUnZeroIndex().ToString()));
-                //    group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
-                //    group.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
-                //}
-            }
+            //    //group.Add(new DCILOperCode(CreataLableID(), "br", group[0].LabelID));
+            //    //group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next(0, 10000).ToString()));
+            //    //group.Add(new DCILOperCode(CreataLableID(), "pop",null));
 
-            if (retCode != null)
-            {
-                groups[groups.Count - 1].Add(new DCILOperCode(CreataLableID(), "br", retCode.LabelID));
-            }
+            //    ////// 输出无效的垃圾代码
+            //    //group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", "8888"));
+            //    //group.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+
+            //    ////group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+
+            //    //group.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+            //    //if (_Random.Next(0, 1) == 0)
+            //    //{
+            //    //    group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+            //    //    group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+            //    //    group.Add(new DCILOperCode(CreataLableID(), "brfalse", nextGroupLableID));
+            //    //}
+            //    //else
+            //    //{
+            //    //    group.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetUnZeroIndex().ToString()));
+            //    //    group.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+            //    //    group.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+            //    //}
+            //}
+
+            //if (retCode != null)
+            //{
+            //    groups[groups.Count - 1].Add(new DCILOperCode(CreataLableID(), "br", retCode.LabelID));
+            //}
             //var lastCode = new DCILOperCode(CreataLableID(), "nop", null);
             //var lastGroup = groups[groups.Count - 1];
             //lastGroup.Add(new DCILOperCode(CreataLableID(), "br", lastCode.LabelID));
@@ -4233,7 +4456,7 @@ namespace JIEJIE
             //    }
             //}
 
-            DCUtils.ObfuseListOrder(groups);
+           
             DCILOperCode leaveCode = null;
             if (isInTryBlock)
             {
@@ -4247,9 +4470,30 @@ namespace JIEJIE
                     }
                 }
             }
-
             items.Clear();
             items.Add(new DCILOperCode(CreataLableID(), "nop", null));
+            //////if (groups.Count > 1)
+            //////{
+            //////    //items.Add(new DCILOperCode(
+            //////    //    CreataLableID(),
+            //////    //    "ldsfld",
+            //////    //    "object " + _ClassName_InnerAssemblyHelper20210315 + "::_NullObject"));
+            //////    items.Add(new DCILOperCode(
+            //////        CreataLableID(),
+            //////        "ldc.i4",
+            //////        _Random.Next(1, 10).ToString()));
+            //////    items.Add(new DCILOperCode(CreataLableID(), "brtrue", groups[0][0].LabelID));
+            //////    items.Add(new DCILOperCode(CreataLableID(), "br", groups[_Random.Next(1, groups.Count - 1)][0].LabelID));
+            //////}
+            //////else
+            {
+                items.Add(new DCILOperCode(CreataLableID(), "br", groups[0][0].LabelID));
+            }
+            DCUtils.ObfuseListOrder(groups);
+            foreach ( var group3 in groups )
+            {
+                items.AddRange(group3);
+            }
             //if (startGroupNone.Count > 0)
             //{
             //    var labelIDStart = CreataLableID();
@@ -4257,91 +4501,219 @@ namespace JIEJIE
             //    items.AddRange(startGroupNone);
             //    items.Add(new DCILOperCode(labelIDStart, "nop", null));
             //}
-            if (firstGroup != groups[0])
-            {
-                var nextGroupLableID = firstGroup[0].LabelID;
-                if (nextGroupLableID == null || nextGroupLableID.Length == 0)
-                {
+            //if (firstGroup != groups[0])
+            //{
+            //    var nextGroupLableID = firstGroup[0].LabelID;
+            //    if (nextGroupLableID == null || nextGroupLableID.Length == 0)
+            //    {
 
+            //    }
+
+            //    if (method.IndexOfExtLocals == int.MinValue)
+            //    {
+            //        if (method.Locals == null)
+            //        {
+            //            method.Locals = new DCILMethodLocalVariableList();
+            //        }
+            //        method.IndexOfExtLocals = method.Locals.Count;
+            //        var loc = new DCILMethodLocalVariable();
+            //        loc.ValueType = DCILTypeReference.GetPrimitiveType("int32");
+            //        loc.Name = "jijietemp_" + Environment.TickCount.ToString();
+            //        method.Locals.Add(loc);
+            //    }
+
+            //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next(1, 1000).ToString()));
+            //    items.Add(new DCILOperCode(CreataLableID(), "stloc", method.IndexOfExtLocals.ToString()));
+            //    items.Add(new DCILOperCode(CreataLableID(), "ldloc", method.IndexOfExtLocals.ToString()));
+            //    items.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "ldloc", method.IndexOfExtLocals.ToString()));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next(0,100).ToString()));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "pop", null));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "pop", null));
+            //    items.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "ldc.i4.0", null));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+            //    //var id3 = nextGroupLableID;
+            //    //if( groups.Count > 1 )
+            //    //{
+            //    //    id3 = groups[1][0].LabelID;
+            //    //}
+            //    //if(id3 == null || id3.Length == 0 )
+            //    //{
+            //    //    id3 = nextGroupLableID;
+            //    //}
+            //    ////foreach (var item3 in items)
+            //    ////{
+            //    ////    if (item3.LabelID != null && item3.LabelID.Length > 0 && _Random.Next(0, 100) > 90)
+            //    ////    {
+            //    ////        id3 = item3.LabelID;
+            //    ////        break;
+            //    ////    }
+            //    ////}
+            //    ////items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", _Random.Next(1, 1000).ToString()));
+            //    //items.Add(new DCILOperCode(CreataLableID(), "br", id3));
+
+            //    //items.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
+
+            //    //items.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+            //    //if (_Random.Next(0, 1) == 0)
+            //    //{
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "brfalse", nextGroupLableID));
+            //    //}
+            //    //else
+            //    //{
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetUnZeroIndex().ToString()));
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
+            //    //}
+            //}
+            ////var lastGroup = groups[groups.Count - 1];
+            //foreach (var group2 in groups)
+            //{
+            //    foreach (var item in group2)
+            //    {
+            //        items.Add(item);
+            //        //if ( items.Count > 10 && _Random.Next(0, 100) < 2)
+            //        //{
+            //        //    // 小概率插入无效跳转指令
+            //        //    string rndLableID = items[_Random.Next(0, items.Count - 1)].LabelID;
+            //        //    if (rndLableID != null && rndLableID.Length > 0)
+            //        //    {
+            //        //        //if( rndLableID == "IL_0001")
+            //        //        //{
+
+            //        //        //}
+            //        //        items.Add(new DCILOperCodeComment("no used"));
+            //        //        items.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
+            //        //        items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
+            //        //        items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
+            //        //        items.Add(new DCILOperCode(CreataLableID(), "brtrue", rndLableID));
+            //        //    }
+            //        //}
+            //    }
+            //    if (group2 == lastGroup)
+            //    {
+            //        break;
+            //    }
+            //    //if (group2 == lastGroup)
+            //    //{
+            //    //    if(isInTryBlock )
+            //    //    {
+            //    //        items.Add(leaveCode.Clone(CreataLableID()));
+            //    //    }
+            //    //    break;
+            //    //}
+            //    //if (groups.Count > 4 && _Random.Next(0, 100) < 70)
+            //    //{
+            //    //    // 指令组和指令组之间小概率插入随机指令(类似花指令)
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "nop", null)); // "\"111111111222222222\""));
+            //    //    int num = _Random.Next(5, 10);
+            //    //    for (int iCount = 0; iCount < num; iCount++)
+            //    //    {
+            //    //        var g3 = groups[_Random.Next(0, groups.Count - 1)];
+            //    //        var code3 = g3[_Random.Next(0, g3.Count - 1)];
+            //    //        if (code3.IsPrefixOperCode() == false && ((code3 is DCILOperCode_Try_Catch_Finally) == false))
+            //    //        {
+            //    //            items.Add(code3.Clone(CreataLableID()));
+            //    //        }
+            //    //        //items.Add(followCodes[_Random.Next(0, followCodes.Count - 1)].Clone(CreataLableID()));
+            //    //    }
+            //    //    items.Add(new DCILOperCode(CreataLableID(), "nop", null));// "\"4444444444444455555555555555555\""));
+            //    //}
+            //    //if (isInTryBlock && group2 == lastGroup)
+            //    //{
+            //    //    items.Add(leaveCode.Clone(CreataLableID()));
+            //    //}
+            //}
+            // 进行某些特征性代码移动位置的跳转，用于增加using/lock/foreach的恢复难度。
+            var tempList = new DCILOperCodeList();
+            var itemsCount_1 = items.Count - 1;
+            for (int iCount = 1; iCount < itemsCount_1; iCount++)
+            {
+                bool changePos = false;
+                var code = items[iCount];
+                if( code.OperCode == "throw")
+                {
+                    changePos = true;
                 }
-                items.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
-
-                //items.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
-                //if (_Random.Next(0, 1) == 0)
-                //{
-                //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
-                //    items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
-                //    items.Add(new DCILOperCode(CreataLableID(), "brfalse", nextGroupLableID));
-                //}
-                //else
-                //{
-                //    items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetUnZeroIndex().ToString()));
-                //    items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
-                //    items.Add(new DCILOperCode(CreataLableID(), "brtrue", nextGroupLableID));
-                //}
-            }
-            var lastGroup = groups[groups.Count - 1];
-            foreach (var group2 in groups)
-            {
-                foreach (var item in group2)
+                else if (code is DCILOperCode_HandleMethod)
                 {
-                    items.Add(item);
-                    //if ( items.Count > 10 && _Random.Next(0, 100) < 2)
+                    var info = ((DCILOperCode_HandleMethod)code).InvokeInfo;
+                    var methodName = info.MethodName;
+                    if (methodName == "ToString")
+                    {
+                        if (info.ParametersCount == 0 && info.OwnerType?.Name == "System.Object")
+                        {
+                            changePos = true;
+                        }
+                    }
+                    //else if( methodName == "Concat")
                     //{
-                    //    // 小概率插入无效跳转指令
-                    //    string rndLableID = items[_Random.Next(0, items.Count - 1)].LabelID;
-                    //    if (rndLableID != null && rndLableID.Length > 0)
+                    //    if( info.ParametersCount > 0 && info.OwnerType?.Name == "System.String")
                     //    {
-                    //        //if( rndLableID == "IL_0001")
-                    //        //{
-
-                    //        //}
-                    //        items.Add(new DCILOperCodeComment("no used"));
-                    //        items.Add(new DCILOperCode(CreataLableID(), "ldsfld", "uint8[] " + FieldName));
-                    //        items.Add(new DCILOperCode(CreataLableID(), "ldc.i4", GetZeroIndex().ToString()));
-                    //        items.Add(new DCILOperCode(CreataLableID(), "ldelem.u1", null));
-                    //        items.Add(new DCILOperCode(CreataLableID(), "brtrue", rndLableID));
+                    //        changePos = true;
                     //    }
                     //}
-                }
-                //if( group2 == lastGroup)
-                //{
-                //    break;
-                //}
-                if (group2 == lastGroup)
-                {
-                    break;
-                }
-                if (groups.Count > 4 && _Random.Next(0, 100) < 70)
-                {
-                    // 指令组和指令组之间小概率插入随机指令(类似花指令)
-                    items.Add(new DCILOperCode(CreataLableID(), "nop", null)); // "\"111111111222222222\""));
-                    int num = _Random.Next(5, 10);
-                    for (int iCount = 0; iCount < num; iCount++)
+                    else if (methodName == "GetEnumerator"
+                        || methodName == "Dispose"
+                        || methodName == "MoveNext"
+                        || methodName == "get_Current"
+                        //|| methodName == "get_Count"
+                        )
                     {
-                        var g3 = groups[_Random.Next(0, groups.Count - 1)];
-                        var code3 = g3[_Random.Next(0, g3.Count - 1)];
-                        if (code3.IsPrefixOperCode() == false && ((code3 is DCILOperCode_Try_Catch_Finally) == false))
+                        if (info.Paramters == null || info.Paramters.Count == 0)
                         {
-                            items.Add(code3.Clone(CreataLableID()));
+                            changePos = true;
                         }
-                        //items.Add(followCodes[_Random.Next(0, followCodes.Count - 1)].Clone(CreataLableID()));
                     }
-                    items.Add(new DCILOperCode(CreataLableID(), "nop", null));// "\"4444444444444455555555555555555\""));
                 }
-                if (isInTryBlock && group2 == lastGroup)
+                if (changePos)
                 {
-                    items.Add(leaveCode.Clone(CreataLableID()));
+                    var preCode = items[iCount - 1];
+                    if (preCode.IsPrefixOperCode())
+                    {
+                        continue;
+                    }
+                    var nextCode = items[iCount + 1];
+                    if (nextCode.HasLabelID() == false)
+                    {
+                        continue;
+                    }
+                    var newID = CreataLableID();
+                    items[iCount] = new DCILOperCode(code.LabelID, "br", newID);// 替换成跳转代码
+                    code.LabelID = newID;
+                    tempList.Add(code);
+                    tempList.Add(new DCILOperCode(CreataLableID(), "br", nextCode.LabelID));
                 }
-            }
+            }//for
 
+            if (tempList.Count > 0)
+            {
+                if (groups.Count > 2)
+                {
+                    items.Add(new DCILOperCode(CreataLableID(), "br", groups[_Random.Next(1, groups.Count - 1)][0].LabelID));
+                }
+                items.AddRange(tempList);
+            }
+            if ( leaveCode != null )
+            {
+                items.Add(leaveCode.Clone(CreataLableID()));
+            }
             if (retCode != null)
             {
-                var newRetlabelID = CreataLableID();
-                items.Add(new DCILOperCode(retCode.LabelID, "br.s", newRetlabelID));
-                items.Add(new DCILOperCode(CreataLableID(), "nop", null));
-                retCode.LabelID = newRetlabelID;
-                items.Add(retCode);
+                items.Add(new DCILOperCode(retCode.LabelID, "nop", null));
+                items.Add(new DCILOperCode(CreataLableID(), "ret", null));
+                //items.Add(retCode);
+                //items.Add(new DCILOperCode(CreataLableID(), "ret", null));
+
+                //var newRetlabelID = CreataLableID();
+                //items.Add(new DCILOperCode(retCode.LabelID, "br.s", newRetlabelID));
+                //items.Add(new DCILOperCode(CreataLableID(), "nop", null));
+                //retCode.LabelID = newRetlabelID;
+                //items.Add(retCode);
             }
             int addCount = items.Count - oldItemsCount;
             return true;
@@ -4436,6 +4808,27 @@ namespace JIEJIE
             }
 
             reader.ReadLine();
+        }
+        public DCILInvokeMethodInfo Clone()
+        {
+            var result = (DCILInvokeMethodInfo)this.MemberwiseClone();
+            if( this.Paramters != null )
+            {
+                result.Paramters = new List<DCILMethodParamter>();
+                foreach( var p in this.Paramters )
+                {
+                    result.Paramters.Add(p.Clone());
+                }
+            }
+            if(this.GenericParamters != null )
+            {
+                result.GenericParamters = new List<DCILTypeReference>();
+                foreach( var p in this.GenericParamters )
+                {
+                    result.GenericParamters.Add(p);
+                }
+            }
+            return result;
         }
         public void CacheTypeReference(DCILDocument document)
         {
@@ -4663,6 +5056,21 @@ namespace JIEJIE
         public DCILMethod LocalMethod = null;
         public List<DCILTypeReference> GenericParamters = null; 
         public List<DCILMethodParamter> Paramters = null;
+        public int ParametersCount
+        {
+            get
+            {
+                if (this.Paramters == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return this.Paramters.Count;
+                }
+            }
+        }
+
         public void WriteTo(DCILWriter writer)
         {
             var strMethodName = this.MethodName;
@@ -6378,9 +6786,16 @@ namespace JIEJIE
 
         }
         public DCILInvokeMethodInfo InvokeInfo = null;
-
+        public void ChangeTarget( DCILTypeReference type , string methodName )
+        {
+            var info = this.InvokeInfo.Clone();
+            info.OwnerType = type;
+            info.MethodName = methodName;
+            this.InvokeInfo = info;
+        }
+         
         public DCILMethod LocalMethod = null;
-
+        
         public DCILOperCode_HandleMethod(string code, DCILReader reader)
         {
             this.OperCode = code;
@@ -6399,6 +6814,10 @@ namespace JIEJIE
             {
                 writer.WriteWhitespace(10 - this.LabelID.Length);
             }
+            //if( this.InvokeInfo.MethodName == "Object_ToString")
+            //{
+
+            //}
             writer.Write(this.OperCode);
             if (this.InvokeInfo != null)
             {
@@ -6576,7 +6995,7 @@ namespace JIEJIE
         {
             if (this.Text != null && this.Text.Length > 0)
             {
-                writer.WriteLine("//" + this.Text);
+                writer.WriteLine( Environment.NewLine + "//" + this.Text);
             }
         }
         public override string ToString()
@@ -6712,6 +7131,10 @@ namespace JIEJIE
         public DCILMethod OwnerMethod = null;
         public string NativeSource = null;
         public string LabelID = null;
+        public bool HasLabelID()
+        {
+            return this.LabelID != null && this.LabelID.Length > 0;
+        }
         public string OperCode = null;
         public string OperData = null;
         public int LineIndex = 0;
@@ -9171,6 +9594,7 @@ namespace JIEJIE
         private static readonly HashSet<string> PrimitiveTypeNames = null;
         public static readonly DCILTypeReference Type_Void = null;
         public static readonly DCILTypeReference Type_String = null;
+        public static readonly DCILTypeReference Type_Object = null;
         static DCILTypeReference()
         {
             PrimitiveTypeNames = new HashSet<string>();
@@ -9216,6 +9640,7 @@ namespace JIEJIE
 
             Type_Void = _PrimitiveTypes["void"];
             Type_String = _PrimitiveTypes["string"];
+            Type_Object = _PrimitiveTypes["object"];
             _Cache_CreateByNativeType[typeof(string)] = Type_String;
         }
 
@@ -10183,6 +10608,10 @@ namespace JIEJIE
             }
             return true;
         }
+        public DCILMethodParamter Clone()
+        {
+            return (DCILMethodParamter)this.MemberwiseClone();
+        }
         public bool IsOut = false;
         public bool IsIn = false;
 
@@ -10461,7 +10890,7 @@ namespace JIEJIE
             this.Load(reader);
             this.HasGenericStyle = GetHasGenericStyle();
         }
-
+        public int IndexOfExtLocals = int.MinValue;
         /// <summary>
         /// 是否处于某个重载链条中
         /// </summary>
@@ -12540,6 +12969,11 @@ namespace JIEJIE
     [System.Runtime.InteropServices.ComVisible(false)]
     internal static class InnerAssemblyHelper20210315
     {
+        public static bool EqualString( string s1 , string s2 )
+        {
+            return string.Equals(s1, s2);
+        }
+
         private static volatile System.Threading.Thread _CloneStringCrossThead_Thread = null;
         private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event 
             = new System.Threading.AutoResetEvent(false);

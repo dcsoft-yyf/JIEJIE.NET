@@ -75,7 +75,7 @@ public abstract class XTextDocumentContentElement : XTextContentElement
 You can see , some API's name obfuscated.
 
 ## 2 , Obfuscate control-flow.
-JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It let codes are very hard to read, some times it will cause crack tool error.
+JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It can break syntactic structure for foreach/lock/using. hiden the operation of euqals and concat tow string values. It let codes are very hard to read, some times it will cause crack tool error.
 <br />For example , the old code is :
 ```C#
 public static string[] AnalyseVariableString(string strText, string strHead,
