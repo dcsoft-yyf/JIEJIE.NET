@@ -109,42 +109,42 @@ After use JieJie.NET, these code display in ILSpy is:
 ```C#
 public void RemoveTaskByTaskID(string taskID)
 {
-	//Discarded unreachable code: IL_0083, IL_00e7, IL_00f4
-	//IL_0074: Incompatible stack heights: 0 vs 1
-	//IL_007e: Incompatible stack heights: 0 vs 1
-	//IL_00d8: Incompatible stack heights: 0 vs 1
-	//IL_00e2: Incompatible stack heights: 0 vs 1
-	if (taskID == null || !z0ufhk())
-	{
-		return;
-	}
-	z0ZzZzkh.z0akj(this);
-	try
-	{
-		if (z0dfhk != null && z0ZzZzkh.z0clj(z0dfhk.ID, taskID))
-		{
-			z0dfhk = null;
-		}
-		((BackgroundTaskManager)/*Error near IL_0012: Stack underflow*/).z0hfhk.GetEnumerator();
-		using List<BackgroundTask>.Enumerator enumerator = /*Error near IL_0019: Stack underflow*/;
-		BackgroundTask backgroundTask;
-		do
-		{
-			enumerator.MoveNext();
-			if ((int)/*Error near IL_006a: Stack underflow*/ == 0)
-			{
-				return;
-			}
-			_ = enumerator.Current;
-			backgroundTask = (BackgroundTask)/*Error near IL_0032: Stack underflow*/;
-		}
-		while (!z0ZzZzkh.z0clj(backgroundTask.ID, taskID));
-		z0hfhk.Remove(backgroundTask);
-	}
-	finally
-	{
-		z0ZzZzkh.z0xlj(this);
-	}
+    //Discarded unreachable code: IL_0083, IL_00e7, IL_00f4
+    //IL_0074: Incompatible stack heights: 0 vs 1
+    //IL_007e: Incompatible stack heights: 0 vs 1
+    //IL_00d8: Incompatible stack heights: 0 vs 1
+    //IL_00e2: Incompatible stack heights: 0 vs 1
+    if (taskID == null || !z0ufhk())
+    {
+        return;
+    }
+    z0ZzZzkh.z0akj(this);
+    try
+    {
+        if (z0dfhk != null && z0ZzZzkh.z0clj(z0dfhk.ID, taskID))
+        {
+            z0dfhk = null;
+        }
+        ((BackgroundTaskManager)/*Error near IL_0012: Stack underflow*/).z0hfhk.GetEnumerator();
+        using List<BackgroundTask>.Enumerator enumerator = /*Error near IL_0019: Stack underflow*/;
+        BackgroundTask backgroundTask;
+        do
+        {
+            enumerator.MoveNext();
+            if ((int)/*Error near IL_006a: Stack underflow*/ == 0)
+            {
+                return;
+            }
+            _ = enumerator.Current;
+            backgroundTask = (BackgroundTask)/*Error near IL_0032: Stack underflow*/;
+        }
+        while (!z0ZzZzkh.z0clj(backgroundTask.ID, taskID));
+        z0hfhk.Remove(backgroundTask);
+    }
+    finally
+    {
+        z0ZzZzkh.z0xlj(this);
+    }
 }
 ```
 Look, the `foreach` and `lock` broken , and ILSpy has error ` /*Error near IL_0012: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
