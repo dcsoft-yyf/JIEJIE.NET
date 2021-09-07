@@ -75,192 +75,79 @@ public abstract class XTextDocumentContentElement : XTextContentElement
 You can see , some API's name obfuscated.
 
 ## 2 , Obfuscate control-flow.
-JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It can break syntactic structure for foreach/lock/using. hiden the operation of euqals and concat tow string values. It let codes are very hard to read, some times it will cause crack tool error.
+JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It can break syntactic structure for `foreach/lock/using`. hiden the operation of euqals and concat tow string values. It let codes are very hard to read, some times it will cause crack tool error.
 <br />For example , the old code is :
 ```C#
-public static string[] AnalyseVariableString(string strText, string strHead,
-      string strEnd, bool EnableEmptyItem)
+public void RemoveTaskByTaskID(string taskID)
 {
-   if (strText == null || strHead == null || strEnd == null 
-      || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
-   {
-      return new string[1]
-      {
-         strText
-      };
-   }
-   int index = strText.IndexOf(strHead);
-   if (index < 0)
-   {
-      return new string[1]
-      {
-         strText
-      };
-   }
-   List<string> myList = new List<string>();
-   int LastIndex = 0;
-   do
-   {
-      int index2 = strText.IndexOf(strEnd, index + 1);
-      if (index2 > index)
-      {
-         index = LastIndexOfRange(strText, strHead, LastIndex, index2);
-         if (index == -1)
-         {
-            break;
-         }
-         int len = index2 - index - strHead.Length;
-         if (len < 0 || (len == 0 && !EnableEmptyItem))
-         {
-            break;
-         }
-         string strKey = strText.Substring(index + strHead.Length, len);
-         if (LastIndex < index)
-         {
-            string strItem = strText.Substring(LastIndex, index - LastIndex);
-            myList.Add(strItem);
-         }
-         else
-         {
-            myList.Add(string.Empty);
-         }
-         myList.Add(strKey);
-         index = index2 + strEnd.Length;
-         LastIndex = index;
-         continue;
-      }
-      break;
-   }
-   while (index >= 0 && index < strText.Length);
-   if (LastIndex < strText.Length)
-   {
-      myList.Add(strText.Substring(LastIndex));
-   }
-   return myList.ToArray();
+    if (taskID == null)
+    {
+        return;
+    }
+    if (CheckOwner() == false)
+    {
+        return;
+    }
+    lock (this)
+    {
+        if (this._CurrentTask != null && this._CurrentTask.ID == taskID)
+        {
+            this._CurrentTask = null;
+        }
+        foreach (BackgroundTask task in _Tasks)
+        {
+            if (task.ID == taskID)
+            {
+                _Tasks.Remove(task);
+                break;
+            }
+        }
+    }
 }
 ```
 After use JieJie.NET, these code display in ILSpy is:
 ```C#
-public static string[] AnalyseVariableString(string strText, string strHead, 
-      string strEnd, bool EnableEmptyItem)
+public void RemoveTaskByTaskID(string taskID)
 {
-   //Discarded unreachable code: IL_01ff
-   //IL_008a: Invalid comparison between Unknown and O
-   //IL_0109: Unknown result type (might be due to invalid IL or missing references)
-   //IL_010b: Expected I4, but got Unknown
-   //IL_0135: Incompatible stack heights: 0 vs 2
-   //IL_014d: Incompatible stack heights: 0 vs 1
-   //IL_014d: Incompatible stack heights: 1 vs 0
-   //IL_017d: Incompatible stack heights: 2 vs 0
-   //IL_0194: Incompatible stack heights: 1 vs 4
-   //IL_0194: Incompatible stack heights: 3 vs 1
-   //IL_01f5: Incompatible stack heights: 3 vs 1
-   //IL_01f5: Incompatible stack heights: 1 vs 3
-   //IL_01ff: Incompatible stack heights: 1 vs 0
-   string[] array;
-   if (strText == null || strHead == null || strEnd == null 
-      || strHead.Length == 0 || strEnd.Length == 0 || strText.Length == 0)
-   {
-      array = new string[1]
-      {
-         strText
-      };
-      goto IL_002a;
-   }
-   if (1 == 0)
-   {
-      goto IL_008a;
-   }
-   goto IL_0152;
-   IL_013a:
-   int num;
-   bool flag = num < strText.Length;
-   List<string> list;
-   if (true)
-   {
-      if ((int)/*Error near IL_000b: Stack underflow*/ != 0)
-      {
-         list.Add(strText.Substring(num));
-      }
-      array = list.ToArray();
-      goto IL_002a;
-   }
-   goto IL_0152;
-   IL_002a:
-   string[] result = array;
-   goto IL_0200;
-   IL_017f:
-   int num2;
-   int num3 = strText.IndexOf(strEnd, num2 + 1);
-   if (true)
-   {
-      goto IL_008a;
-   }
-   goto IL_0199;
-   IL_008a:
-   int num4;
-   int num5;
-   if ((object)/*Error near IL_008c: Stack underflow*/ > strText)
-   {
-      num2 = LastIndexOfRange(strText, strHead, num, num3);
-      if (num2 != -1)
-      {
-         num4 = num3 - num2 - strHead.Length;
-         if (num4 >= 0 && (num4 != 0 || EnableEmptyItem))
-         {
-            num5 = num2;
-            if (1 == 0)
-            {
-               goto IL_0103;
-            }
-            goto IL_0199;
-         }
-      }
-   }
-   goto IL_013a;
-   IL_0200:
-   return result;
-   IL_0152:
-   num2 = strText.IndexOf(strHead);
-   if (num2 < 0)
-   {
-      array = new string[1]
-      {
-         strText
-      };
-      goto IL_002a;
-   }
-   list = new List<string>();
-   num = 0;
-   goto IL_017f;
-   IL_0199:
-   string item = strText.Substring(num5 + strHead.Length, num4);
-   if (num < num2)
-   {
-      string item2 = strText.Substring(num, num2 - num);
-      list.Add(item2);
-   }
-   else
-   {
-      list.Add(string.Empty);
-   }
-   list.Add(item);
-   if (true)
-   {
-      goto IL_0103;
-   }
-   goto IL_0200;
-   IL_0103:
-   num2 = (int)(strHead + strEnd.Length);
-   num = num2;
-   if (num2 < 0 || num2 >= strText.Length)
-   {
-      goto IL_013a;
-   }
-   goto IL_017f;
+	//Discarded unreachable code: IL_0083, IL_00e7, IL_00f4
+	//IL_0074: Incompatible stack heights: 0 vs 1
+	//IL_007e: Incompatible stack heights: 0 vs 1
+	//IL_00d8: Incompatible stack heights: 0 vs 1
+	//IL_00e2: Incompatible stack heights: 0 vs 1
+	if (taskID == null || !z0ufhk())
+	{
+		return;
+	}
+	z0ZzZzkh.z0akj(this);
+	try
+	{
+		if (z0dfhk != null && z0ZzZzkh.z0clj(z0dfhk.ID, taskID))
+		{
+			z0dfhk = null;
+		}
+		((BackgroundTaskManager)/*Error near IL_0012: Stack underflow*/).z0hfhk.GetEnumerator();
+		using List<BackgroundTask>.Enumerator enumerator = /*Error near IL_0019: Stack underflow*/;
+		BackgroundTask backgroundTask;
+		do
+		{
+			enumerator.MoveNext();
+			if ((int)/*Error near IL_006a: Stack underflow*/ == 0)
+			{
+				return;
+			}
+			_ = enumerator.Current;
+			backgroundTask = (BackgroundTask)/*Error near IL_0032: Stack underflow*/;
+		}
+		while (!z0ZzZzkh.z0clj(backgroundTask.ID, taskID));
+		z0hfhk.Remove(backgroundTask);
+	}
+	finally
+	{
+		z0ZzZzkh.z0xlj(this);
+	}
 }
 ```
-Look, the code has many goto , and ILSpy has error ` /*Error near IL_008c: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
+Look, the `foreach` and `lock` broken , and ILSpy has error ` /*Error near IL_0012: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
 ## 3 , Encrypt all string values define in assembly.
 JieJie.NET can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 <br/>For example , the old code is :
