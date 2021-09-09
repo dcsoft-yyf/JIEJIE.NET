@@ -1,7 +1,13 @@
 # JIEJIE.NET
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
-  
+## update log
+<br/> 2021-9-9 package small properties and change call/callvirt instructions.
+<br/> 2021-8-23 Add feature: Support .NET core,fix some bugs.
+<br/> 2021-7-20 Add feature: type or member rename.
+<br/> 2021-4-2  Add feature: Obfuscate control flow.
+<br/> 2021-3-22 First publish.
+
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
 <br/>So I write JieJie.NET can encrypt .NET assembly deeply,help people protect their copyright.and this tool is open source.
@@ -109,45 +115,50 @@ After use JieJie.NET, these code display in ILSpy is:
 ```C#
 public void RemoveTaskByTaskID(string taskID)
 {
-    //Discarded unreachable code: IL_0083, IL_00e7, IL_00f4
-    //IL_0074: Incompatible stack heights: 0 vs 1
-    //IL_007e: Incompatible stack heights: 0 vs 1
-    //IL_00d8: Incompatible stack heights: 0 vs 1
-    //IL_00e2: Incompatible stack heights: 0 vs 1
-    if (taskID == null || !z0ufhk())
-    {
-        return;
-    }
-    z0ZzZzkh.z0akj(this);
-    try
-    {
-        if (z0dfhk != null && z0ZzZzkh.z0clj(z0dfhk.ID, taskID))
-        {
-            z0dfhk = null;
-        }
-        ((BackgroundTaskManager)/*Error near IL_0012: Stack underflow*/).z0hfhk.GetEnumerator();
-        using List<BackgroundTask>.Enumerator enumerator = /*Error near IL_0019: Stack underflow*/;
-        BackgroundTask backgroundTask;
-        do
-        {
-            enumerator.MoveNext();
-            if ((int)/*Error near IL_006a: Stack underflow*/ == 0)
-            {
-                return;
-            }
-            _ = enumerator.Current;
-            backgroundTask = (BackgroundTask)/*Error near IL_0032: Stack underflow*/;
-        }
-        while (!z0ZzZzkh.z0clj(backgroundTask.ID, taskID));
-        z0hfhk.Remove(backgroundTask);
-    }
-    finally
-    {
-        z0ZzZzkh.z0xlj(this);
-    }
+	//Discarded unreachable code: IL_0006, IL_000e, IL_0022, IL_0087, IL_00ea, IL_00f7
+	//IL_006e: Incompatible stack heights: 1 vs 0
+	//IL_0078: Incompatible stack heights: 0 vs 1
+	//IL_0082: Incompatible stack heights: 0 vs 1
+	//IL_00e5: Incompatible stack heights: 0 vs 2
+	//IL_012c: Incompatible stack heights: 1 vs 0
+	if (taskID == null || !z0qwk())
+	{
+		return;
+	}
+	z0ZzZzjyf.z0pek(this);
+	try
+	{
+		if (z0cqk != null && z0ZzZzjyf.z0mek(z0cqk.z0dwk(), taskID))
+		{
+			z0cqk = null;
+		}
+		z0kwk.GetEnumerator();
+		using List<BackgroundTask>.Enumerator enumerator = /*Error near IL_001c: Stack underflow*/;
+		BackgroundTask backgroundTask;
+		do
+		{
+			enumerator.MoveNext();
+			double num;
+			if ((int)num == 0)
+			{
+				return;
+			}
+			_ = enumerator.Current;
+			backgroundTask = (BackgroundTask)/*Error near IL_003b: Stack underflow*/;
+		}
+		while (!z0ZzZzjyf.z0mek(backgroundTask.z0dwk(), taskID));
+		z0kwk.Remove(backgroundTask);
+	}
+	finally
+	{
+		z0ZzZzjyf.z0tek(this);
+	}
 }
 ```
-Look, the `foreach` and `lock` broken , and ILSpy has error ` /*Error near IL_0012: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
+Look, the `foreach` and `lock` broken , and ILSpy has error ` /*Error near IL_003b: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
+<br />JieJie.NET can package small properties. In the old code ` task.ID ` , and in the new code it changed to ` backgroundTask.z0dwk() ` . JieJie.NET create a new method ` z0dwk() ` and copy the function of ` backgroundTask.get_ID() `.
+This cause the new code is more hard to read.
+
 ## 3 , Encrypt all string values define in assembly.
 JieJie.NET can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
 <br/>For example , the old code is :
@@ -750,10 +761,6 @@ My new tool is a .NET framework console  application.
 ## License
 JieJie.NET use GPL-2.0 License. 
 
-## update log
-<br/> 2021-3-22 First publish.
-<br/> 2021-4-2  Add feature: Obfuscate control flow.
-<br/> 2021-7-20 Add feature: type or member rename.
-<br/> 2021-8-23 Add feature: Support .NET core,fix some bugs.
+
 <hr />
 JIEJIE.NET can save tens of thousands of US dollars for your team. so you can donate by <a href="https://www.paypal.com/paypalme/yuanyongfu">paypal</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/alipay.jpg">alipay</a> , by <a href="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/wechat_pay.png">Wechat</a>,help author to feed twins born in 2020.

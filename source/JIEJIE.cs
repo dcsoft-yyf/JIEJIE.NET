@@ -53,7 +53,7 @@ namespace JIEJIE
             //    "",
             //    "prefixfortyperename=zzz.z0ZzZz",
             //    "prefixformemberrename=z0",
-            //    "dddebugmode",
+            //    //"debugmode",
             //    "pause"
             //};
 
@@ -454,6 +454,8 @@ namespace JIEJIE
                 this.Document.Dispose();
                 this.Document = null;
             }
+            this._CallOperCodes?.Clear();
+            this._CallOperCodes = null;
             this._AllClasses?.Clear();
             //this._AllBaseTypes.Clear();
             this._ByteDataContainer = null;
@@ -739,6 +741,7 @@ namespace JIEJIE
 
         public void HandleDocument()
         {
+            this._CallOperCodes = new List<DCILOperCode_HandleMethod>();
             this.SelectUILanguage();
             if (this.Switchs.Strings)
             {
@@ -759,6 +762,15 @@ namespace JIEJIE
             }
             this.AddDatasClass();
             this.Document.FixDomState();
+            if (this.Switchs.ControlFlow)
+            {
+                if (this._CallOperCodes != null && this._CallOperCodes.Count > 0)
+                {
+                    ChangeCallOperCodes(this._CallOperCodes);
+                    this._CallOperCodes.Clear();
+                    this._CallOperCodes = null;
+                }
+            }
             if (this.Switchs.MemberOrder)
             {
                 this.ObfuseClassOrder();
@@ -771,7 +783,140 @@ namespace JIEJIE
             {
                 RemoveMember();
             }
+            
         }
+
+        private void ChangeCallOperCodes(List<DCILOperCode_HandleMethod> callCodes)
+        {
+            ConsoleWriteTask();
+            Console.Write("Start package member property...");
+            int tick = Environment.TickCount;
+            var methods = new Dictionary<DCILMethod, int>();
+            foreach (var item in callCodes)
+            {
+                var lm = item.InvokeInfo?.LocalMethod;
+                if (lm == null
+                    || lm.RenameState == DCILRenameState.Renamed)
+                {
+                    continue;
+                }
+                if (lm.Name.StartsWith("get_", StringComparison.Ordinal)
+                    && lm.ParametersCount == 0
+                    && lm.ParentMember is DCILProperty)
+                {
+                    if (methods.ContainsKey(lm))
+                    {
+                        methods[lm]++;
+                    }
+                    else
+                    {
+                        methods[lm] = 1;
+                    }
+                }
+                else if (lm.Name.StartsWith("set_", StringComparison.Ordinal)
+                    && lm.ParametersCount == 1
+                    && lm.ParentMember is DCILProperty)
+                {
+                    if (methods.ContainsKey(lm))
+                    {
+                        methods[lm]++;
+                    }
+                    else
+                    {
+                        methods[lm] = 1;
+                    }
+                }
+            }//foreach
+            //int idCounter = 0;
+            int newMethodCount = 0;
+            int changeCodeCount = 0;
+            foreach ( var item in methods )
+            {
+                if( item.Value > 5 )
+                {
+                    var method = item.Key;
+                    //if (method.Name == "get_ID" && method.Parent.Name == "DCSoft.Common.BackgroundTask")
+                    //{
+
+                    //}
+                    if ( method.IsFinal == false )
+                    {
+                        if(method.IsVirtual || method.IsNewslot || method.IsAbstract )
+                        {
+                            continue;
+                        }
+                    }
+                    if(method.OperCodes.Count > 20 )
+                    {
+                        continue;
+                    }
+                    bool tooManyCode = false;
+                    foreach ( var code2 in method.OperCodes )
+                    {
+                        if(code2 is DCILOperCode_Try_Catch_Finally)
+                        {
+                            tooManyCode = true;
+                            break;
+                        }
+                    }
+                    if(tooManyCode )
+                    {
+                        continue;
+                    }
+                    
+                    var cls =(DCILClass) method.Parent;
+                    var newMethod = method.SimpleClone();
+                    //if (this.Switchs.Rename)
+                    //{
+                    //    if (cls.idGenForMember == null)
+                    //    {
+                    //        cls.idGenForMember = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
+                    //    }
+                    //    method.ChangeName(cls.idGenForMember.GenerateIDForMember(method.Name, method));
+                    //}
+                    //else
+                    //{
+                    //    method._Name = "__jiejie_net_" + Convert.ToString(idCounter++);
+                    //}
+                    //method._Name = "__jiejie_net_" + Convert.ToString(idCounter++);
+                    method.RenameState = DCILRenameState.NotHandled;
+                    method.ObfuscationSettings = null;
+                    method._Name = "__jiejie_net_" + newMethod.Name + "_" + item.Value;// Convert.ToString(idCounter++);
+                    method.RemoveStyle_specialname();
+                    method.RemoveStyle("public");
+                    method.CustomAttributes = null;
+                    if (method.FlagsForPrivate)
+                    {
+                        method.Styles.Insert(0, "private");
+                    }
+                    else
+                    { 
+                        method.Styles.Insert(0, "assembly");
+                    }
+                    cls.ChildNodes.Add(newMethod);
+                    if(method.ParentMember is DCILProperty )
+                    {
+                        var p = (DCILProperty)method.ParentMember;
+                        if(p.Method_Get?.LocalMethod == method )
+                        {
+                            p.Method_Get = p.Method_Get.SimpleClone();
+                            p.Method_Get.LocalMethod = newMethod;
+                        }
+                        else if( p.Method_Set?.LocalMethod == method )
+                        {
+                            p.Method_Set = p.Method_Set.SimpleClone();
+                            p.Method_Set.LocalMethod = newMethod;
+                        }
+                    }
+                    method.ParentMember = null;
+                    newMethodCount++;
+                    changeCodeCount += item.Value;
+                }
+            }//foreach
+            tick = Environment.TickCount - tick;
+            Console.WriteLine(" create " + newMethodCount + " methods , change " + changeCodeCount + " call/callvirt instructions. span " + tick + " milliseconds.");
+        }
+
         private void RemoveMember()
         {
             ConsoleWriteTask();
@@ -1942,11 +2087,12 @@ namespace JIEJIE
         }
         public int RenameClasses()
         {
+            IDGenerator.GenCountBase = 0;
             ConsoleWriteTask();
             Console.Write("Renaming.....");
             int tick = Environment.TickCount;
-            var idGen = new IDGenerator(this.PrefixForTypeRename , this.PrefixForMemberRename );
-            idGen.DebugMode = this.DebugMode;
+            var idGenForMember = new IDGenerator(this.PrefixForTypeRename , this.PrefixForMemberRename );
+            idGenForMember.DebugMode = this.DebugMode;
 
             var allClasses = GetAllClasses();
             var attributes = new List<DCILCustomAttribute>();
@@ -1962,7 +2108,10 @@ namespace JIEJIE
                 }
             }
             var clsNameMaps = new RenameMapInfo();
-            int result = RenameByOverrideList(allClasses, idGen, clsNameMaps);
+            int result = RenameByOverrideList(allClasses, idGenForMember, clsNameMaps);
+
+            IDGenerator.GenCountBase = idGenForMember.GenCount + 1;
+
             // 执行函数的重命名
             var idGenForClass = new IDGenerator(this.PrefixForTypeRename,this.PrefixForMemberRename);
             idGenForClass.DebugMode = this.DebugMode;
@@ -1989,13 +2138,25 @@ namespace JIEJIE
                 //continue;
                 if (clsOs == null || clsOs.Exclude == false || clsOs.ApplyToMembers == false)
                 {
+                    //if(cls.Name == "DCSoft.Common.ValueValidateStyle")
+                    //{
+
+                    //}
                     if (cls.IsMulticastDelegate)// .BaseType?.Name == "System.MulticastDelegate")
                     {
                         continue;
                     }
+                    if(cls.idGenForMember == null )
+                    {
+                        cls.idGenForMember = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
+                    }
                     // 重命名成员
                     foreach (var item in cls.ChildNodes)
                     {
+                        if (item.Name == "__jiejie_net_get_CheckMinValue")
+                        {
+
+                        }
                         if (item is DCILMethod)
                         {
                             var method = (DCILMethod)item;
@@ -2005,7 +2166,7 @@ namespace JIEJIE
                                 if(AllowRename(method))
                                 {
                                     method.OldName = method.Name;
-                                    method.ChangeName(idGen.GenerateIDForMember(method.OldName, method));
+                                    method.ChangeName(cls.idGenForMember.GenerateIDForMember(method.OldName, method));
                                     result++;
                                 }
                                 else
@@ -2024,7 +2185,7 @@ namespace JIEJIE
                                     continue;
                                 }
                                 field.OldName = field.Name;
-                                field.ChangeName(idGen.GenerateIDForMember(field.OldName, field));
+                                field.ChangeName(cls.idGenForMember.GenerateIDForMember(field.OldName, field));
                                 result++;
                             }
                         }
@@ -2216,111 +2377,6 @@ namespace JIEJIE
             str.AppendLine(" (" + rate.ToString("0.00") + "%)");
         }
 
-        internal class IDGenerator
-        {
-            public IDGenerator(string strPreFix, string memberPrefix , int len = 8)
-            {
-                this.Length = len;
-                this._Indexs = new int[len];
-                this._CharsLength = _Chars.Length;
-                this._ClassNamePrefx = strPreFix;
-                this._MemberNamePrefix = memberPrefix;
-                Reset();
-            }
-            public void Reset()
-            {
-                for (int iCount = 0; iCount < this._Indexs.Length; iCount++)
-                {
-                    this._Indexs[iCount] = _rnd.Next(0, _Chars.Length - 1);
-                }
-                this._Indexs[0] = 0;
-                this._Indexs[1] = 0;
-                this.GenCount = _rnd.Next(10, 100);
-            }
-            private System.Random _rnd = new Random();
-            private static readonly string _Chars = "lkjhgfdsaqwertyuiopmnbvcxz";//"mn0O1l";
-            private readonly int _CharsLength = 0;
-            private readonly string _ClassNamePrefx = null;
-            private readonly string _MemberNamePrefix = null;
-
-            private int[] _Indexs = null;
-            public readonly int Length = 0;
-            public int GenCount = 0;
-            public bool DebugMode = false;
-
-            public string GenerateIDForClass(string oldName, DCILObject obj)
-            {
-                if (this.DebugMode)
-                {
-                    return DebugModeGenerateID(oldName, obj);
-                }
-                string id = this.InnerGenerateID();
-                if (this._ClassNamePrefx != null)
-                {
-                    return this._ClassNamePrefx + id;
-                }
-                else
-                {
-                    return id;
-                }
-            }
-            public string GenerateIDForMember(string oldName, DCILObject obj)
-            {
-                if (this.DebugMode)
-                {
-                    return DebugModeGenerateID(oldName, obj);
-                }
-                string id = this.InnerGenerateID();
-                if (this._MemberNamePrefix != null)
-                {
-                    return this._MemberNamePrefix + id;
-                }
-                else
-                {
-                    return id;
-                }
-            }
-            private string DebugModeGenerateID(string oldName, DCILObject obj)
-            {
-                //this.GenCount++;
-                int idFix = obj.InstanceIndex;
-                string result = null;
-                if (oldName[0] == '\'')
-                {
-                    result = "'__" + oldName.Substring(1);
-                }
-                else
-                {
-                    result = "__" + oldName;
-                }
-                if (result[result.Length - 1] == '\'')
-                {
-                    result = result.Substring(0, result.Length - 1) + "_" + idFix.ToString() + "'";
-                }
-                else
-                {
-                    result = result + "_" + idFix.ToString();
-                }
-                return result;
-            }
-            private char[] _ResultBuffer = new char[20];
-            private string InnerGenerateID()
-            {
-                int gc = this.GenCount++;
-                for( int iCount = 0; iCount < 20; iCount ++  )
-                {
-                    int index = gc % this._CharsLength;
-                    _ResultBuffer[iCount] = _Chars[index];
-                    gc = (gc - index) / this._CharsLength;
-                    if( gc == 0 )
-                    {
-                        return new string(this._ResultBuffer, 0, iCount+1);
-                    }
-                }
-                return null; 
-            }
-        }
-         
         private void InnerGetAllBaseType(DCILClass start, List<DCILTypeReference> list)
         {
             if (start.BaseType != null)
@@ -4269,6 +4325,8 @@ namespace JIEJIE
                 }
             }//foreach
         }
+        private List<DCILOperCode_HandleMethod> _CallOperCodes = new List<DCILOperCode_HandleMethod> ();
+
         public bool ObfuscateOperCodeList( DCILMethod method , DCILOperCodeList items, bool isInTryBlock , DCILOperCodeList parentList )
         {
             if (items == null || items.Count == 0)
@@ -4295,6 +4353,43 @@ namespace JIEJIE
             {
                 ChangeSpecifyCallTarget(items);
             }
+            //if (method.Name == "get_BoundsSelection" && method.Parent.Name == "DCSoft.Writer.Controls.WriterControl")
+            //{
+
+            //}
+            foreach (var item in items)
+            {
+                if (item.OperCode == "call" || item.OperCode == "callvirt")
+                {
+                    var callCode = (DCILOperCode_HandleMethod)item;
+                    if (callCode.InvokeInfo != null)
+                    {
+                        var info = callCode.InvokeInfo;
+                        var methodName = info.MethodName;
+                        if (
+                            methodName.StartsWith("get_", StringComparison.Ordinal)
+                            || methodName.StartsWith("set_", StringComparison.Ordinal)
+                            || methodName.StartsWith("add_", StringComparison.Ordinal)
+                            || methodName.StartsWith("remove_", StringComparison.Ordinal)
+                            )
+                        {
+                            var lm = info.LocalMethod;
+                            if (lm != null && lm.IsInstance && lm.HasGenericStyle == false)
+                            {
+                                //if (lm.Name == "get_BoundsSelection")
+                                //{
+
+                                //}
+                                if (lm.Parent != method.Parent)
+                                {
+                                    lm.FlagsForPrivate = false;
+                                }
+                                this._CallOperCodes.Add(callCode);
+                            }
+                        }
+                    }
+                }
+            }
             var groupMaxLen = _Random.Next(20, 30);
             if (groupMaxLen >= items.Count)
             {
@@ -4320,7 +4415,6 @@ namespace JIEJIE
             var firstGroup = group;
             groups.Add(group);
             List<DCILOperCode> preGroup = null;
-
             foreach (var item in items)
             {
                 if(group.Count == 0 && item.HasLabelID() == false )
@@ -4333,6 +4427,7 @@ namespace JIEJIE
                     preGroup.Add(new DCILOperCode(CreataLableID(), "br", group[0].LabelID));
                     preGroup.Add(new DCILOperCodeComment("goto next group"));
                     preGroup = null;
+                    group.Insert(0, new DCILOperCode(CreataLableID(), "conv.r8", null));
                     //if (_Random.Next(0, 100) < 30 && items.Count > 40)
                     //{
                     //    // 小概率插入花指令
@@ -4340,7 +4435,7 @@ namespace JIEJIE
                     //    {
                     //        if (items[iCount2].HasLabelID() && items[iCount2].IsPrefixOperCode() == false)
                     //        {
-                    //            group.Insert( 0, new DCILOperCode(CreataLableID(), "br", items[iCount2].LabelID));
+                    //            group.Insert(0, new DCILOperCode(CreataLableID(), "br",items[iCount2].LabelID));
                     //            break;
                     //        }
                     //    }
@@ -4809,6 +4904,10 @@ namespace JIEJIE
 
             reader.ReadLine();
         }
+        public DCILInvokeMethodInfo SimpleClone()
+        {
+            return (DCILInvokeMethodInfo)this.MemberwiseClone();
+        }
         public DCILInvokeMethodInfo Clone()
         {
             var result = (DCILInvokeMethodInfo)this.MemberwiseClone();
@@ -5074,6 +5173,10 @@ namespace JIEJIE
         public void WriteTo(DCILWriter writer)
         {
             var strMethodName = this.MethodName;
+            if(strMethodName == "get_CreateEmptyDirectories")
+            {
+
+            }
             if (this.LocalMethod != null)
             {
                 strMethodName = this.LocalMethod.Name;
@@ -6834,6 +6937,10 @@ namespace JIEJIE
                 this.InvokeInfo.WriteTo(writer);
             }
         }
+        public override string ToString()
+        {
+            return this.LabelID + ":" + this.OperCode + " " + this.InvokeInfo.OwnerType.Name + "::" + this.InvokeInfo.MethodName;
+        }
     }
     internal class DCILOperCode_Try_Catch_Finally : DCILOperCode
     {
@@ -8107,6 +8214,8 @@ namespace JIEJIE
             }
         }
 
+        public IDGenerator idGenForMember = null;
+
         public bool IsImport = false;
         public bool IsInterface = false;
 
@@ -9229,7 +9338,12 @@ namespace JIEJIE
             }
             return false;
         }
-         
+        public bool RemoveStyle_specialname()
+        {
+            return RemoveStyle("specialname");
+        }
+        
+
         public bool AddStyle(string name)
         {
             if (name != null && name.Length > 0)
@@ -10890,6 +11004,17 @@ namespace JIEJIE
             this.Load(reader);
             this.HasGenericStyle = GetHasGenericStyle();
         }
+        public DCILMethod SimpleClone()
+        {
+            var method = (DCILMethod)this.MemberwiseClone();
+            if(this.Styles != null )
+            {
+                method.Styles = new List<string>(this.Styles);
+            }
+            return method;
+        }
+        public bool FlagsForPrivate = true ;
+
         public int IndexOfExtLocals = int.MinValue;
         /// <summary>
         /// 是否处于某个重载链条中
@@ -11773,6 +11898,13 @@ namespace JIEJIE
 
         public int Maxstack = -1;
         public List<DCILMethodParamter> Parameters = null;
+        public int ParametersCount
+        {
+            get
+            {
+                return this.Parameters == null ? 0 : this.Parameters.Count;
+            }
+        }
         public string DeclearEndFix = null;
 
         public int ILCodeStartLineIndex = 0;
@@ -12100,7 +12232,107 @@ namespace JIEJIE
             return str.ToString();
         }
     }
-     
+
+
+    internal class IDGenerator
+    {
+        public IDGenerator(string strPreFix, string memberPrefix )
+        {
+            //this.Length = len;
+            //this._Indexs = new int[len];
+            //this._CharsLength = _Chars.Length;
+            this._ClassNamePrefx = strPreFix;
+            this._MemberNamePrefix = memberPrefix;
+            this.GenCount = GenCountBase + _rnd.Next(10, 100);
+        }
+
+        private static readonly System.Random _rnd = new Random();
+        private static readonly string _Chars = "lkjhgfdsaqwertyuiopmnbvcxz";//"mn0O1l";
+        private static readonly int _CharsLength = _Chars.Length;
+        private readonly string _ClassNamePrefx = null;
+        private readonly string _MemberNamePrefix = null;
+
+        //private int[] _Indexs = null;
+        //public readonly int Length = 0;
+        public static int GenCountBase = 0;
+
+        public int GenCount = 0;
+        public bool DebugMode = false;
+
+        public string GenerateIDForClass(string oldName, DCILObject obj)
+        {
+            if (this.DebugMode)
+            {
+                return DebugModeGenerateID(oldName, obj);
+            }
+            string id = this.InnerGenerateID();
+            if (this._ClassNamePrefx != null)
+            {
+                return this._ClassNamePrefx + id;
+            }
+            else
+            {
+                return id;
+            }
+        }
+        public string GenerateIDForMember(string oldName, DCILObject obj)
+        {
+            if (this.DebugMode)
+            {
+                return DebugModeGenerateID(oldName, obj);
+            }
+            string id = this.InnerGenerateID();
+            if (this._MemberNamePrefix != null)
+            {
+                return this._MemberNamePrefix + id;
+            }
+            else
+            {
+                return id;
+            }
+        }
+        private string DebugModeGenerateID(string oldName, DCILObject obj)
+        {
+            //this.GenCount++;
+            int idFix = obj.InstanceIndex;
+            string result = null;
+            if (oldName[0] == '\'')
+            {
+                result = "'__" + oldName.Substring(1);
+            }
+            else
+            {
+                result = "__" + oldName;
+            }
+            if (result[result.Length - 1] == '\'')
+            {
+                result = result.Substring(0, result.Length - 1) + "_" + idFix.ToString() + "'";
+            }
+            else
+            {
+                result = result + "_" + idFix.ToString();
+            }
+            return result;
+        }
+        private char[] _ResultBuffer = new char[20];
+        private string InnerGenerateID()
+        {
+            int gc = this.GenCount++;
+            for (int iCount = 0; iCount < 20; iCount++)
+            {
+                int index = gc % _CharsLength;
+                _ResultBuffer[iCount] = _Chars[index];
+                gc = (gc - index) / _CharsLength;
+                if (gc == 0)
+                {
+                    return new string(this._ResultBuffer, 0, iCount + 1);
+                }
+            }
+            return null;
+        }
+    }
+
+
     public interface IEqualsValue<T>
     {
         bool EqualsValue(T otherValue);
