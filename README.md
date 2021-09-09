@@ -2,11 +2,11 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2021-9-9 package small properties and change call/callvirt instructions.
-<br/> 2021-8-23 Add feature: Support .NET core,fix some bugs.
-<br/> 2021-7-20 Add feature: type or member rename.
-<br/> 2021-4-2  Add feature: Obfuscate control flow.
-<br/> 2021-3-22 First publish.
+<br/> 2021-9-9  : package small properties and change call/callvirt instructions.
+<br/> 2021-8-23 : Add feature: Support .NET core,fix some bugs.
+<br/> 2021-7-20 : Add feature: type or member rename.
+<br/> 2021-4-2  : Add feature: Obfuscate control flow.
+<br/> 2021-3-22 : First publish.
 
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
