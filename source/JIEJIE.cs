@@ -36,29 +36,36 @@ using System.Reflection;
 
 namespace JIEJIE
 {
-
-    static class ConsoleProgram
+    internal static class ConsoleProgram
     {
+#if DCSoftInner
+        static void AppMain(string[] args)
+        { 
+#else
         static void Main(string[] args)
         {
-            // test data
-
+            ///* test data **************************/
             //args = new string[] {
             //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Common\bin\Debug\DCSoft.Common.dll",//D:\temp2\DCSoft.Writer.ForWinForm.dll",//D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\bin\Debug\netcoreapp3.1\DCSoft.Writer.ForASPNETCore.dll",
-            //    @"D:\temp2\DCSoft.Writer.ForWinForm.dll",//D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\bin\Debug\netcoreapp3.1\DCSoft.Writer.ForASPNETCore.dll",
+            //    @"D:\temp2\DCSoft.Writer.ForWinForm.dll",
+            //    //@"D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\native\DCSoft.Writer.ForASPNETCore.dll",
             //    @"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib",
+            //    //@"output=D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo",
             //    @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
             //    //"switch=-rename,-controlfow,-strings,-resources,-memberorder,-removemember,-allocationcallstack" 
             //    //"switch=-rename" ,
             //    "",
             //    "prefixfortyperename=zzz.z0ZzZz",
             //    "prefixformemberrename=z0",
+            //    @"mapxml=d:\temp3\",
             //    //"debugmode",
             //    "pause"
             //};
+            ///***************************************/
+#endif
 
 
-            string inputAssmblyFileName = null;
+        string inputAssmblyFileName = null;
             string outputAssemblyFileName = null;
             bool pause = false;
             const string _SwapCallModeFlag = "4325faf20210820";
@@ -118,6 +125,14 @@ namespace JIEJIE
                                 if( argValue != null && argValue.Length > 0 )
                                 {
                                     eng.PrefixForMemberRename = argValue;
+                                }
+                                break;
+                            case "mapxml":
+                                {
+                                    if( argValue!= null && argValue.Length > 0 )
+                                    {
+                                        eng.MapXmlFileName = argValue;
+                                    }
                                 }
                                 break;
                         }
@@ -307,7 +322,6 @@ namespace JIEJIE
         }
     }
 
-
     /// <summary>
     /// options of protect
     /// </summary>
@@ -407,7 +421,7 @@ namespace JIEJIE
     [Serializable]
     internal class DCJieJieNetEngine : System.MarshalByRefObject
     {
-        public const string ProductVersion = "1.3.0.0";
+        public const string ProductVersion = "1.3.0.1";
 
 
         public DCJieJieNetEngine(DCILDocument doc)
@@ -443,6 +457,7 @@ namespace JIEJIE
             eng._UILanguageDisplayName = this._UILanguageDisplayName;
             eng._UILanguageName = this._UILanguageName;
             eng.DeleteTempFile = this.DeleteTempFile;
+            eng.MapXmlFileName = this.MapXmlFileName;
         }
         /// <summary>
         /// 关闭对象
@@ -483,8 +498,287 @@ namespace JIEJIE
             }
         }
 
+        private bool WriteDocumentCommentXml(string srcFileName, string descFileName)
+        {
+            try
+            {
+                int tick = Environment.TickCount;
+
+                var xmlDoc = new System.Xml.XmlDocument();
+                xmlDoc.Load(srcFileName);
+                if (xmlDoc.DocumentElement?.Name != "doc")
+                {
+                    return false;
+                }
+                var names = new SortedDictionary<string, string>();
+                foreach (var cls in this.GetAllClasses())
+                {
+                    if (cls.RenameState == DCILRenameState.Renamed)
+                    {
+                        continue;
+                    }
+                    if (cls.Parent is DCILClass)
+                    {
+                        var npc = (DCILClass)cls.Parent;
+                        if (npc.RenameState == DCILRenameState.Renamed)
+                        {
+                            continue;
+                        }
+                    }
+                    var ms = new Dictionary<string, DCILObject>();
+                    var tn = cls.NameWithNested;
+                    names["T:" + tn] = tn;
+                    foreach (var m in cls.ChildNodes)
+                    {
+                        if (m is DCILMethod)
+                        {
+                            var m2 = (DCILMethod)m;
+                            if (m2.RenameState == DCILRenameState.Renamed)
+                            {
+                                continue;
+                            }
+                            if (m2.IsSpecialname)
+                            {
+                                if (m2.Name.StartsWith("get_") || m2.Name.StartsWith("set_"))
+                                {
+                                    continue;
+                                }
+                            }
+                            var str = new StringBuilder();
+                            var writer = new DCILWriter(str);
+                            if (m2.Name == ".ctor" || m2.Name == ".cctor")
+                            {
+                                str.Append("M:" + tn + ".#" + m2.Name.Substring(1));
+                            }
+                            else
+                            {
+                                str.Append("M:" + tn + "." + m2.Name);
+                            }
+                            if (m2.ParametersCount > 0)
+                            {
+                                str.Append("(");
+                                for (int iCount = 0; iCount < m2.Parameters.Count; iCount++)
+                                {
+                                    if (iCount > 0)
+                                    {
+                                        str.Append(',');
+                                    }
+                                    var p = m2.Parameters[iCount];
+                                    //if (p.IsOut)
+                                    //{
+                                    //    str.Append("out ");
+                                    //}
+                                    if (p.ValueType.IsPrimitive && p.ValueType.NativeType != null)
+                                    {
+                                        str.Append(p.ValueType.NativeType.FullName);
+                                    }
+                                    else
+                                    {
+                                        p.ValueType.WriteToForSignString(writer, m2.GenericParamters);
+                                    }
+                                }
+                                str.Append(")");
+                            }
+                            var strSign = str.ToString();
+                            names[strSign] = strSign;
+                        }
+                        else if (m is DCILField)
+                        {
+                            var f = (DCILField)m;
+                            if (f.RenameState == DCILRenameState.Renamed)
+                            {
+                                continue;
+                            }
+                            if (f.Name == "value__" && cls.IsEnum)
+                            {
+                                continue;
+                            }
+
+                            names["F:" + tn + "." + m.Name] = m.Name;
+                        }
+                        else if (m is DCILProperty)
+                        {
+                            var p = (DCILProperty)m;
+                            if (p.RenameState == DCILRenameState.Renamed)
+                            {
+                                continue;
+                            }
+                            names["P:" + tn + "." + p.Name] = p.Name;
+                        }
+                        else if (m is DCILEvent)
+                        {
+                            var p = (DCILEvent)m;
+                            if (p.RenameState == DCILRenameState.Renamed)
+                            {
+                                continue;
+                            }
+                            names["E:" + tn + "." + m.Name] = m.Name;
+                        }
+                    }
+                }
+
+                int removeCount = 0;
+                int totalMembers = 0;
+                using (var writer = new System.Xml.XmlTextWriter(descFileName, Encoding.UTF8))
+                {
+                    writer.Formatting = System.Xml.Formatting.Indented;
+                    writer.Indentation = 3;
+                    writer.IndentChar = ' ';
+                    writer.WriteStartDocument();
+                    writer.WriteStartElement("doc");
+                    foreach (System.Xml.XmlNode node1 in xmlDoc.DocumentElement.ChildNodes)
+                    {
+                        if (node1.Name == "members")
+                        {
+                            writer.WriteStartElement("members");
+                            foreach (System.Xml.XmlNode node2 in node1.ChildNodes)
+                            {
+                                if (node2 is System.Xml.XmlElement)
+                                {
+                                    totalMembers++;
+                                    var e2 = (System.Xml.XmlElement)node2;
+                                    string name = e2.GetAttribute("name");
+                                    if (names.ContainsKey(name))
+                                    {
+                                        node2.WriteTo(writer);
+                                    }
+                                    else
+                                    {
+                                        removeCount++;
+                                    }
+                                }
+                            }
+                            writer.WriteFullEndElement();//</members>
+                        }
+                        else
+                        {
+                            node1.WriteTo(writer);
+                        }
+                    }
+                    writer.WriteEndElement();//</doc>
+                    writer.WriteEndDocument();
+                }//using
+                tick = Math.Abs(Environment.TickCount - tick);
+                var percent = Convert.ToDouble( removeCount * 100.0 / totalMembers ).ToString("0.00") ;
+                Console.WriteLine("    Write comment XML file \"" + descFileName + "\" ,remove " + removeCount + "(" + percent + "%)members,span " + tick + " milliseconds.");
+                return true;
+            }
+            catch (System.Exception ext)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ext.ToString());
+                Console.ResetColor();
+            }
+            return false;
+        }
+        public void WriteMapXml(System.Xml.XmlWriter writer)
+        {
+            if (writer == null)
+            {
+                throw new ArgumentNullException("writer");
+            }
+            writer.WriteStartDocument();
+            writer.WriteStartElement("dotfuscatorMap");
+            writer.WriteStartElement("header");
+            writer.WriteElementString("timestamp", DateTime.Now.ToString());
+            writer.WriteStartElement("product");
+            writer.WriteAttributeString("version", DCJieJieNetEngine.ProductVersion);
+            writer.WriteAttributeString("user", Environment.UserName);
+            writer.WriteString("JieJie.NET");
+            writer.WriteEndElement();//</product>
+            writer.WriteFullEndElement();//</header>
+            writer.WriteStartElement("mapping");
+            writer.WriteStartElement("module");
+            writer.WriteElementString("name", Path.GetFileName(this.Document.AssemblyFileName));
+            foreach (var item in this.Document.ChildNodes)
+            {
+                if (item is DCILClass)
+                {
+                    var cls = (DCILClass)item;
+                    if (cls.InnerGenerate)
+                    {
+                        continue;
+                    }
+                    bool hasRenamedMethod = false;
+                    bool hasRenamedField = false;
+                    foreach( var item2 in cls.ChildNodes )
+                    {
+                        if(item2 is DCILMethod && ((DCILMethod ) item2).RenameState == DCILRenameState.Renamed )
+                        {
+                            hasRenamedMethod = true;
+                            break;
+                        }
+                        else if( item2 is DCILField && ((DCILField ) item2 ).RenameState == DCILRenameState.Renamed )
+                        {
+                            hasRenamedField = true;
+                            break;
+                        }
+                    }//foreach
+
+                    if (cls.RenameState == DCILRenameState.Renamed 
+                        || hasRenamedMethod 
+                        || hasRenamedField)
+                    {
+                        writer.WriteStartElement("type");
+                        writer.WriteElementString("name", cls.OldName);
+                        writer.WriteElementString("newname", cls.Name);
+                        if (hasRenamedMethod)
+                        {
+                            writer.WriteStartElement("methodlist");
+
+                            foreach (var item2 in cls.ChildNodes)
+                            {
+                                if (item2 is DCILMethod)
+                                {
+                                    var method = (DCILMethod)item2;
+                                    if (method.InnerGenerate == false
+                                        && method.RenameState == DCILRenameState.Renamed)
+                                    {
+                                        writer.WriteStartElement("method");
+                                        writer.WriteElementString("signature", method.OldSignature);
+                                        writer.WriteElementString("name", method.OldName);
+                                        writer.WriteElementString("newname", method.Name);
+                                        writer.WriteEndElement();//</method>
+                                    }
+                                }
+                            }
+                            writer.WriteEndElement();//</methodlist>
+                        }
+                        if(hasRenamedField)
+                        {
+                            writer.WriteStartElement("fieldlist");
+                            foreach(var item2 in cls.ChildNodes )
+                            {
+                                if( item2 is DCILField )
+                                {
+                                    var field = (DCILField)item2;
+                                    if(field.RenameState == DCILRenameState.Renamed )
+                                    {
+                                        writer.WriteStartElement("field");
+                                        writer.WriteElementString("signature", field.OldSignature);
+                                        writer.WriteElementString("name", field.OldName);
+                                        writer.WriteElementString("newname", field.Name);
+                                        writer.WriteEndElement();
+                                    }
+                                }
+                            }
+                            writer.WriteEndElement();// </fieldlist>
+                        }
+                        writer.WriteEndElement();//</type>
+                    }
+                }
+            }
+            writer.WriteEndElement();//</module>
+            writer.WriteEndElement();//</mapping>
+            writer.WriteFullEndElement();//</dotfuscatorMap>
+            writer.WriteEndDocument();
+        }
         private static string _PathOfildasm = null;
 
+        /// <summary>
+        /// 对照信息XML文件名
+        /// </summary>
+        public string MapXmlFileName = null;
         /// <summary>
         /// 保存程序集文件
         /// </summary>
@@ -565,6 +859,30 @@ namespace JIEJIE
                 }
                 File.Copy(asmTempFileName, asmFileName, true);
                 File.Delete(asmTempFileName);
+                if(this.Switchs.Rename 
+                    && this.MapXmlFileName != null 
+                    && this.MapXmlFileName.Length > 0 )
+                {
+                    var fn2 = this.MapXmlFileName;
+                    if(Directory.Exists( fn2 ))
+                    {
+                        fn2 = Path.Combine(fn2, Path.GetFileName(asmFileName) +".map.xml");
+                    }
+                    using (var writer = new System.Xml.XmlTextWriter(fn2, Encoding.UTF8))
+                    {
+                        writer.Formatting = System.Xml.Formatting.Indented;
+                        writer.IndentChar = ' ';
+                        writer.Indentation = 3;
+                        this.WriteMapXml(writer);
+                    }
+                    Console.WriteLine("    Write rename map xml to\"" + fn2 + "\".");
+                }
+                var comXmlFileName = Path.ChangeExtension(this._InputAssemblyFileName, ".xml");
+                if( comXmlFileName != null && comXmlFileName.Length > 0 &&  File.Exists( comXmlFileName ))
+                {
+                    // clean document comment xml file.
+                    WriteDocumentCommentXml(comXmlFileName, Path.ChangeExtension(asmFileName, ".xml"));
+                }
 #if !DOTNETCORE // .NET Core not support ngen.exe
                 if (checkUseNgen)
                 {
@@ -779,11 +1097,113 @@ namespace JIEJIE
             {
                 this.RenameClasses();
             }
+            if (this.Switchs.ControlFlow)
+            {
+                this.CollectStatcMethod();
+            }
             if( this.Switchs.RemoveMember )
             {
                 RemoveMember();
             }
             
+        }
+        /// <summary>
+        /// 将所有的无构造函数的类中的内部静态函数合并到新的类型中。减少静态函数功能模块的关联。
+        /// </summary>
+        private void CollectStatcMethod( )
+        {
+            var methods = new List<DCILMethod>();
+            var clses = this.GetAllClasses();
+            foreach (var cls in clses)
+            {
+                if (cls.InnerGenerate)
+                {
+                    continue;
+                }
+                bool hasCotr = false;
+                foreach (var item in cls.ChildNodes)
+                {
+                    if (item is DCILMethod && (item.Name == ".ctor" || item.Name == ".cctor"))
+                    {
+                        // 类型有构造函数的则不处理
+                        hasCotr = true;
+                        break;
+                    }
+                    if (item is DCILField || item is DCILEvent)
+                    {
+                        // 类型有字段或者事件的不处理。
+                        hasCotr = true;
+                        break;
+                    }
+                }
+                if (hasCotr)
+                {
+                    continue;
+                }
+                for (int iCount = cls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                {
+                    var item = cls.ChildNodes[iCount];
+                    if (item is DCILMethod)
+                    {
+                        var method = (DCILMethod)item;
+                        if (method.IsStatic && method.ParentMember == null && method.HasGenericStyle == false )
+                        {
+                            if (method.RenameState == DCILRenameState.Renamed || method.IsPublic == false)
+                            {
+                                // 只有重命名的未公开的函数才分离。
+                                methods.Add(method);
+                                cls.ChildNodes.RemoveAt(iCount);
+                                //method.Parent = null;
+                            }
+                        }
+                    }
+                }
+            }//foreach
+            if (methods.Count > 0)
+            {
+                methods.Sort(new DCILMethod.NameCompaer(true));
+
+                var newClass = new DCILClass();
+                newClass.Styles = new List<string>();
+                newClass.Styles.AddRange(new string[] { "private", "auto", "ansi", "abstract", "sealed", "beforefieldinit" });
+                newClass._Name = _ClassNamePrefix + "_jiejienet_sm";
+                newClass.BaseType = new DCILTypeReference( "[" + this.Document.LibName_mscorlib +"]System.Object", DCILTypeMode.Primitive);
+                if (this._IDGenForClass != null)
+                {
+                    newClass.ChangeName(this._IDGenForClass.GenerateIDForClass(newClass.Name, newClass));
+                }
+                var idgen2 = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
+                idgen2.DebugMode = this.DebugMode;
+                for (int iCount = methods.Count - 1; iCount >= 0; iCount--)
+                {
+                    var method = methods[iCount];
+                    string oldClsName = method.OwnerClass.OldName == null ? method.OwnerClass.Name : method.OwnerClass.OldName;
+                    string oldMethodName = method.OldName == null ? method.Name : method.OldName;
+                    if (method.Styles[0] == "private")
+                    {
+                        method.Styles[0] = "assembly";
+                    }
+                    if (this.Switchs.Rename)
+                    {
+                        method.ChangeName(idgen2.GenerateIDForMember(
+                            oldMethodName,
+                            method));
+                    }
+                    else
+                    {
+                        method._Name = method.Name + "_" + iCount;
+                    }
+                    newClass.ChildNodes.Add(method);
+                    method.Parent = newClass;
+                    if( this.DebugMode )
+                    {
+                        Console.WriteLine("            Move static methods : " + oldClsName + "::" + oldMethodName);
+                    }
+                }//for
+                DCUtils.ObfuseListOrder(newClass.ChildNodes);
+                this.Document.ChildNodes.Add(newClass);
+                Console.WriteLine("       Collect " + methods.Count + " static methods.");
+            }
         }
 
         private void ChangeCallOperCodes(List<DCILOperCode_HandleMethod> callCodes)
@@ -846,6 +1266,10 @@ namespace JIEJIE
                             continue;
                         }
                     }
+                    if(method.Parent.Name == "DCSoft.Writer.DocumentBehaviorOptions")
+                    {
+
+                    }
                     if(method.OperCodes.Count > 20 )
                     {
                         continue;
@@ -866,6 +1290,7 @@ namespace JIEJIE
                     
                     var cls =(DCILClass) method.Parent;
                     var newMethod = method.SimpleClone();
+                    cls.HasInnerGenerateMethod = true;
                     //if (this.Switchs.Rename)
                     //{
                     //    if (cls.idGenForMember == null)
@@ -881,16 +1306,28 @@ namespace JIEJIE
                     //method._Name = "__jiejie_net_" + Convert.ToString(idCounter++);
                     method.RenameState = DCILRenameState.NotHandled;
                     method.ObfuscationSettings = null;
+                    //if (this.Switchs.Rename)
+                    //{
+                    //    method._Name = "_" + Convert.ToString(newMethodCount++);
+                    //}
+                    //else
+                    //{ 
                     method._Name = "__jiejie_net_" + newMethod.Name + "_" + item.Value;// Convert.ToString(idCounter++);
+                    //}
+                    //else
+                    //{
+                    //    method._Name = this._IDGenForClass.GenerateIDForMember(newMethod.Name, newMethod);//  "_" + Convert.ToString(newMethodCount);
+                    //}
                     method.RemoveStyle_specialname();
                     method.RemoveStyle("public");
                     method.CustomAttributes = null;
+                    method.InnerGenerate = true;
                     if (method.FlagsForPrivate)
                     {
                         method.Styles.Insert(0, "private");
                     }
                     else
-                    { 
+                    {
                         method.Styles.Insert(0, "assembly");
                     }
                     cls.ChildNodes.Add(newMethod);
@@ -2085,6 +2522,8 @@ namespace JIEJIE
                 return result.ToString();
             }
         }
+        private IDGenerator _IDGenForClass = null;
+
         public int RenameClasses()
         {
             IDGenerator.GenCountBase = 0;
@@ -2105,16 +2544,25 @@ namespace JIEJIE
                     {
                         ((DCILMemberInfo)item).CollectAttributes(attributes);
                     }
-                }
-            }
+                    if(item is DCILMethod )
+                    {
+                        ((DCILMethod)item).UpdateOldSignature();
+                    }
+                    else if(item is DCILField )
+                    {
+                        ((DCILField)item).UpdateOldSignature();
+                    }
+                }//foreach
+            }//foreach
+
             var clsNameMaps = new RenameMapInfo();
             int result = RenameByOverrideList(allClasses, idGenForMember, clsNameMaps);
 
             IDGenerator.GenCountBase = idGenForMember.GenCount + 1;
 
             // 执行函数的重命名
-            var idGenForClass = new IDGenerator(this.PrefixForTypeRename,this.PrefixForMemberRename);
-            idGenForClass.DebugMode = this.DebugMode;
+            this._IDGenForClass = new IDGenerator(this.PrefixForTypeRename,this.PrefixForMemberRename);
+            this._IDGenForClass.DebugMode = this.DebugMode;
             foreach (var cls in allClasses)
             {
                 if (cls.IsImport)
@@ -2128,13 +2576,14 @@ namespace JIEJIE
                 {
                     cls.OldName = cls.Name;
                     clsNameMaps.Register(cls);
-                    cls.ChangeName(idGenForClass.GenerateIDForClass(cls.OldName, cls));
+                    cls.ChangeName(this._IDGenForClass.GenerateIDForClass(cls.OldName, cls));
                     result++;
                 }
                 else
                 {
                     cls.RenameState = DCILRenameState.Preserve;
                 }
+
                 //continue;
                 if (clsOs == null || clsOs.Exclude == false || clsOs.ApplyToMembers == false)
                 {
@@ -2146,24 +2595,24 @@ namespace JIEJIE
                     {
                         continue;
                     }
-                    if(cls.idGenForMember == null )
+                    if (cls.idGenForMember == null)
                     {
                         cls.idGenForMember = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
                     }
                     // 重命名成员
                     foreach (var item in cls.ChildNodes)
                     {
-                        if (item.Name == "__jiejie_net_get_CheckMinValue")
-                        {
+                        //if (item.Name == "__jiejie_net_get_CheckMinValue")
+                        //{
 
-                        }
+                        //}
                         if (item is DCILMethod)
                         {
                             var method = (DCILMethod)item;
-                             
-                            if (method.RenameState == DCILRenameState.NotHandled )
+
+                            if (method.RenameState == DCILRenameState.NotHandled)
                             {
-                                if(AllowRename(method))
+                                if (AllowRename(method))
                                 {
                                     method.OldName = method.Name;
                                     method.ChangeName(cls.idGenForMember.GenerateIDForMember(method.OldName, method));
@@ -2172,7 +2621,7 @@ namespace JIEJIE
                                 else
                                 {
                                     method.RenameState = DCILRenameState.Preserve;
-                                } 
+                                }
                             }
                         }
                         else if (item is DCILField)
@@ -2187,6 +2636,25 @@ namespace JIEJIE
                                 field.OldName = field.Name;
                                 field.ChangeName(cls.idGenForMember.GenerateIDForMember(field.OldName, field));
                                 result++;
+                            }
+                        }
+                    }
+                }
+                else if (cls.HasInnerGenerateMethod)
+                {
+                    if (cls.idGenForMember == null)
+                    {
+                        cls.idGenForMember = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
+                    }
+                    foreach (var item in cls.ChildNodes)
+                    {
+                        if (item is DCILMethod)
+                        {
+                            var method = (DCILMethod)item;
+                            if (method.InnerGenerate)
+                            {
+                                method.OldName = method.Name;
+                                method.ChangeName(cls.idGenForMember.GenerateIDForMember(method.OldName, method));
                             }
                         }
                     }
@@ -2210,7 +2678,7 @@ namespace JIEJIE
             int handleCount_Method = 0;
             foreach (var cls in allClasses)
             {
-                if (cls.NewGenerate == false)
+                if (cls.InnerGenerate == false)
                 {
                     totalCount_cls++;
                     if (cls.RenameState == DCILRenameState.Renamed)
@@ -2831,9 +3299,13 @@ namespace JIEJIE
                     strNewClassCode.AppendLine("}");
                     var strCodeText = strNewClassCode.ToString();
                     var newCls = new DCILClass(strCodeText, this.Document);
-                    newCls.NewGenerate = false;
+                    newCls.InnerGenerate = false;
                     cls.CustomAttributes = null;
                     cls.ChildNodes = newCls.ChildNodes;
+                    foreach( DCILObject item in cls.ChildNodes )
+                    {
+                        item.Parent = cls;
+                    }
                     this._ModifiedCount++;
                     removeResIndexs.Add(clsItem.Value);
                 }
@@ -3119,16 +3591,16 @@ namespace JIEJIE
             return strCode;
 #endif
         }
-        private string ReplaceTypeLibName( string code , string typeName , Type nativeType )
-        {
-            if( typeName == null && nativeType != null )
-            {
-                typeName = DCUtils.GetFullName(nativeType);
-            }
-            string name2 = this.Document.GetTypeNameWithLibraryName(typeName, null, nativeType);
-            code = code.Replace("[mscorlib]" + typeName, name2);
-            return code;
-        }
+        //private string ReplaceTypeLibName( string code , string typeName , Type nativeType )
+        //{
+        //    if( typeName == null && nativeType != null )
+        //    {
+        //        typeName = DCUtils.GetFullName(nativeType);
+        //    }
+        //    string name2 = this.Document.GetTypeNameWithLibraryName(typeName, null, nativeType);
+        //    code = code.Replace("[mscorlib]" + typeName, name2);
+        //    return code;
+        //}
         private static readonly string _ClassName_InnerAssemblyHelper20210315 = "DCSoft.Common.InnerAssemblyHelper20210315";
 
         private static readonly string _Code_Template_InnerAssemblyHelper20210315 = @"
@@ -5200,7 +5672,15 @@ namespace JIEJIE
                 writer.Write(") ");
             }
             writer.Write(' ');
-            this.OwnerType.WriteTo(writer);
+            var cls = this.LocalMethod?.OwnerClass;
+            if( cls != null && cls.HasGenericParamters == false )
+            {
+                writer.Write(cls.NameWithNested);
+            }
+            else
+            {
+                this.OwnerType.WriteTo(writer);
+            }
             writer.Write("::");
             writer.Write(strMethodName);
             if (this.GenericParamters != null && this.GenericParamters.Count > 0)
@@ -5277,6 +5757,18 @@ namespace JIEJIE
             this._BaseWriter = new StringWriter(w);
             this._StringBuilder = w;
         }
+        public override string ToString()
+        {
+            if (this._StringBuilder != null)
+            {
+                return this._StringBuilder.ToString();
+            }
+            else
+            {
+                return base.ToString();
+            }
+        }
+
         private readonly TextWriter _BaseWriter = null;
         private readonly StringBuilder _StringBuilder = null;
 
@@ -7558,6 +8050,7 @@ namespace JIEJIE
             this.Parent = parent;
         }
         public DCILTypeReference ValueType = null;
+     
 
         public override void CacheInfo(DCILDocument document, Dictionary<string, DCILClass> clses)
         {
@@ -7657,6 +8150,17 @@ namespace JIEJIE
                 }
             }
         }
+        /// <summary>
+        /// 旧的签名信息
+        /// </summary>
+        public string OldSignature = null;
+        public void UpdateOldSignature()
+        {
+            var writer = new DCILWriter(new StringBuilder());
+            this.ValueType.WriteToForSignString(writer);
+            this.OldSignature = writer.ToString();
+        }
+
         public override void WriteTo(DCILWriter writer)
         {
             writer.Write(".field ");
@@ -8014,6 +8518,7 @@ namespace JIEJIE
     /// </summary>
     internal class DCILClass : DCILMemberInfo
     {
+
         private static readonly HashSet<string> _ClassAttributeNames = null;
         static DCILClass()
         {
@@ -8049,7 +8554,12 @@ namespace JIEJIE
         {
             base.ChildNodes = new DCILObjectList();
         }
-        public bool NewGenerate = false;
+
+        /// <summary>
+        /// 系统内部自动产生的
+        /// </summary>
+        public bool InnerGenerate = false;
+        public bool HasInnerGenerateMethod = false;
 
         private static readonly Dictionary<Type, DCILClass> _NativeClasses = new Dictionary<Type, DCILClass>();
   
@@ -8103,7 +8613,7 @@ namespace JIEJIE
                 reader.ReadWord();
             }
             this.Load(reader);
-            this.NewGenerate = true;
+            this.InnerGenerate = true;
         }
  
         public override void Load(DCILReader reader)
@@ -8140,7 +8650,8 @@ namespace JIEJIE
             }
             DCILGenericParamter.CacheTypeReference(document, this.GenericParamters);
              
-        } 
+        }
+ 
         public void LoadHeader(DCILReader reader)
         {
             this.ChildNodes = new DCILObjectList();
@@ -8378,13 +8889,25 @@ namespace JIEJIE
         {
             writer.Write(".class ");
             base.WriteStyles(writer);
+            if( this._Name == "__DC20210205.__jiejienet_sm")
+            {
+
+            }
             writer.Write(" " + this._Name);
             this.GenericParamters?.WriteTo(writer);
 
             if (this.BaseType != null)
             {
                 writer.Write(" extends ");
-                this.BaseType.WriteTo(writer);
+                this.BaseType.WriteTo(writer, true);
+                //if (this.BaseType.HasLibraryName)
+                //{
+                //    this.BaseType.WriteTo(writer, true );
+                //}
+                //else
+                //{
+                //    this.BaseType.WriteTo(writer, false);
+                //}
             }
             if (this.ImplementsInterfaces != null
                 && this.ImplementsInterfaces.Count > 0)
@@ -10957,12 +11480,31 @@ namespace JIEJIE
     } 
     internal class DCILMethod : DCILMemberInfo
     {
-        public static readonly IComparer<DCILMethod> ComparerByName = new NameCompaer();
+        /// <summary>
+        /// 系统内部自动产生的
+        /// </summary>
+        public bool InnerGenerate = false;
 
-        private class NameCompaer : IComparer<DCILMethod>
+        public static readonly IComparer<DCILMethod> ComparerByName = new NameCompaer(false);
+
+        internal class NameCompaer : IComparer<DCILMethod>
         {
+            public NameCompaer( bool comareClassName )
+            {
+                this._CompareClassName = comareClassName;
+            }
+            private bool _CompareClassName = false;
+
             public int Compare(DCILMethod x, DCILMethod y)
             {
+                if( this._CompareClassName )
+                {
+                    int v = string.Compare(x.OwnerClass?.Name, y.OwnerClass?.Name);
+                    if(v!= 0 )
+                    {
+                        return v;
+                    }
+                }
                 return string.Compare(x.Name, y.Name);
             }
         }
@@ -11013,6 +11555,7 @@ namespace JIEJIE
             }
             return method;
         }
+      
         public bool FlagsForPrivate = true ;
 
         public int IndexOfExtLocals = int.MinValue;
@@ -11109,6 +11652,10 @@ namespace JIEJIE
 
         private bool GetHasGenericStyle()
         {
+            //if(this.Name == "GetAllChildControlsDeeplyInner")
+            //{
+
+            //}
             if (this.GenericParamters != null
                 && this.GenericParamters.Count > 0)
             {
@@ -11667,7 +12214,18 @@ namespace JIEJIE
                     break;
                 }
             }
-        } 
+        }
+
+        /// <summary>
+        /// 旧的签名信息
+        /// </summary>
+        public string OldSignature = null;
+        public void UpdateOldSignature()
+        {
+            this.OldSignature = InnerGetSignString(this.ReturnTypeInfo, null , this.GenericParamters, ((DCILClass)this.Parent)?.GenericParamters, this.Parameters);
+        }
+
+
         private string _SignString = null;
         public virtual string GetSignString()
         {
@@ -11742,9 +12300,9 @@ namespace JIEJIE
             var writer = new DCILWriter(str);
             var allGps = DCILGenericParamterList.Merge(methodGps, classGps);
             returnType.WriteToForSignString(writer, allGps);
-            writer.Write(" ");
             if (methodName != null)
             {
+                writer.Write(" ");
                 writer.Write(methodName);
             }
             if (methodGps != null && methodGps.Count > 0)

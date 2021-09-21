@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2021-9-21 : Clean document comment xml element which renamed.
 <br/> 2021-9-9  : package small properties and change call/callvirt instructions.
 <br/> 2021-8-23 : Add feature: Support .NET core,fix some bugs.
 <br/> 2021-7-20 : Add feature: type or member rename.
@@ -720,10 +721,13 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 ```
  Other members nearby maby have nothing to do with one key member.this can make carck more difficult.
 
-## 7 , Support .NET Core 3.1
+## 7 , Clean document comment xml file.
+   JIEJIE.NET can clean document comment xml file. remove member xml element which it renamed.
+   
+## 8 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
 
-## 8 , Easy to use.
+## 9 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
