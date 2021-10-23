@@ -767,9 +767,9 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
 ## 10 , Custom instruction.
-	 JIEJIE.NET support change .coreflags or .subsystem instruction. Some time, .NET assembly is design for x86 or x64, JIEJIE.NET can change the target platform. for example use command line :
+	 JIEJIE.NET support change .coreflags or .subsystem instruction. Some times, .NET assembly is design for x86 or x64, JIEJIE.NET can modify the target platform. <br/>For example use command line :
 ```
-	>jiejie.net.exe d:\\aa.dll .corflags=0x1
+	jiejie.net.exe d:\\aa.dll .corflags=0x1
 ```
 
    This can change the result assembly file to x64 platform.
@@ -781,38 +781,38 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
-        input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll,
-                 currenttly only support .NET framework 2.0 or later]
-        output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
-        snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
-        switch=[optional,multi-switch split by ',',also can be define in [System.Reflection.ObfuscationAttribute.Feature].
-                It support :
-                +contorlfow    = enable obfuscate control flow in method body.
-                -contorlfow    = disable obfuscate control flow in method body.
-                +/-strings     = enable/disable encrypt string value.
-                +/-resources   = enable/disable encrypt resources data.
-                +/-memberorder = enable/disable member list order in type.
-                +/-rename      = enable/disable rename type or member's name.
-                +/-allocationcallstack  = enable/disable encrypt string value allocation callstack.
-            ]
-        mapxml=[optional, a file/directory name to save map infomation for class/member's old name and new name in xml format.]
-        pause =[optional,pause the console after finish process.]
-        debugmode=[optional,Allow show some debug info text.]
-        sdkpath=[optional,set the direcotry full name of ildasm.exe.]
-        prefixfortyperename=[optional, the prefix use to rename type name.]
-        prefixformemberrename=[optional,the prefix use to rename type's member name.]
-        deletetempfile=[optional,delete template file after job finshed.default is false.]
-        merge=[optional,some .net assembly file to merge to the result file. '*' for all referenced assembly files.]
-        .custominstructurename=[optional, some custom IL instruction , for example '.subsystem=0x2'.]
+      input =[required,default argument,Full path of input .NET assembly file , can be .exe or .dll,
+               currenttly only support .NET framework 2.0 or later]
+      output=[optional,Full path of output .NET assmebly file , if it is empty , then use input argument value]
+      snk   =[optional,Full path of snk file. It use to add strong name to output assembly file.]
+      switch=[optional,multi-switch split by ',',also can be define in [System.Reflection.ObfuscationAttribute.Feature].
+              It support :
+              +contorlfow    = enable obfuscate control flow in method body.
+              -contorlfow    = disable obfuscate control flow in method body.
+              +/-strings     = enable/disable encrypt string value.
+              +/-resources   = enable/disable encrypt resources data.
+              +/-memberorder = enable/disable member list order in type.
+              +/-rename      = enable/disable rename type or member's name.
+              +/-allocationcallstack  = enable/disable encrypt string value allocation callstack.
+          ]
+      mapxml=[optional, a file/directory name to save map infomation for class/member's old name and new name in xml format.]
+      pause =[optional,pause the console after finish process.]
+      debugmode=[optional,Allow show some debug info text.]
+      sdkpath=[optional,set the direcotry full name of ildasm.exe.]
+      prefixfortyperename=[optional, the prefix use to rename type name.]
+      prefixformemberrename=[optional,the prefix use to rename type's member name.]
+      deletetempfile=[optional,delete template file after job finshed.default is false.]
+      merge=[optional,some .net assembly file to merge to the result file. '*' for all referenced assembly files.]
+      .custominstructurename=[optional, some custom IL instruction , for example '.subsystem=0x2'.]
 
-     Example 1, protect d:\a.dll ,this will modify dll file.
-        >JIEJIE.NET.exe d:\a.dll  
-     Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
-        >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk switch=+contorlfow,-resources
+   Example 1, protect d:\a.dll ,this will modify dll file.
+      >JIEJIE.NET.exe d:\a.dll  
+   Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
+      >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk switch=+contorlfow,-resources
 
 ```
 
-## So many cool features! But JieJie.NET only has 14000 lines C# code!
+## So many cool features! But JieJie.NET only has 16000 C# code lines!
    
    So it is small and without any third party component.
 
