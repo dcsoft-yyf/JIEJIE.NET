@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2021-10-23: Merge multi assembly files to a single assembly file.Custom instruction.
 <br/> 2021-9-21 : Clean document comment xml element which renamed.
 <br/> 2021-9-9  : package small properties and change call/callvirt instructions.
 <br/> 2021-8-23 : Add feature: Support .NET core,fix some bugs.
@@ -760,15 +761,18 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
                   <newname>z0zjk</newname>
                </field>
 ```
+
 ## 9 , Merge assembly files.
    When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
 ## 10 , Custom instruction.
 	 JIEJIE.NET support change .coreflags|.subsystem instruction. Some time, .NET assembly is design for x86/x64,JIEJIE.NET can change the target platform.for example use command line:
+	 
 ```
 	>jiejie.net.exe d:\\aa.dll .corflags=0x1
 ```
+
    This can change the result assembly file to x64 platform.
    
 ## 11 , Support .NET Core 3.1
