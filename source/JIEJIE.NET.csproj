@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JIEJIE.cs" />
@@ -45,17 +46,6 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\DCSoft.ResourceFileHelper.NetCore.deps.json" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\DCSoft.ResourceFileHelper.NetCore.runtimeconfig.dev.json" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\DCSoft.ResourceFileHelper.NetCore.runtimeconfig.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\DCSoft.ResourceFileHelper.NetCore.dll" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\DCSoft.ResourceFileHelper.NetCore.exe" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\DCSoft.ResourceFileHelper.NetCore.pdb" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\Microsoft.Win32.SystemEvents.dll" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\System.Drawing.Common.dll" />
-    <EmbeddedResource Include="DCSoft.ResourceFileHelper.NetCore\System.Resources.Extensions.dll" />
     <Content Include="snapshort\snapshort.png" />
     <Content Include="snapshort\winformdemo.png" />
     <Content Include="snapshort\winformdemo2.png" />

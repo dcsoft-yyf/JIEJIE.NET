@@ -44,33 +44,42 @@ namespace JIEJIE
 #else
         static void Main(string[] args)
         {
-            ///* test data **************************/
+            /////* test data **************************/
             //args = new string[] {
+            //    //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.ASPNETDemo\bin\DCSoft.Writer.ForASPNET.dll",
+            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForASPNET\bin\debug\DCSoft.Writer.ForASPNET.dll",
+            //    //@"C:\Users\yfyuan\source\repos\WindowsFormsApp13\bin\Debug\WindowsFormsApp13.exe",
+            //    @"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\Bin\DCSoft.WinFormDemo.exe",
             //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Common\bin\Debug\DCSoft.Common.dll",//D:\temp2\DCSoft.Writer.ForWinForm.dll",//D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\bin\Debug\netcoreapp3.1\DCSoft.Writer.ForASPNETCore.dll",
-            //    @"D:\temp2\DCSoft.Writer.ForWinForm.dll",
-            //    //@"D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\native\DCSoft.Writer.ForASPNETCore.dll",
+            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForWinForm\bin\debug\DCSoft.Writer.ForWinForm.dll",
+            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WinForms\Source\bin\Debug\DCSoft.WinForms.dll",
+            //   // @"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Data\Source\bin\Debug\DCSoft.Data.dll",
+            //    //@"D:\temp2\DCSoft.Writer.ForWinForm.dll",
+            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\bin_netcore\debug\netcoreapp3.0\DCSoft.Writer.ForASPNETCore.dll",
             //    @"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib",
             //    //@"output=D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo",
             //    @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
+            //    @"merge=*",
+            //    //".subsystem=0x2",
+            //    ".corflags=0x1",
             //    //"switch=-rename,-controlfow,-strings,-resources,-memberorder,-removemember,-allocationcallstack" 
-            //    //"switch=-rename" ,
-            //    "",
+            //    "switch=-rename,-controlfow" ,
             //    "prefixfortyperename=zzz.z0ZzZz",
             //    "prefixformemberrename=z0",
             //    @"mapxml=d:\temp3\",
             //    //"debugmode",
             //    "pause"
             //};
-            ///***************************************/
+            /////***************************************/
 #endif
 
-
-        string inputAssmblyFileName = null;
+            string inputAssmblyFileName = null;
             string outputAssemblyFileName = null;
             bool pause = false;
-            const string _SwapCallModeFlag = "4325faf20210820";
+            //const string _SwapCallModeFlag = "4325faf20210820";
             var eng = new DCJieJieNetEngine();
-            bool swapCallMode = false;
+            string mergeFileNames = null;
+            var customInstructions = new Dictionary<string, string>(System.StringComparer.CurrentCultureIgnoreCase);
             if (args != null)
             {
                 foreach (var arg in args)
@@ -80,6 +89,11 @@ namespace JIEJIE
                     {
                         string argName = arg.Substring(0, index).Trim().ToLower();
                         string argValue = arg.Substring(index + 1).Trim();
+                        if( argName[0]=='.')
+                        {
+                            customInstructions[argName] = argValue;
+                            continue;
+                        }
                         switch (argName)
                         {
                             case "input":
@@ -93,9 +107,9 @@ namespace JIEJIE
                                 outputAssemblyFileName = argValue;
                                 break;
                             case "snk":
-                                if( argValue != null
-                                    && argValue.Length > 0 
-                                    && File.Exists( argValue ) == false )
+                                if (argValue != null
+                                    && argValue.Length > 0
+                                    && File.Exists(argValue) == false)
                                 {
                                     ConsoleWriteError("Can not find file : " + argValue);
                                     return;
@@ -115,40 +129,42 @@ namespace JIEJIE
                                 }
                                 eng.SDKDirectory = argValue;
                                 break;
-                            case "prefixfortyperename": 
-                                if( argValue != null && argValue.Length > 0 )
+                            case "prefixfortyperename":
+                                if (argValue != null && argValue.Length > 0)
                                 {
                                     eng.PrefixForTypeRename = argValue;
                                 }
                                 break;
                             case "prefixformemberrename":
-                                if( argValue != null && argValue.Length > 0 )
+                                if (argValue != null && argValue.Length > 0)
                                 {
                                     eng.PrefixForMemberRename = argValue;
                                 }
                                 break;
                             case "mapxml":
                                 {
-                                    if( argValue!= null && argValue.Length > 0 )
+                                    if (argValue != null && argValue.Length > 0)
                                     {
                                         eng.MapXmlFileName = argValue;
                                     }
                                 }
                                 break;
+                            case "merge":
+                                mergeFileNames = argValue;
+                                break;
                         }
                     }
                     else
                     {
-                        switch( arg.Trim().ToLower())
+                        switch (arg.Trim().ToLower())
                         {
-                            case "deletetempfile":  eng.DeleteTempFile = true;break;
-                            case "pause": pause = true;break;
-                            case "debugmode": eng.DebugMode = true;break;
-                            case _SwapCallModeFlag: swapCallMode = true;break;
+                            case "deletetempfile": eng.DeleteTempFile = true; break;
+                            case "pause": pause = true; break;
+                            case "debugmode": eng.DebugMode = true; break;
                             default:
                                 if (arg != null
                                     && arg.Length > 0
-                                    && Path.IsPathRooted(arg) 
+                                    && Path.IsPathRooted(arg)
                                     && File.Exists(arg))
                                 {
                                     // 默认为输入的程序集的文件全路径名
@@ -161,10 +177,8 @@ namespace JIEJIE
             }//if
             try
             {
-                if (swapCallMode == false)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(@"
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(@"
 *****************************************************************************************
            __   __   _______        __   __   _______   .__   __.  _______ .___________.
           |  | |  | |   ____|      |  | |  | |   ____|  |  \ |  | |   ____||           |
@@ -173,11 +187,10 @@ namespace JIEJIE
     |  `--'  | |  | |  |____ |  `--'  | |  | |  |____ __|  |\   | |  |____     |  |     
      \______/  |__| |_______| \______/  |__| |_______(__)__| \__| |_______|    |__|     
 
+     From https://github.com/dcsoft-yyf/JIEJIE.NET
      JieJie.NET v" + DCJieJieNetEngine.ProductVersion + @" ,encrypt .NET assembly file, help you protect copyright.");
-                }
                 var strInfoMore = @"     Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
      Author:yuan yong fu . mail: 28348092@qq.com
-     Site :https://github.com/dcsoft-yyf/JIEJIE.NET
      Last update 2021-8-26
      You can use this software free forever,but CAN NOT modify source code anytime.
      Any good idears you can write to 28348092@qq.com.
@@ -191,15 +204,18 @@ namespace JIEJIE
                 +/-resources   = enable/disable encrypt resources data.
                 +/-memberorder = enable/disable member list order in type.
                 +/-rename      = enable/disable rename type or member's name.
-                +/-allocationcallstack  = enable/disable encrypt string value allocation callstack.
+                +/-allocationcallstack = enable/disable encrypt string value allocation callstack.
                 +/-removemember= enable/disable remove unused const field and properties.
             ]
+        mapxml=[optional, a file/directory name to save map infomation for class/member's old name and new name in xml format.]
         pause =[optional,pause the console after finish process.]
         debugmode=[optional,Allow show some debug info text.]
         sdkpath=[optional,set the direcotry full name of ildasm.exe.]
         prefixfortyperename=[optional, the prefix use to rename type name.]
         prefixformemberrename=[optional,the prefix use to rename type's member name.]
         deletetempfile=[optional,delete template file after job finshed.default is false.]
+        merge=[optional,some .net assembly file to merge to the result file. '*' for all referenced assembly files.]
+        .custominstructurename=[optional, some custom IL instruction , for example '.subsystem=0x2'.]
  
      Example 1, protect d:\a.dll ,this will modify dll file.
         >JIEJIE.NET.exe d:\a.dll  
@@ -210,16 +226,13 @@ namespace JIEJIE
                 {
                     if (File.Exists(inputAssmblyFileName))
                     {
-                        if (swapCallMode == false)
-                        {
-                            Console.Title = "JieJie.NET - " + inputAssmblyFileName;
-                            Console.WriteLine("**************************** MADE IN CHINA **********************************************");
-                            Console.ResetColor();
-                        }
+                        Console.Title = "JieJie.NET - " + inputAssmblyFileName;
+                        Console.WriteLine("**************************** MADE IN CHINA **********************************************");
+                        Console.ResetColor();
                         var inputDir = Path.GetDirectoryName(inputAssmblyFileName);
                         var startDir = Path.GetDirectoryName(typeof(DCJieJieNetEngine).Assembly.Location);
                         System.AppDomain taskDomain = null;
-                        if (string.Compare( startDir , inputDir, true) != 0)
+                        if (string.Compare(startDir, inputDir, true) != 0)
                         {
 #if DOTNETCORE
                             DCILTypeReference._AsmLoader = new System.Runtime.Loader.AssemblyLoadContext("jiejie.net temp");
@@ -239,29 +252,31 @@ namespace JIEJIE
                             eng = taskEng;
 #endif
                         }
-                        if ( eng.LoadAssemblyFile(inputAssmblyFileName , swapCallMode ) == false )
+                        if (eng.LoadAssemblyFile(inputAssmblyFileName, mergeFileNames) == false)
                         {
-                            if( eng._UseAnotherExeName != null )
-                            {
-                                var exeName = Path.Combine(
-                                    Path.GetDirectoryName(eng.GetType().Assembly.Location),
-                                    eng._UseAnotherExeName);
-                                if( File.Exists( exeName )== false )
-                                {
-                                    ConsoleWriteError("Can not find file [" + exeName + "]!!!");
-                                    return;
-                                }
-                                var strCmdLine = new System.Text.StringBuilder();
-                                foreach (var arg in args)
-                                {
-                                    strCmdLine.Append(arg);
-                                    strCmdLine.Append(' ');
-                                }
-                                strCmdLine.Append(_SwapCallModeFlag);
-                                ResourceFileHelper.RunExe(exeName, strCmdLine.ToString());
-                                return;
-                            }
+                            return;
+                            //if (eng._UseAnotherExeName != null)
+                            //{
+                            //    var exeName = Path.Combine(
+                            //        Path.GetDirectoryName(eng.GetType().Assembly.Location),
+                            //        eng._UseAnotherExeName);
+                            //    if (File.Exists(exeName) == false)
+                            //    {
+                            //        ConsoleWriteError("Can not find file [" + exeName + "]!!!");
+                            //        return;
+                            //    }
+                            //    var strCmdLine = new System.Text.StringBuilder();
+                            //    foreach (var arg in args)
+                            //    {
+                            //        strCmdLine.Append(arg);
+                            //        strCmdLine.Append(' ');
+                            //    }
+                            //    strCmdLine.Append(_SwapCallModeFlag);
+                            //    ResourceFileHelper.RunExe(exeName, strCmdLine.ToString());
+                            //    return;
+                            //}
                         }
+                        eng.SetDocumentCustomInstructions( customInstructions );
                         eng.HandleDocument();
                         if (outputAssemblyFileName == null || outputAssemblyFileName.Length == 0)
                         {
@@ -270,11 +285,15 @@ namespace JIEJIE
                             {
                                 Directory.CreateDirectory(dir);
                             }
-                            outputAssemblyFileName = Path.Combine(dir, Path.GetFileName(inputAssmblyFileName));
+                            outputAssemblyFileName = Path.Combine(
+                                dir, 
+                                Path.GetFileName(inputAssmblyFileName));
                         }
                         else if (System.IO.Directory.Exists(outputAssemblyFileName))
                         {
-                            outputAssemblyFileName = Path.Combine(outputAssemblyFileName, Path.GetFileName(inputAssmblyFileName));
+                            outputAssemblyFileName = Path.Combine(
+                                outputAssemblyFileName,
+                                Path.GetFileName(inputAssmblyFileName));
                         }
                         eng.SaveAssemblyFile(outputAssemblyFileName, true);
                         if (eng.DeleteTempFile)
@@ -306,7 +325,7 @@ namespace JIEJIE
             }
             finally
             {
-                if (pause && swapCallMode == false )
+                if (pause)
                 {
                     Console.WriteLine("##########  All finished, press any key to continue ############");
                     Console.ReadKey();
@@ -366,7 +385,7 @@ namespace JIEJIE
                 }
             }
         }
-        
+
         /// <summary>
         /// 混淆代码执行流程
         /// </summary>
@@ -394,7 +413,7 @@ namespace JIEJIE
         /// <summary>
         /// 删除无作用的类型成员
         /// </summary>
-        public bool RemoveMember = true ;
+        public bool RemoveMember = true;
     }
 
     internal class RenameMapInfo : SortedDictionary<string, DCILClass>
@@ -421,7 +440,7 @@ namespace JIEJIE
     [Serializable]
     internal class DCJieJieNetEngine : System.MarshalByRefObject
     {
-        public const string ProductVersion = "1.3.0.1";
+        public const string ProductVersion = "1.4.0.1";
 
 
         public DCJieJieNetEngine(DCILDocument doc)
@@ -431,12 +450,12 @@ namespace JIEJIE
         public DCJieJieNetEngine()
         {
         }
- 
+
         /// <summary>
         ///  复制系统配置
         /// </summary>
         /// <param name="eng">复制输出对象</param>
-        public void CopytSettingsTo( DCJieJieNetEngine eng )
+        public void CopytSettingsTo(DCJieJieNetEngine eng)
         {
             eng.ContentEncoding = this.ContentEncoding;
             eng.DebugMode = this.DebugMode;
@@ -498,18 +517,11 @@ namespace JIEJIE
             }
         }
 
-        private bool WriteDocumentCommentXml(string srcFileName, string descFileName)
+        private bool WriteDocumentCommentXml(string descFileName)
         {
             try
             {
                 int tick = Environment.TickCount;
-
-                var xmlDoc = new System.Xml.XmlDocument();
-                xmlDoc.Load(srcFileName);
-                if (xmlDoc.DocumentElement?.Name != "doc")
-                {
-                    return false;
-                }
                 var names = new SortedDictionary<string, string>();
                 foreach (var cls in this.GetAllClasses())
                 {
@@ -626,7 +638,7 @@ namespace JIEJIE
                     writer.IndentChar = ' ';
                     writer.WriteStartDocument();
                     writer.WriteStartElement("doc");
-                    foreach (System.Xml.XmlNode node1 in xmlDoc.DocumentElement.ChildNodes)
+                    foreach (System.Xml.XmlNode node1 in this.Document.CommentXmlDoc.DocumentElement.ChildNodes)
                     {
                         if (node1.Name == "members")
                         {
@@ -659,8 +671,9 @@ namespace JIEJIE
                     writer.WriteEndDocument();
                 }//using
                 tick = Math.Abs(Environment.TickCount - tick);
-                var percent = Convert.ToDouble( removeCount * 100.0 / totalMembers ).ToString("0.00") ;
-                Console.WriteLine("    Write comment XML file \"" + descFileName + "\" ,remove " + removeCount + "(" + percent + "%)members,span " + tick + " milliseconds.");
+                var percent = Convert.ToDouble(removeCount * 100.0 / totalMembers).ToString("0.00");
+                ConsoleWriteTask();
+                Console.WriteLine("Write comment XML file \"" + descFileName + "\" ,remove " + removeCount + "(" + percent + "%)members,span " + tick + " milliseconds.");
                 return true;
             }
             catch (System.Exception ext)
@@ -690,82 +703,85 @@ namespace JIEJIE
             writer.WriteStartElement("mapping");
             writer.WriteStartElement("module");
             writer.WriteElementString("name", Path.GetFileName(this.Document.AssemblyFileName));
-            foreach (var item in this.Document.ChildNodes)
+            foreach (var cls in this.Document.Classes)
             {
-                if (item is DCILClass)
+                if (cls.InnerGenerate)
                 {
-                    var cls = (DCILClass)item;
-                    if (cls.InnerGenerate)
+                    continue;
+                }
+                bool hasRenamedMethod = false;
+                bool hasRenamedField = false;
+                foreach (var item2 in cls.ChildNodes)
+                {
+                    if (item2 is DCILMethod && ((DCILMethod)item2).RenameState == DCILRenameState.Renamed)
                     {
-                        continue;
+                        hasRenamedMethod = true;
+                        break;
                     }
-                    bool hasRenamedMethod = false;
-                    bool hasRenamedField = false;
-                    foreach( var item2 in cls.ChildNodes )
+                    else if (item2 is DCILField && ((DCILField)item2).RenameState == DCILRenameState.Renamed)
                     {
-                        if(item2 is DCILMethod && ((DCILMethod ) item2).RenameState == DCILRenameState.Renamed )
-                        {
-                            hasRenamedMethod = true;
-                            break;
-                        }
-                        else if( item2 is DCILField && ((DCILField ) item2 ).RenameState == DCILRenameState.Renamed )
-                        {
-                            hasRenamedField = true;
-                            break;
-                        }
-                    }//foreach
+                        hasRenamedField = true;
+                        break;
+                    }
+                }//foreach
 
-                    if (cls.RenameState == DCILRenameState.Renamed 
-                        || hasRenamedMethod 
-                        || hasRenamedField)
+                if (cls.RenameState == DCILRenameState.Renamed
+                    || hasRenamedMethod
+                    || hasRenamedField)
+                {
+                    writer.WriteStartElement("type");
+                    if( cls.RenameState == DCILRenameState.Preserve )
                     {
-                        writer.WriteStartElement("type");
+                        writer.WriteElementString("name", cls.Name);
+                    }
+                    else
+                    {
                         writer.WriteElementString("name", cls.OldName);
-                        writer.WriteElementString("newname", cls.Name);
-                        if (hasRenamedMethod)
-                        {
-                            writer.WriteStartElement("methodlist");
-
-                            foreach (var item2 in cls.ChildNodes)
-                            {
-                                if (item2 is DCILMethod)
-                                {
-                                    var method = (DCILMethod)item2;
-                                    if (method.InnerGenerate == false
-                                        && method.RenameState == DCILRenameState.Renamed)
-                                    {
-                                        writer.WriteStartElement("method");
-                                        writer.WriteElementString("signature", method.OldSignature);
-                                        writer.WriteElementString("name", method.OldName);
-                                        writer.WriteElementString("newname", method.Name);
-                                        writer.WriteEndElement();//</method>
-                                    }
-                                }
-                            }
-                            writer.WriteEndElement();//</methodlist>
-                        }
-                        if(hasRenamedField)
-                        {
-                            writer.WriteStartElement("fieldlist");
-                            foreach(var item2 in cls.ChildNodes )
-                            {
-                                if( item2 is DCILField )
-                                {
-                                    var field = (DCILField)item2;
-                                    if(field.RenameState == DCILRenameState.Renamed )
-                                    {
-                                        writer.WriteStartElement("field");
-                                        writer.WriteElementString("signature", field.OldSignature);
-                                        writer.WriteElementString("name", field.OldName);
-                                        writer.WriteElementString("newname", field.Name);
-                                        writer.WriteEndElement();
-                                    }
-                                }
-                            }
-                            writer.WriteEndElement();// </fieldlist>
-                        }
-                        writer.WriteEndElement();//</type>
                     }
+                    writer.WriteElementString("newname", cls.Name);
+                    if (hasRenamedMethod)
+                    {
+                        writer.WriteStartElement("methodlist");
+
+                        foreach (var item2 in cls.ChildNodes)
+                        {
+                            if (item2 is DCILMethod)
+                            {
+                                var method = (DCILMethod)item2;
+                                if (method.InnerGenerate == false
+                                    && method.RenameState == DCILRenameState.Renamed)
+                                {
+                                    writer.WriteStartElement("method");
+                                    writer.WriteElementString("signature", method.OldSignature);
+                                    writer.WriteElementString("name", method.OldName);
+                                    writer.WriteElementString("newname", method.Name);
+                                    writer.WriteEndElement();//</method>
+                                }
+                            }
+                        }
+                        writer.WriteEndElement();//</methodlist>
+                    }
+                    if (hasRenamedField)
+                    {
+                        writer.WriteStartElement("fieldlist");
+                        foreach (var item2 in cls.ChildNodes)
+                        {
+                            if (item2 is DCILField)
+                            {
+                                var field = (DCILField)item2;
+                                if (field.RenameState == DCILRenameState.Renamed)
+                                {
+                                    writer.WriteStartElement("field");
+                                    writer.WriteElementString("signature", field.OldSignature);
+                                    writer.WriteElementString("name", field.OldName);
+                                    writer.WriteElementString("newname", field.Name);
+                                    writer.WriteEndElement();
+                                }
+                            }
+                        }
+                        writer.WriteEndElement();// </fieldlist>
+                    }
+                    writer.WriteEndElement();//</type>
                 }
             }
             writer.WriteEndElement();//</module>
@@ -773,6 +789,7 @@ namespace JIEJIE
             writer.WriteFullEndElement();//</dotfuscatorMap>
             writer.WriteEndDocument();
         }
+
         private static string _PathOfildasm = null;
 
         /// <summary>
@@ -797,9 +814,9 @@ namespace JIEJIE
             }
             ConsoleWriteTask();
             Console.WriteLine("Saving assembly to " + asmFileName);
-            var ilFileName = Path.Combine(this.TempDirectory, "result_" + Path.GetFileName(asmFileName) + ".il");
+            var ilFileName = Path.Combine(this.Document.RootPath, "result_" + Path.GetFileName(asmFileName) + ".il");
             this.Document.WriteToFile(ilFileName, this.ContentEncoding);
-            if( _PathOfildasm == null )
+            if (_PathOfildasm == null)
             {
                 _PathOfildasm = Path.GetDirectoryName(typeof(string).Assembly.Location);
 #if DOTNETCORE
@@ -836,21 +853,44 @@ namespace JIEJIE
                 }
 #endif
             }
-             
+
             var asmTempFileName = Path.Combine(this.TempDirectory, "Temp_" + Path.GetFileName(asmFileName));
             if (File.Exists(asmTempFileName))
             {
                 File.Delete(asmTempFileName);
             }
             // 生成临时程序集文件
-            if (this.DebugMode)
+            var ilAsmArgs = "\"" + ilFileName + "\"  \"/output:" + asmTempFileName + "\"";
+            if( asmTempFileName.EndsWith(".exe" , StringComparison.OrdinalIgnoreCase))
             {
-                ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ilasm.exe"), "\"" + ilFileName + "\" /dll  \"/output:" + asmTempFileName + "\"");
+                ilAsmArgs = ilAsmArgs + " /exe";
             }
             else
             {
-                ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ilasm.exe"), "\"" + ilFileName + "\" /dll  \"/output:" + asmTempFileName + "\" /quiet");
+                ilAsmArgs = ilAsmArgs + " /dll";
             }
+            if( this.Document.Win32ResData != null && this.Document.Win32ResData.Length > 0 )
+            {
+                var resFileName = Path.ChangeExtension(ilFileName, ".res");
+                if(File.Exists( resFileName )== false )
+                {
+                    File.WriteAllBytes(resFileName, this.Document.Win32ResData);
+                }
+                ilAsmArgs = ilAsmArgs + " \"/resource=" + resFileName + "\"";
+            }
+            if(this.DebugMode == false )
+            {
+                ilAsmArgs = ilAsmArgs + " /quiet";
+            }
+            ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ilasm.exe"),  ilAsmArgs);
+            //if (this.DebugMode)
+            //{
+            //    ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ilasm.exe"), "\"" + ilFileName + "\" /dll  \"/output:" + asmTempFileName + "\"");
+            //}
+            //else
+            //{
+            //    ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ilasm.exe"), "\"" + ilFileName + "\" /dll  \"/output:" + asmTempFileName + "\" /quiet");
+            //}
             if (File.Exists(asmTempFileName))
             {
                 if (this.SnkFileName != null && this.SnkFileName.Length > 0 && File.Exists(this.SnkFileName))
@@ -859,14 +899,22 @@ namespace JIEJIE
                 }
                 File.Copy(asmTempFileName, asmFileName, true);
                 File.Delete(asmTempFileName);
-                if(this.Switchs.Rename 
-                    && this.MapXmlFileName != null 
-                    && this.MapXmlFileName.Length > 0 )
+                if (this.Switchs.Rename
+                    && this.MapXmlFileName != null
+                    && this.MapXmlFileName.Length > 0)
                 {
                     var fn2 = this.MapXmlFileName;
-                    if(Directory.Exists( fn2 ))
+                    if (fn2.EndsWith("\\") || fn2.EndsWith("/"))
                     {
-                        fn2 = Path.Combine(fn2, Path.GetFileName(asmFileName) +".map.xml");
+                        if (Directory.Exists(fn2) == false)
+                        {
+                            Directory.CreateDirectory(fn2);
+                        }
+                        fn2 = Path.Combine(fn2, Path.GetFileName(asmFileName) + ".map.xml");
+                    }
+                    else if (Directory.Exists(fn2))
+                    {
+                        fn2 = Path.Combine(fn2, Path.GetFileName(asmFileName) + ".map.xml");
                     }
                     using (var writer = new System.Xml.XmlTextWriter(fn2, Encoding.UTF8))
                     {
@@ -875,36 +923,39 @@ namespace JIEJIE
                         writer.Indentation = 3;
                         this.WriteMapXml(writer);
                     }
-                    Console.WriteLine("    Write rename map xml to\"" + fn2 + "\".");
+                    ConsoleWriteTask();
+                    Console.WriteLine("Write rename map xml to\"" + fn2 + "\".");
                 }
-                var comXmlFileName = Path.ChangeExtension(this._InputAssemblyFileName, ".xml");
-                if( comXmlFileName != null && comXmlFileName.Length > 0 &&  File.Exists( comXmlFileName ))
+                if (this.Document.CommentXmlDoc != null && this.Document.CommentXmlDoc.DocumentElement?.Name == "doc")
                 {
                     // clean document comment xml file.
-                    WriteDocumentCommentXml(comXmlFileName, Path.ChangeExtension(asmFileName, ".xml"));
+                    var comXmlFileName = Path.ChangeExtension(asmFileName, ".xml");
+                    WriteDocumentCommentXml(comXmlFileName);
                 }
-#if !DOTNETCORE // .NET Core not support ngen.exe
                 if (checkUseNgen)
                 {
                     ConsoleWriteTask();
+#if !DOTNETCORE // .NET Core not support ngen.exe
                     Console.WriteLine("Testing by ngen.exe...");
-                    ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ngen.exe"), "install \"" + asmFileName + "\"");
+                    ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ngen.exe"), "install \"" + asmFileName + "\"  /NoDependencies");
                     ResourceFileHelper.RunExe(Path.Combine(_PathOfildasm, "ngen.exe"), "uninstall \"" + asmFileName + "\"");
-                }
+#else
+                    Console.WriteLine(".NET Core not support ngen.exe");
 #endif
+                }
                 Console.WriteLine();
                 ConsoleWriteTask();
-                Console.Write("Job finished, final save to :" );
+                Console.Write("Job finished, final save to :");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(asmFileName);
                 Console.ResetColor();
-                if(this._SourceAssemblyFileSize > 0 )
+                if (this._SourceAssemblyFileSize > 0)
                 {
                     Console.Write(" Source file size : " + DCUtils.FormatByteSize(this._SourceAssemblyFileSize) + " ,");
                 }
                 var newFileLength = new FileInfo(asmFileName).Length;
                 Console.WriteLine(" Result file size : " + DCUtils.FormatByteSize(newFileLength));
-                
+
                 return true;
             }
             else
@@ -916,7 +967,6 @@ namespace JIEJIE
         }
         private string _InputAssemblyFileName = null;
         private string _InputAssemblyDirectory = null;
-
         internal string _UseAnotherExeName = null;
         private int _SourceAssemblyFileSize = 0;
 
@@ -925,7 +975,7 @@ namespace JIEJIE
         /// </summary>
         /// <param name="asmFileName">程序集文件名</param>
         /// <returns>操作是否成功</returns>
-        public bool LoadAssemblyFile(string asmFileName , bool checkILFile )
+        public bool LoadAssemblyFile(string asmFileName, string mergeAsmFileNames)
         {
             if (asmFileName == null || asmFileName.Length == 0)
             {
@@ -956,77 +1006,234 @@ namespace JIEJIE
                 DCUtils.CleanDirectory(this.TempDirectory);
             }
             int tick = Environment.TickCount;
-            ConsoleWriteTask();
+            //ConsoleWriteTask();
             string ilFileName = null;
-            if( checkILFile )
-            {
-                var fn2 = Path.ChangeExtension(asmFileName, ".il");
-                if(File.Exists( fn2 ))
-                {
-                    ilFileName = fn2;
-                }
-            }
-            if ( ilFileName == null && asmFileName.EndsWith(".il", StringComparison.OrdinalIgnoreCase))
+
+            if (asmFileName.EndsWith(".il", StringComparison.OrdinalIgnoreCase))
             {
                 // 已经存在 il 文件。
                 ilFileName = asmFileName;
+                var doc2 = new DCILDocument();
+                doc2.LoadByReader(ilFileName, this.ContentEncoding);
+                this.Document = doc2;
+
             }
             else
             {
                 this._SourceAssemblyFileSize = (int)(new FileInfo(asmFileName).Length);
 
                 // 调用 ildasm.exe 将程序集文件反编译为 il 文件。
-                Console.WriteLine("Loading assembly file " + asmFileName);
-                ilFileName = Path.Combine(this.TempDirectory, Path.GetFileName(asmFileName) + ".il");
                 var ildasmExeFileName = Path.Combine(this.SDKDirectory, "ildasm.exe");
-                ResourceFileHelper.RunExe(
-                    ildasmExeFileName,
-                    "\"" + asmFileName + "\" /forward /UTF8 \"/output=" + ilFileName + "\"");
-                string rootDir = Path.GetDirectoryName(asmFileName);
-                foreach (var dir in Directory.GetDirectories(rootDir))
+                //Console.WriteLine("Loading main assembly file " + asmFileName);
+                var mafns = new List<string>();
+                if (mergeAsmFileNames != null)
                 {
-                    // 反编译资源DLL文件
-                    var resDllFileName = Path.Combine(
-                            dir,
-                            Path.GetFileNameWithoutExtension(asmFileName) + DCILDocument.EXT_resources + ".dll");
-                    if (File.Exists(resDllFileName))
+                    foreach (var item in mergeAsmFileNames.Split(';'))
                     {
-                        var tempFileName = Path.Combine(this.TempDirectory, Path.GetFileName(dir));
-                        if (Directory.Exists(tempFileName) == false)
+                        var item2 = item.Trim();
+                        if (item2.Length > 0)
                         {
-                            Directory.CreateDirectory(tempFileName);
+                            mafns.Add(item2);
                         }
-                        tempFileName = Path.Combine(tempFileName, Path.GetFileNameWithoutExtension(resDllFileName) + ".il");
-                        ResourceFileHelper.RunExe(
-                            ildasmExeFileName,
-                            "\"" + resDllFileName + "\" /forward /UTF8 \"/output=" + tempFileName + "\"");
                     }
                 }
-                Console.WriteLine(" span " + Math.Abs(Environment.TickCount - tick) + " milliseconds.");
+                var documents = new List<DCILDocument>();
+                LoadAssemblyDocuments(documents, asmFileName, ildasmExeFileName, mafns.Count > 0 ? mafns.ToArray() : null);
+                if( this._UseAnotherExeName != null )
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.WriteLine();
+#if DOTNETCORE
+                    Console.WriteLine("   Warring!!! This program not support .NET Framework,please use '" + this._UseAnotherExeName + "'.");
+#else
+                    Console.WriteLine("   Warring!!! This program not support .NET Core,please use '" + this._UseAnotherExeName + "'.");
+#endif
+                    Console.ResetColor();
+                    return false;
+                }
+                this.Document = documents[0];
+                if (documents.Count > 1)
+                {
+                    ConsoleWriteTask();
+                    Console.WriteLine("Merge other assembly files to " + Path.GetFileName(this.Document.AssemblyFileName));
+                    // 进行文档合并
+                    this.Document = DCILDocument.MergeDocuments(documents);
+                    //for( int iCount = 1; iCount < documents.Count; iCount ++)
+                    //{
+                    //    Console.WriteLine("        + " + Path.GetFileName( documents[iCount].AssemblyFileName));
+                    //    this.Document.Merge(documents[iCount]);
+                    //}
+                }
+                else
+                {
+                    this.Document.UpdateCustomAttributeValues();
+                }
+                //ilFileName = CreateILFile(asmFileName, ildasmExeFileName, Path.Combine( this.TempDirectory , "Main"));
+
+                //ilFileName = Path.Combine(this.TempDirectory, Path.GetFileName(asmFileName) + ".il");
+                //ResourceFileHelper.RunExe(
+                //    ildasmExeFileName,
+                //    "\"" + asmFileName + "\" /forward /UTF8 \"/output=" + ilFileName + "\"");
+                //string rootDir = Path.GetDirectoryName(asmFileName);
+                //foreach (var dir in Directory.GetDirectories(rootDir))
+                //{
+                //    // 反编译资源DLL文件
+                //    var resDllFileName = Path.Combine(
+                //            dir,
+                //            Path.GetFileNameWithoutExtension(asmFileName) + DCILDocument.EXT_resources + ".dll");
+                //    if (File.Exists(resDllFileName))
+                //    {
+                //        var tempFileName = Path.Combine(this.TempDirectory, Path.GetFileName(dir));
+                //        if (Directory.Exists(tempFileName) == false)
+                //        {
+                //            Directory.CreateDirectory(tempFileName);
+                //        }
+                //        tempFileName = Path.Combine(tempFileName, Path.GetFileNameWithoutExtension(resDllFileName) + ".il");
+                //        ResourceFileHelper.RunExe(
+                //            ildasmExeFileName,
+                //            "\"" + resDllFileName + "\" /forward /UTF8 \"/output=" + tempFileName + "\"");
+                //    }
+                //}
+                //Console.WriteLine(" span " + Math.Abs(Environment.TickCount - tick) + " milliseconds.");
                 this._InputAssemblyFileName = asmFileName;
                 this._InputAssemblyDirectory = Path.GetDirectoryName(this._InputAssemblyFileName);
             }
 
-            tick = Environment.TickCount;
+            //            tick = Environment.TickCount;
+            //            ConsoleWriteTask();
+            //            Console.Write("Anlysing IL file...");
+            ////            using (var reader = new System.IO.StreamReader(ilFileName, Encoding.UTF8, true))
+            ////            {
+            ////                var line = reader.ReadLine();
+            ////                string strHeader = ".assembly extern";
+            ////                int lineCount = 0;
+            ////                while ( line != null && lineCount < 200)
+            ////                {
+            ////                    lineCount++;
+            ////                    line = line.Trim();
+            ////                    if(line.StartsWith(  strHeader , StringComparison.Ordinal))
+            ////                    {
+            ////                        var asmName = line.Substring(strHeader.Length).Trim();
+            ////#if DOTNETCORE
+            ////                        if( asmName == "mscorlib")
+            ////                        {
+            ////                            this._UseAnotherExeName = "JieJie.Net.exe";
+            ////                            return false;
+            ////                        }
+            ////                        else
+            ////                        {
+            ////                            break;
+            ////                        }
+
+            ////#else
+            ////                        if ( asmName == "System.Runtime")
+            ////                        {
+            ////                            this._UseAnotherExeName = "JieJie.NETForCore.exe";
+            ////                            return false;
+            ////                        }
+            ////                        else
+            ////                        {
+            ////                            break;
+            ////                        }
+            ////#endif
+            ////                    }
+            ////                    line = reader.ReadLine();
+            ////                }
+            ////            }
+            //            var doc = new DCILDocument();
+            //            doc.LoadByReader(ilFileName, this.ContentEncoding);
+            //            doc.AssemblyFileName = asmFileName;
+            //            if( mergeAsmFileNames != null && mergeAsmFileNames.Length > 0 )
+            //            {
+            //                var refAsmFileNames = new List<string>();
+            //                foreach( var asm in this.Document.Assemblies)
+            //                {
+
+            //                }
+            //                var mergeAsmFileNameList = mergeAsmFileNames.Split(';');
+            //                foreach( var margeFileName in mergeAsmFileNameList )
+            //                {
+
+            //                }
+            //            }
+            //            Console.WriteLine(" span " + Math.Abs(Environment.TickCount - tick) + " milliseconds. get " + doc.Classes.Count + " classes.");
+            return true;
+        }
+        /// <summary>
+        /// 加载程序集文档
+        /// </summary>
+        /// <param name="documents">文档列表</param>
+        /// <param name="asmFileName">程序集文件名</param>
+        /// <param name="ildasmExeFileName">ildasm可执行文件名</param>
+        /// <param name="mergeAsmFileNames">合并的程序集文件名数组</param>
+        private void LoadAssemblyDocuments(
+            List<DCILDocument> documents, 
+            string asmFileName, 
+            string ildasmExeFileName, 
+            string[] mergeAsmFileNames)
+        {
+            string sfn = Path.GetFileNameWithoutExtension(asmFileName);
+            foreach (var item in documents)
+            {
+                if (string.Compare(sfn, Path.GetFileNameWithoutExtension(item.AssemblyFileName), true) == 0)
+                {
+                    // 已经加载了相同名称的程序集，不重复加载。
+                    return;
+                }
+            }
+            var outputPath = Path.Combine(this.TempDirectory, Path.GetFileNameWithoutExtension(asmFileName));
+            if (Directory.Exists(outputPath) == false)
+            {
+                Directory.CreateDirectory(outputPath);
+            }
             ConsoleWriteTask();
-            Console.Write("Anlysing IL file...");
+            Console.WriteLine("Loading assembly file " + asmFileName);
+            var ilFileName = Path.Combine(outputPath, Path.GetFileName(asmFileName) + ".il");
+            ResourceFileHelper.RunExe(
+                    ildasmExeFileName,
+                    "\"" + asmFileName + "\" /forward /UTF8 \"/output=" + ilFileName + "\" /nobar");
+            string rootDir = Path.GetDirectoryName(asmFileName);
+            foreach (var dir in Directory.GetDirectories(rootDir))
+            {
+                // 反编译资源DLL文件
+                var resDllFileName = Path.Combine(
+                        dir,
+                        Path.GetFileNameWithoutExtension(asmFileName) + DCILMResource.EXT_Resources + ".dll");
+                if (File.Exists(resDllFileName))
+                {
+                    var tempFileName = Path.Combine(outputPath, Path.GetFileName(dir));
+                    if (Directory.Exists(tempFileName) == false)
+                    {
+                        Directory.CreateDirectory(tempFileName);
+                    }
+                    tempFileName = Path.Combine(tempFileName, Path.GetFileNameWithoutExtension(resDllFileName) + ".il");
+                    ResourceFileHelper.RunExe(
+                        ildasmExeFileName,
+                        "\"" + resDllFileName + "\" /forward /UTF8 \"/output=" + tempFileName + "\"");
+                }
+            }
+            int tick = Environment.TickCount;
+            //ConsoleWriteTask();
+            Console.Write("    Anlysing IL file...");
             using (var reader = new System.IO.StreamReader(ilFileName, Encoding.UTF8, true))
             {
+                // 检查.NET库类型
                 var line = reader.ReadLine();
                 string strHeader = ".assembly extern";
                 int lineCount = 0;
-                while ( line != null && lineCount < 200)
+                while (line != null && lineCount < 1000)
                 {
                     lineCount++;
                     line = line.Trim();
-                    if(line.StartsWith(  strHeader , StringComparison.Ordinal))
+                    if (line.StartsWith(strHeader, StringComparison.Ordinal))
                     {
                         var asmName = line.Substring(strHeader.Length).Trim();
 #if DOTNETCORE
                         if( asmName == "mscorlib")
                         {
                             this._UseAnotherExeName = "JieJie.Net.exe";
-                            return false;
+                            return ;
                         }
                         else
                         {
@@ -1034,10 +1241,10 @@ namespace JIEJIE
                         }
 
 #else
-                        if ( asmName == "System.Runtime")
+                        if (asmName == "System.Runtime")
                         {
                             this._UseAnotherExeName = "JieJie.NETForCore.exe";
-                            return false;
+                            return ;
                         }
                         else
                         {
@@ -1048,13 +1255,81 @@ namespace JIEJIE
                     line = reader.ReadLine();
                 }
             }
+            
             var doc = new DCILDocument();
             doc.LoadByReader(ilFileName, this.ContentEncoding);
             doc.AssemblyFileName = asmFileName;
             doc.RootPath = Path.GetDirectoryName(ilFileName);
-            this.Document = doc;
-            Console.WriteLine(" span " + Math.Abs(Environment.TickCount - tick) + " milliseconds. get " + doc.ChildNodes.Count + " IL entries.");
-            return true;
+            doc.FileName = ilFileName;
+            var xmlFileName = Path.ChangeExtension(asmFileName, ".XML");
+            if( File.Exists( xmlFileName ))
+            {
+                try
+                {
+                    var xml = new System.Xml.XmlDocument();
+                    xml.Load(xmlFileName);
+                    doc.CommentXmlDoc = xml;
+                }
+                catch( System.Exception ext )
+                {
+                    Console.WriteLine("      Fail to load " + xmlFileName + " . " + ext.Message);
+                }
+            }
+            Console.WriteLine(" span " + Math.Abs(Environment.TickCount - tick) + " milliseconds. get " + doc.Classes.Count + " classes.");
+            documents.Add(doc);
+            if (mergeAsmFileNames != null && mergeAsmFileNames.Length > 0)
+            {
+                // 准备合并程序集
+                string asmBasePath = Path.GetDirectoryName(asmFileName);
+                foreach (var mafn in mergeAsmFileNames)
+                {
+                    if (mafn == "*")
+                    {
+                        // 遇到通配符 * ，表示加载所有引用的程序集
+                        foreach (var asm in doc.Assemblies)
+                        {
+                            if (asm.IsExtern)
+                            {
+                                if ( DCUtils.IsSystemAsseblyName( asm.Name))
+                                {
+                                    // 不加载系统DLL
+                                    continue;
+                                }
+                                var fn2 = Path.Combine(asmBasePath, asm.Name + ".dll");
+                                if (File.Exists(fn2) == false)
+                                {
+                                    fn2 = Path.Combine(asmBasePath, asm.Name + ".exe");
+                                }
+                                if (File.Exists(fn2))
+                                {
+                                    LoadAssemblyDocuments(documents, fn2, ildasmExeFileName, mergeAsmFileNames);
+                                    if(this._UseAnotherExeName != null )
+                                    {
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 参数中指明了要合并的程序集文件名
+                        var fn = mafn;
+                        if (Path.IsPathRooted(fn) == false)
+                        {
+                            fn = Path.Combine(asmBasePath, fn);
+                        }
+                        if (File.Exists(fn))
+                        {
+                            LoadAssemblyDocuments(documents, fn, ildasmExeFileName, mergeAsmFileNames);
+                            if (this._UseAnotherExeName != null)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void HandleDocument()
@@ -1065,18 +1340,15 @@ namespace JIEJIE
             {
                 this.HandleCollectStringValue();
             }
-            this.AddClassInnerAssemblyHelper20210315();
+            this.AddClassInnerAssemblyHelper20211018();
             if (this.Switchs.Resources)
             {
                 this.ApplyResouceContainerClass();
             }
-            var nodes = this.Document.ChildNodes.Clone();
-            foreach (var item in nodes)
+            var clses = new List<DCILClass>(this.Document.Classes);
+            foreach (var cls in clses)
             {
-                if (item is DCILClass)
-                {
-                    HandleClass((DCILClass)item, this.Switchs);
-                }
+                HandleClass(cls, this.Switchs);
             }
             this.AddDatasClass();
             this.Document.FixDomState();
@@ -1091,26 +1363,35 @@ namespace JIEJIE
             }
             if (this.Switchs.MemberOrder)
             {
-                this.ObfuseClassOrder();
+                DCUtils.ObfuseListOrder(this.Document.Classes);
             }
+            bool hasRenamed = false;
             if (this.Switchs.Rename)
             {
-                this.RenameClasses();
+                hasRenamed = this.RenameClasses() > 0;
+            }
+            if (hasRenamed || this.Document._HasMergeDocuments)
+            {
+                var attrs = this.Document.GetAllCustomAttributesUseCache();
+                foreach (var attr in attrs)
+                {
+                    attr.UpdateBinaryValueForLocalClassRename();
+                }
             }
             if (this.Switchs.ControlFlow)
             {
                 this.CollectStatcMethod();
             }
-            if( this.Switchs.RemoveMember )
+            if (this.Switchs.RemoveMember)
             {
                 RemoveMember();
             }
-            
+
         }
         /// <summary>
         /// 将所有的无构造函数的类中的内部静态函数合并到新的类型中。减少静态函数功能模块的关联。
         /// </summary>
-        private void CollectStatcMethod( )
+        private void CollectStatcMethod()
         {
             var methods = new List<DCILMethod>();
             var clses = this.GetAllClasses();
@@ -1146,13 +1427,18 @@ namespace JIEJIE
                     if (item is DCILMethod)
                     {
                         var method = (DCILMethod)item;
-                        if (method.IsStatic && method.ParentMember == null && method.HasGenericStyle == false )
+                        if (method.IsStatic 
+                            && method.ParentMember == null 
+                            && method.HasGenericStyle == false
+                            && method.Pinvokeimpl == null 
+                            && method.HasCustomAttributes == false 
+                            && ( method.OperCodes != null || method.OperCodes.Count > 0 )) 
                         {
                             if (method.RenameState == DCILRenameState.Renamed || method.IsPublic == false)
                             {
                                 // 只有重命名的未公开的函数才分离。
                                 methods.Add(method);
-                                cls.ChildNodes.RemoveAt(iCount);
+                                //cls.ChildNodes.RemoveAt(iCount);
                                 //method.Parent = null;
                             }
                         }
@@ -1161,13 +1447,48 @@ namespace JIEJIE
             }//foreach
             if (methods.Count > 0)
             {
+                for( int iCount = methods.Count -1; iCount >= 0; iCount --)
+                {
+                    var method = methods[iCount];
+                    bool moveFlag = true;
+                    var cls = (DCILClass)method.Parent;
+                    method.OperCodes.EnumDeeply(delegate (DCILOperCode code)
+                    {
+                        if (code is DCILOperCode_HandleMethod)
+                        {
+                            var method4 = ((DCILOperCode_HandleMethod)code).InvokeInfo.LocalMethod;
+                            if ( method4 != null 
+                                && method4.Parent == cls 
+                                && method4.IsPublic == false)
+                            {
+                                // 调用了同类型下的私有成员函数，则不分离
+                                if( methods.Contains( method4 ) == false )
+                                {
+                                    moveFlag = false;
+                                }
+                            }
+                        }
+                    });
+                    if (moveFlag)
+                    {
+                        cls.ChildNodes.Remove(method);
+                    }
+                    else
+                    { 
+                        methods.RemoveAt(iCount);
+                    }
+                }
+                if(methods.Count ==0 )
+                {
+                    return;
+                }
                 methods.Sort(new DCILMethod.NameCompaer(true));
 
                 var newClass = new DCILClass();
                 newClass.Styles = new List<string>();
                 newClass.Styles.AddRange(new string[] { "private", "auto", "ansi", "abstract", "sealed", "beforefieldinit" });
                 newClass._Name = _ClassNamePrefix + "_jiejienet_sm";
-                newClass.BaseType = new DCILTypeReference( "[" + this.Document.LibName_mscorlib +"]System.Object", DCILTypeMode.Primitive);
+                newClass.BaseType = new DCILTypeReference("[" + this.Document.LibName_mscorlib + "]System.Object", DCILTypeMode.Primitive);
                 if (this._IDGenForClass != null)
                 {
                     newClass.ChangeName(this._IDGenForClass.GenerateIDForClass(newClass.Name, newClass));
@@ -1195,14 +1516,15 @@ namespace JIEJIE
                     }
                     newClass.ChildNodes.Add(method);
                     method.Parent = newClass;
-                    if( this.DebugMode )
+                    if (this.DebugMode)
                     {
                         Console.WriteLine("            Move static methods : " + oldClsName + "::" + oldMethodName);
                     }
                 }//for
                 DCUtils.ObfuseListOrder(newClass.ChildNodes);
-                this.Document.ChildNodes.Add(newClass);
-                Console.WriteLine("       Collect " + methods.Count + " static methods.");
+                this.Document.Classes.Add(newClass);
+                ConsoleWriteTask();
+                Console.WriteLine("Move " + methods.Count + " static methods.");
             }
         }
 
@@ -1250,45 +1572,45 @@ namespace JIEJIE
             //int idCounter = 0;
             int newMethodCount = 0;
             int changeCodeCount = 0;
-            foreach ( var item in methods )
+            foreach (var item in methods)
             {
-                if( item.Value > 5 )
+                if (item.Value > 5)
                 {
                     var method = item.Key;
                     //if (method.Name == "get_ID" && method.Parent.Name == "DCSoft.Common.BackgroundTask")
                     //{
 
                     //}
-                    if ( method.IsFinal == false )
+                    if (method.IsFinal == false)
                     {
-                        if(method.IsVirtual || method.IsNewslot || method.IsAbstract )
+                        if (method.IsVirtual || method.IsNewslot || method.IsAbstract)
                         {
                             continue;
                         }
                     }
-                    if(method.Parent.Name == "DCSoft.Writer.DocumentBehaviorOptions")
+                    if (method.Parent.Name == "DCSoft.Writer.DocumentBehaviorOptions")
                     {
 
                     }
-                    if(method.OperCodes.Count > 20 )
+                    if (method.OperCodes.Count > 20)
                     {
                         continue;
                     }
                     bool tooManyCode = false;
-                    foreach ( var code2 in method.OperCodes )
+                    foreach (var code2 in method.OperCodes)
                     {
-                        if(code2 is DCILOperCode_Try_Catch_Finally)
+                        if (code2 is DCILOperCode_Try_Catch_Finally)
                         {
                             tooManyCode = true;
                             break;
                         }
                     }
-                    if(tooManyCode )
+                    if (tooManyCode)
                     {
                         continue;
                     }
-                    
-                    var cls =(DCILClass) method.Parent;
+
+                    var cls = (DCILClass)method.Parent;
                     var newMethod = method.SimpleClone();
                     cls.HasInnerGenerateMethod = true;
                     //if (this.Switchs.Rename)
@@ -1331,15 +1653,15 @@ namespace JIEJIE
                         method.Styles.Insert(0, "assembly");
                     }
                     cls.ChildNodes.Add(newMethod);
-                    if(method.ParentMember is DCILProperty )
+                    if (method.ParentMember is DCILProperty)
                     {
                         var p = (DCILProperty)method.ParentMember;
-                        if(p.Method_Get?.LocalMethod == method )
+                        if (p.Method_Get?.LocalMethod == method)
                         {
                             p.Method_Get = p.Method_Get.SimpleClone();
                             p.Method_Get.LocalMethod = newMethod;
                         }
-                        else if( p.Method_Set?.LocalMethod == method )
+                        else if (p.Method_Set?.LocalMethod == method)
                         {
                             p.Method_Set = p.Method_Set.SimpleClone();
                             p.Method_Set.LocalMethod = newMethod;
@@ -1365,91 +1687,88 @@ namespace JIEJIE
             }
             int tick = Environment.TickCount;
             int removeCount = 0;
-            foreach (var item in this.Document.ChildNodes)
+            foreach (var cls in this.Document.Classes)
             {
-                if (item is DCILClass)
+                var localCount = 0;
+                var localPCount = 0;
+                if (GetRuntimeSwitchs(cls, this.Switchs).RemoveMember)
                 {
-                    var cls = (DCILClass)item;
-                    var localCount = 0;
-                    var localPCount = 0;
-                    if (GetRuntimeSwitchs(cls, this.Switchs).RemoveMember)
+                    if (cls.IsEnum && cls.RenameState == DCILRenameState.Renamed)
                     {
-                        if (cls.IsEnum && cls.RenameState == DCILRenameState.Renamed)
+                        // 删除被混淆的枚举类型的常量
+                        for (int iCount = cls.ChildNodes.Count - 1; iCount >= 0; iCount--)
                         {
-                            // 删除被混淆的枚举类型的常量
-                            for (int iCount = cls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                            var field = cls.ChildNodes[iCount] as DCILField;
+                            if (field != null && field.IsConst)
                             {
-                                var field = cls.ChildNodes[iCount] as DCILField;
-                                if (field != null && field.IsConst)
+                                cls.ChildNodes.RemoveAt(iCount);
+                                removeCount++;
+                                localCount++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        bool removeProperty = (cls.ImplementsInterfaces == null || cls.ImplementsInterfaces.Count == 0);
+                        for (int iCount = cls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                        {
+                            var node = cls.ChildNodes[iCount];
+                            if (node is DCILField)
+                            {
+                                var field = (DCILField)node;
+                                if (field.IsConst && field.RenameState == DCILRenameState.Renamed)
                                 {
+                                    // 删除被混淆的常量
                                     cls.ChildNodes.RemoveAt(iCount);
                                     removeCount++;
                                     localCount++;
                                 }
                             }
-                        }
-                        else
-                        {
-                            bool removeProperty = (cls.ImplementsInterfaces == null || cls.ImplementsInterfaces.Count == 0);
-                            for (int iCount = cls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                            else if (removeProperty && node is DCILProperty)
                             {
-                                var node = cls.ChildNodes[iCount];
-                                if (node is DCILField)
+                                var p = (DCILProperty)node;
+                                bool removeFlag = false;
+                                var mGet = p.Method_Get?.LocalMethod;
+                                if (mGet != null
+                                    && mGet.RenameState == DCILRenameState.Renamed
+                                    && mGet.IsInOverrideList == false)
                                 {
-                                    var field = (DCILField)node;
-                                    if (field.IsConst && field.RenameState == DCILRenameState.Renamed)
-                                    {
-                                        // 删除被混淆的常量
-                                        cls.ChildNodes.RemoveAt(iCount);
-                                        removeCount++;
-                                        localCount++;
-                                    }
+                                    removeFlag = true;
                                 }
-                                else if (removeProperty && node is DCILProperty)
+                                if (removeFlag == false)
                                 {
-                                    var p = (DCILProperty)node;
-                                    bool removeFlag = false;
-                                    var mGet = p.Method_Get?.LocalMethod;
-                                    if( mGet != null 
-                                        && mGet.RenameState == DCILRenameState.Renamed 
-                                        && mGet.IsInOverrideList == false )
+                                    var mSet = p.Method_Set?.LocalMethod;
+                                    if (mSet != null
+                                        && mSet.RenameState == DCILRenameState.Renamed
+                                        && mSet.IsInOverrideList == false)
                                     {
                                         removeFlag = true;
                                     }
-                                    if (removeFlag == false)
-                                    {
-                                        var mSet = p.Method_Set?.LocalMethod;
-                                        if (mSet != null 
-                                            && mSet.RenameState == DCILRenameState.Renamed
-                                            && mSet.IsInOverrideList == false)
-                                        {
-                                            removeFlag = true;
-                                        }
-                                    }
-                                    if (removeFlag)
-                                    {
-                                        mGet?.RemoveStyle("specialname");
-                                        p.Method_Set?.LocalMethod?.RemoveStyle("specialname");
-                                        cls.ChildNodes.RemoveAt(iCount);
-                                        removeCount++;
-                                        localPCount++;
-                                    }
+                                }
+                                if (removeFlag)
+                                {
+                                    mGet?.RemoveStyle("specialname");
+                                    p.Method_Set?.LocalMethod?.RemoveStyle("specialname");
+                                    cls.ChildNodes.RemoveAt(iCount);
+                                    removeCount++;
+                                    localPCount++;
                                 }
                             }
                         }
                     }
-                    if ((localCount > 0 || localPCount > 0) && counters != null)
+                }
+                if ((localCount > 0 || localPCount > 0) && counters != null)
+                {
+                    if (cls.OldName == null)
                     {
-                        if (cls.OldName == null)
-                        {
-                            counters[cls.Name] = new Tuple<int, int>(localCount, localPCount);
-                        }
-                        else
-                        {
-                            counters[cls.OldName] = new Tuple<int, int>(localCount, localPCount);
-                        }
+                        counters[cls.Name] = new Tuple<int, int>(localCount, localPCount);
+                    }
+                    else
+                    {
+                        counters[cls.OldName] = new Tuple<int, int>(localCount, localPCount);
                     }
                 }
+
             }
             if (counters != null)
             {
@@ -1506,7 +1825,10 @@ namespace JIEJIE
             return this._IndexCounter++;
         }
         private static readonly string _ClassNamePrefix = "__DC20210205._";
-
+        internal void SetDocumentCustomInstructions( Dictionary<string,string> cis )
+        {
+            this.Document.CustomInstructions = cis;
+        }
         public DCILDocument Document = null;
         private List<DCILClass> _AllClasses = null;
         /// <summary>
@@ -1518,22 +1840,18 @@ namespace JIEJIE
             if (this._AllClasses == null)
             {
                 this._AllClasses = new List<DCILClass>();
-                InnerGetAllClasses(this.Document.ChildNodes, this._AllClasses);
+                InnerGetAllClasses(this.Document.Classes, this._AllClasses);
             }
             return this._AllClasses;
         }
-        private void InnerGetAllClasses(System.Collections.IEnumerable nodes, List<DCILClass> list)
+        private void InnerGetAllClasses(List<DCILClass> clses, List<DCILClass> list)
         {
-            foreach (var item in nodes)
+            foreach (var cls in clses)
             {
-                if (item is DCILClass)
+                list.Add(cls);
+                if (cls.NestedClasses != null && cls.NestedClasses.Count > 0)
                 {
-                    var cls = (DCILClass)item;
-                    list.Add(cls);
-                    if (cls.NestedClasses != null && cls.NestedClasses.Count > 0)
-                    {
-                        InnerGetAllClasses(cls.NestedClasses, list);
-                    }
+                    InnerGetAllClasses(cls.NestedClasses, list);
                 }
             }
         }
@@ -1547,7 +1865,7 @@ namespace JIEJIE
         public void SelectUILanguage()
         {
             this._UILanguageName = null;
-            var allResFiles = this.Document.ResouceFiles;
+            var allResFiles = this.Document.Resouces;
             if (allResFiles.Count > 0)
             {
                 var culs = this.Document.GetSupportCultures();
@@ -1576,8 +1894,13 @@ namespace JIEJIE
                             int index = key.KeyChar - '0';
                             if (index >= 0 && index < culs.Length)
                             {
-                                _UILanguageName = culs[index].Name;
-                                _UILanguageDisplayName = culs[index].DisplayName;
+                                Console.WriteLine();
+                                this._UILanguageName = culs[index].Name;
+                                this._UILanguageDisplayName = culs[index].DisplayName;
+                                foreach (var item in this.Document.Resouces.Values)
+                                {
+                                    item.ChangeLanguage(this._UILanguageName);
+                                }
                             }
                             break;
                         }
@@ -1758,12 +2081,13 @@ namespace JIEJIE
 
                 var newCls = new DCILClass(txtNewClassCodeText, this.Document);
                 //newCls.CacheInfo(this.Document, null);
-                this.Document.ChildNodes.Add(newCls);
+                this.Document.Classes.Add(newCls);
                 foreach (var item in newILCodes)
                 {
                     item.Value.UpdateLocalField(newCls);
                 }
             }
+            this.Document.ClearCacheForAllClasses();
             this._AllClasses = null;
             tick = Math.Abs(Environment.TickCount - tick);
             Console.WriteLine(" Handle " + strNativeCodes.Count + " string defines , "
@@ -1939,7 +2263,7 @@ namespace JIEJIE
                                 }
                                 curClass = curClass.BaseType?.LocalClass;
                             }
-                        EndCheckInterfaceMethod:;
+                            EndCheckInterfaceMethod:;
                             if (methodsFromInterface.Count > 0)
                             {
                                 foreach (var item in baseTypeMethodMap)
@@ -2003,7 +2327,7 @@ namespace JIEJIE
                         lists.Add(item);
                     }
                 }
-                foreach( var method in item )
+                foreach (var method in item)
                 {
                     method.IsInOverrideList = true;
                 }
@@ -2204,7 +2528,7 @@ namespace JIEJIE
                 }
                 if (baseType.HasLibraryName)
                 {
-                    var nt = baseType.SearchNativeType( this._InputAssemblyDirectory);
+                    var nt = baseType.SearchNativeType(this._InputAssemblyDirectory);
                     if (nt != null)
                     {
                         var list5 = GetBaseMethodsByNativeType(nt, gpvs);
@@ -2270,6 +2594,11 @@ namespace JIEJIE
             if (method.Pinvokeimpl != null && method.Pinvokeimpl.Length > 0)
             {
                 // 是从外部导入的平台调用API，则不改名
+                return false;
+            }
+            if( method.Name == "Main")
+            {
+                // 入口函数，不重命名。
                 return false;
             }
             if (method.ObfuscationSettings != null
@@ -2407,7 +2736,7 @@ namespace JIEJIE
                         }
                         curClass = curClass.BaseType?.LocalClass;
                     }
-                EndHandleMethodFromInterface:;
+                    EndHandleMethodFromInterface:;
                 }
             }
 
@@ -2530,25 +2859,25 @@ namespace JIEJIE
             ConsoleWriteTask();
             Console.Write("Renaming.....");
             int tick = Environment.TickCount;
-            var idGenForMember = new IDGenerator(this.PrefixForTypeRename , this.PrefixForMemberRename );
+            var idGenForMember = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
             idGenForMember.DebugMode = this.DebugMode;
 
             var allClasses = GetAllClasses();
-            var attributes = new List<DCILCustomAttribute>();
+            //var attributes = new List<DCILCustomAttribute>();
             foreach (var cls in allClasses)
             {
-                cls.CollectAttributes(attributes);
+                //cls.CollectAttributes(attributes);
                 foreach (var item in cls.ChildNodes)
                 {
-                    if (item is DCILMemberInfo)
-                    {
-                        ((DCILMemberInfo)item).CollectAttributes(attributes);
-                    }
-                    if(item is DCILMethod )
+                    //if (item is DCILMemberInfo)
+                    //{
+                    //    ((DCILMemberInfo)item).CollectAttributes(attributes);
+                    //}
+                    if (item is DCILMethod)
                     {
                         ((DCILMethod)item).UpdateOldSignature();
                     }
-                    else if(item is DCILField )
+                    else if (item is DCILField)
                     {
                         ((DCILField)item).UpdateOldSignature();
                     }
@@ -2561,7 +2890,7 @@ namespace JIEJIE
             IDGenerator.GenCountBase = idGenForMember.GenCount + 1;
 
             // 执行函数的重命名
-            this._IDGenForClass = new IDGenerator(this.PrefixForTypeRename,this.PrefixForMemberRename);
+            this._IDGenForClass = new IDGenerator(this.PrefixForTypeRename, this.PrefixForMemberRename);
             this._IDGenForClass.DebugMode = this.DebugMode;
             foreach (var cls in allClasses)
             {
@@ -2660,16 +2989,6 @@ namespace JIEJIE
                     }
                 }
             }//foreach
-            if (result > 0)
-            {
-                foreach (var attr in attributes)
-                {
-                    if (attr.UpdateValuesForRename(clsNameMaps))
-                    {
-                        result++;
-                    }
-                }
-            }
             int totalCount_cls = 0;
             int handleCount_cls = 0;
             int totalCount_field = 0;
@@ -2738,11 +3057,12 @@ namespace JIEJIE
             }
             return result;
         }
+       
         /// <summary>
         /// 重命名函数的参数名
         /// </summary>
         /// <param name="method"></param>
-        private void RenameMethodParameter(DCILMethod method )
+        private void RenameMethodParameter(DCILMethod method)
         {
             if (method.Parameters != null && method.Parameters.Count > 0)
             {
@@ -2819,7 +3139,7 @@ namespace JIEJIE
             //    });
             //}
         }
-         
+
         private void AddFinalResultMessage(StringBuilder str, string title, int totalCount, int handleCount)
         {
             if (str == null)
@@ -2869,9 +3189,9 @@ namespace JIEJIE
                     }
                 }
             }
-        } 
+        }
         private int _ModifiedCount = 0;
-        
+
         /// <summary>
         /// 是否处于调试模式
         /// </summary>
@@ -2880,6 +3200,10 @@ namespace JIEJIE
 
         private void HandleMethod(DCILMethod method, JieJieSwitchs parentOptions)
         {
+            //if( method.Name == "TryConvertTo" || method.OldName == "TryConvertTo")
+            //{
+
+            //}
             var opts = GetRuntimeSwitchs(method, parentOptions);
             if (opts.AllocationCallStack && method.ReturnTypeInfo == DCILTypeReference.Type_String)
             {
@@ -2893,15 +3217,15 @@ namespace JIEJIE
                         method.OperCodes.Insert(
                             ilIndex,
                             new DCILOperCode(
-                                "IL_zzzzz", 
-                                "call", 
-                                "string " + _ClassName_InnerAssemblyHelper20210315 + "::CloneStringCrossThead(string)"));
+                                "IL_zzzzz",
+                                "call",
+                                "string " + _ClassName_InnerAssemblyHelper20211018 + "::CloneStringCrossThead(string)"));
                         _ModifiedCount++;
                         break;
                     }
                 }
             }
-            if (opts.ControlFlow)
+            if (opts.ControlFlow && method.OperCodeSpecifyStructure == false )
             {
                 ObfuscateOperCodeList(method);
             }
@@ -3005,7 +3329,7 @@ namespace JIEJIE
                 str.AppendLine("{");
                 for (int iCount = 0; iCount < _Datas.Count; iCount++)
                 {
-                    str.AppendLine(@".class nested private explicit ansi sealed _DATA" + iCount + " extends[" + LibName_mscorlib +  @"]System.ValueType
+                    str.AppendLine(@".class nested private explicit ansi sealed _DATA" + iCount + " extends[" + LibName_mscorlib + @"]System.ValueType
 {
 	.pack 1
     .size " + _Datas[iCount].Length + @"
@@ -3064,142 +3388,91 @@ namespace JIEJIE
                 }
                 str.AppendLine("}");
                 var cls = new DCILClass(str.ToString(), document);
-                document.ChildNodes.Add(cls);
+                document.Classes.Add(cls);
                 for (int iCount = 0; iCount < _Datas.Count; iCount++)
                 {
                     var item = new DCILData();
                     item._Name = "I_BDC" + iCount;
                     item.DataType = "bytearray";
                     item.Value = _Datas[iCount];
-                    document.ChildNodes.Add(item);
+                    document.ILDatas.Add(item);
                 }
             }
         }
 
-        private MyResourceDataFileList GetResourceDataFiles()
-        {
-            var resDataNames = new List<string>();
-            foreach (var item in this.Document.ChildNodes)
-            {
-                if (item is DCILMResource
-                    && item.Name.EndsWith(DCILDocument.EXT_resources, StringComparison.Ordinal))
-                {
-                    resDataNames.Add(item.Name);
-                }
-            }
-            MyResourceDataFileList dataFiles = null;
-            if (this.Document._IsDotNetCoreAssembly && typeof(string).Assembly.FullName.Contains("mscorlib"))
-            {
-                var tempPath = Path.Combine(Path.GetTempPath(), "DCSoft.ResourceFileHelper.NetCore");
-                if (Directory.Exists(tempPath) == false)
-                {
-                    Directory.CreateDirectory(tempPath);
-                }
-                if (DCUtils.ExpandResourcesToPath(
-                    typeof(DCJieJieNetEngine).Assembly,
-                    "DCSoft.AssemblyPublish.DCSoft.ResourceFileHelper.NetCore.",
-                    tempPath,
-                    true) == 0)
-                {
-                    DCUtils.ExpandResourcesToPath(
-                    typeof(DCJieJieNetEngine).Assembly,
-                    "DCNETProtector.DCSoft.ResourceFileHelper.NetCore.",
-                    tempPath,
-                    true);
-                }
-                dataFiles = ResourceFileHelper.ExecuteByExe(
-                    Path.Combine(tempPath, "DCSoft.ResourceFileHelper.NetCore.exe"),
-                    this.Document.RootPath,
-                    this._UILanguageName,
-                    resDataNames);
-                if (Directory.Exists(tempPath))
-                {
-                    Directory.Delete(tempPath, true);
-                }
-            }
-            else
-            {
-                dataFiles = ResourceFileHelper.Execute(this.Document.RootPath, _UILanguageName, resDataNames);// new MyResourceDataFileList(resFileNames);
-            }
-            return dataFiles;
-        }
+        //private MyResourceDataFileList GetResourceDataFiles()
+        //{
+        //    var resDataNames = new List<string>();
+        //    foreach (var item in this.Document.ChildNodes)
+        //    {
+        //        if (item is DCILMResource
+        //            && item.Name.EndsWith(DCILDocument.EXT_resources, StringComparison.Ordinal))
+        //        {
+        //            resDataNames.Add(item.Name);
+        //        }
+        //    }
+        //    MyResourceDataFileList dataFiles = null;
+        //    if (this.Document._IsDotNetCoreAssembly && typeof(string).Assembly.FullName.Contains("mscorlib"))
+        //    {
+        //        var tempPath = Path.Combine(Path.GetTempPath(), "DCSoft.ResourceFileHelper.NetCore");
+        //        if (Directory.Exists(tempPath) == false)
+        //        {
+        //            Directory.CreateDirectory(tempPath);
+        //        }
+        //        if (DCUtils.ExpandResourcesToPath(
+        //            typeof(DCJieJieNetEngine).Assembly,
+        //            "DCSoft.AssemblyPublish.DCSoft.ResourceFileHelper.NetCore.",
+        //            tempPath,
+        //            true) == 0)
+        //        {
+        //            DCUtils.ExpandResourcesToPath(
+        //            typeof(DCJieJieNetEngine).Assembly,
+        //            "DCNETProtector.DCSoft.ResourceFileHelper.NetCore.",
+        //            tempPath,
+        //            true);
+        //        }
+        //        dataFiles = ResourceFileHelper.ExecuteByExe(
+        //            Path.Combine(tempPath, "DCSoft.ResourceFileHelper.NetCore.exe"),
+        //            this.Document.RootPath,
+        //            this._UILanguageName,
+        //            resDataNames);
+        //        if (Directory.Exists(tempPath))
+        //        {
+        //            Directory.Delete(tempPath, true);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        dataFiles = ResourceFileHelper.Execute(this.Document.RootPath, _UILanguageName, resDataNames);// new MyResourceDataFileList(resFileNames);
+        //    }
+        //    return dataFiles;
+        //}
         public void ApplyResouceContainerClass()
         {
             int tick = Environment.TickCount;
             var cls_resIndex = new Dictionary<DCILClass, int>();
             var allRes = this.Document.GetNodeIndexs<DCILMResource>();
             var allResNames = new List<string>();
-            foreach (var node in this.Document.ChildNodes)
-            {
-                if (node is DCILClass)
-                {
-                    var cls = (DCILClass)node;
-                    if (cls.IsResoucePackage())
-                    {
-                        var resName = cls.Name + DCILDocument.EXT_resources;
-                        if (allRes.ContainsKey(resName))
-                        {
-                            cls_resIndex[cls] = allRes[resName];
-                            allResNames.Add(cls.Name);
-                        }
-                    }
-                }
-            }
-            if (allResNames.Count == 0)
-            {
-                return;
-            }
-            MyResourceDataFileList dataFiles = null;
-            if (this.Document._IsDotNetCoreAssembly && typeof(string).Assembly.FullName.Contains("mscorlib"))
-            {
-                var tempPath = Path.Combine(Path.GetTempPath(), "DCSoft.ResourceFileHelper.NetCore");
-                if (Directory.Exists(tempPath) == false)
-                {
-                    Directory.CreateDirectory(tempPath);
-                }
-                if (DCUtils.ExpandResourcesToPath(
-                    typeof(DCJieJieNetEngine).Assembly,
-                    "DCSoft.AssemblyPublish.DCSoft.ResourceFileHelper.NetCore.",
-                    tempPath,
-                    true) == 0)
-                {
-                    DCUtils.ExpandResourcesToPath(
-                    typeof(DCJieJieNetEngine).Assembly,
-                    "DCNETProtector.DCSoft.ResourceFileHelper.NetCore.",
-                    tempPath,
-                    true);
-                }
-                dataFiles = ResourceFileHelper.ExecuteByExe(
-                    Path.Combine(tempPath, "DCSoft.ResourceFileHelper.NetCore.exe"),
-                    this.Document.RootPath,
-                    this._UILanguageName,
-                    allResNames);
-                if (Directory.Exists(tempPath))
-                {
-                    Directory.Delete(tempPath, true);
-                }
-            }
-            else
-            {
-                dataFiles = ResourceFileHelper.Execute(this.Document.RootPath, this._UILanguageName, allResNames);// new MyResourceDataFileList(resFileNames);
-            }
-            if (dataFiles == null || dataFiles.Count == 0)
-            {
-                return;
-            }
-            var fileTable = dataFiles.GetFileTable();
             var bmpTypeName = this.Document.GetTypeNameWithLibraryName(
-                "System.Drawing.Bitmap",
-                typeof(System.Drawing.Bitmap).Assembly.GetName().Name);
-            var removeResIndexs = new List<int>();
-            foreach (var clsItem in cls_resIndex)
+               "System.Drawing.Bitmap",
+               typeof(System.Drawing.Bitmap).Assembly.GetName().Name);
+            foreach (var cls in this.Document.Classes)
             {
-                if (fileTable.ContainsKey(clsItem.Key.Name))
+                if (cls.IsResoucePackage() == false)
                 {
-                    var cls = clsItem.Key;
-                    var dataFile = fileTable[cls.Name];
-                    DCUtils.ObfuseListOrder(dataFile.Items);
-                    var hasBmpValue = dataFile.HasBmp;
+                    continue;
+                }
+                var resName = cls.Name + DCILMResource.EXT_Resources;// DCILDocument.EXT_resources;
+                DCILMResource res = null;
+                if (this.Document.Resouces.TryGetValue(resName, out res))
+                {
+                    if( res.ResourceValues.Count == 0 )
+                    {
+                        continue;
+                    }
+                    var resValues = new List<DCILMResource.MResourceItem>(res.ResourceValues.Values);
+                    DCUtils.ObfuseListOrder(resValues);
+                    var hasBmpValue = res.HasBmpValue;
                     var strNewClassCode = new StringBuilder();
                     var clsName = cls.Name;
                     strNewClassCode.AppendLine(".class " + clsName + " extends System.Object");
@@ -3209,7 +3482,7 @@ namespace JIEJIE
                     strNewClassCode.AppendLine(".field private static initonly uint8[] _Datas");
                     if (hasBmpValue)
                     {
-                        foreach (var item in dataFile.Items)
+                        foreach (var item in resValues)
                         {
                             if (item.IsBmp)
                             {
@@ -3224,7 +3497,7 @@ namespace JIEJIE
 	    .maxstack 8
 	IL_0000: nop
 	// _Datas = Class3.GetData2();
-	IL_0001: call uint8[] " + this._ByteDataContainer.GetMethodName(dataFile.Datas) + @"()
+	IL_0001: call uint8[] " + this._ByteDataContainer.GetMethodName(res.EncryptData()) + @"()
 	IL_0006: stsfld uint8[] " + clsName + "::_Datas");
 
                     int labelCount = 100;
@@ -3232,7 +3505,7 @@ namespace JIEJIE
                     strNewClassCode.AppendLine("}");
                     if (hasBmpValue)
                     {
-                        foreach (var item in dataFile.Items)
+                        foreach (var item in resValues)
                         {
                             if (item.IsBmp)
                             {
@@ -3254,9 +3527,9 @@ namespace JIEJIE
 	IL_000d: nop
 	IL_000e: ldsfld uint8[] " + clsName + @"::_Datas
 	IL_0013: ldc.i4 " + item.StartIndex + @"
-	IL_0018: ldc.i4 " + item.BsLength + @"
+	IL_0018: ldc.i4 " + item.BSLength + @"
 	IL_001d: ldc.i4 " + item.Key + @"
-	IL_0022: call class " + bmpTypeName +  @" " + _ClassName_InnerAssemblyHelper20210315 + @"::GetBitmap(uint8[], int32, int32, int32)
+	IL_0022: call class " + bmpTypeName + @" " + _ClassName_InnerAssemblyHelper20211018 + @"::GetBitmap(uint8[], int32, int32, int32)
 	IL_0027: stsfld class " + bmpTypeName + @" " + clsName + @"::_" + item.Name + @"
 	IL_002c: nop
 
@@ -3273,7 +3546,7 @@ namespace JIEJIE
                             }
                         }
                     }
-                    foreach (var item in dataFile.Items)
+                    foreach (var item in resValues)
                     {
                         if (item.IsBmp == false)
                         {
@@ -3286,9 +3559,9 @@ namespace JIEJIE
 	IL_0000: nop
 	IL_0001: ldsfld uint8[] " + clsName + @"::_Datas
 	IL_0006: ldc.i4 " + item.StartIndex + @"
-	IL_000b: ldc.i4 " + item.BsLength + @"
+	IL_000b: ldc.i4 " + item.BSLength + @"
 	IL_0010: ldc.i4 " + item.Key + @"
-	IL_0015: call string "+ _ClassName_InnerAssemblyHelper20210315 + @"::GetString(uint8[], int32, int32, int32)
+	IL_0015: call string " + _ClassName_InnerAssemblyHelper20211018 + @"::GetString(uint8[], int32, int32, int32)
 	IL_001a: stloc.0
 	IL_001b: br.s IL_001d
 	IL_001d: ldloc.0
@@ -3302,31 +3575,163 @@ namespace JIEJIE
                     newCls.InnerGenerate = false;
                     cls.CustomAttributes = null;
                     cls.ChildNodes = newCls.ChildNodes;
-                    foreach( DCILObject item in cls.ChildNodes )
+                    foreach (DCILObject item in cls.ChildNodes)
                     {
                         item.Parent = cls;
                     }
                     this._ModifiedCount++;
-                    removeResIndexs.Add(clsItem.Value);
-                }
-            }
-            if (removeResIndexs.Count > 0)
-            {
-                removeResIndexs.Sort();
-                for (int iCount = removeResIndexs.Count - 1; iCount > 0; iCount--)
-                {
-                    var item2 = this.Document.ChildNodes[removeResIndexs[iCount]];
-                    var fn = Path.Combine(this.Document.RootPath, item2.Name);
+                    this.Document.Resouces.Remove(resName);
+                    var fn = Path.Combine(this.Document.RootPath, resName);
                     if (File.Exists(fn))
                     {
                         File.Delete(fn);
                     }
-                    this.Document.ChildNodes.RemoveAt(removeResIndexs[iCount]);
                 }
-            }
+            }//for
+             //            if (allResNames.Count == 0)
+             //            {
+             //                return;
+             //            }
+
+            //            var bmpTypeName = this.Document.GetTypeNameWithLibraryName(
+            //                "System.Drawing.Bitmap",
+            //                typeof(System.Drawing.Bitmap).Assembly.GetName().Name);
+            //            var removeResIndexs = new List<int>();
+            //            foreach (var clsItem in cls_resIndex)
+            //            {
+            //                if (fileTable.ContainsKey(clsItem.Key.Name))
+            //                {
+            //                    var cls = clsItem.Key;
+            //                    var dataFile = fileTable[cls.Name];
+            //                    DCUtils.ObfuseListOrder(dataFile.Items);
+            //                    var hasBmpValue = dataFile.HasBmp;
+            //                    var strNewClassCode = new StringBuilder();
+            //                    var clsName = cls.Name;
+            //                    strNewClassCode.AppendLine(".class " + clsName + " extends System.Object");
+            //                    strNewClassCode.AppendLine("{");
+            //                    //var strDataID = AllocID();
+            //                    strNewClassCode.AppendLine("");
+            //                    strNewClassCode.AppendLine(".field private static initonly uint8[] _Datas");
+            //                    if (hasBmpValue)
+            //                    {
+            //                        foreach (var item in dataFile.Items)
+            //                        {
+            //                            if (item.IsBmp)
+            //                            {
+            //                                strNewClassCode.AppendLine(".field private static class " + bmpTypeName + " _" + item.Name);
+            //                            }
+            //                        }
+            //                    }
+
+            //                    strNewClassCode.AppendLine(@"
+            //    .method private hidebysig specialname rtspecialname static  void .cctor () cil managed 
+            //    {
+            //	    .maxstack 8
+            //	IL_0000: nop
+            //	// _Datas = Class3.GetData2();
+            //	IL_0001: call uint8[] " + this._ByteDataContainer.GetMethodName(dataFile.Datas) + @"()
+            //	IL_0006: stsfld uint8[] " + clsName + "::_Datas");
+
+            //                    int labelCount = 100;
+            //                    labelCount += 5; strNewClassCode.AppendLine("IL_" + labelCount.ToString("X4") + ": ret");
+            //                    strNewClassCode.AppendLine("}");
+            //                    if (hasBmpValue)
+            //                    {
+            //                        foreach (var item in dataFile.Items)
+            //                        {
+            //                            if (item.IsBmp)
+            //                            {
+            //                                strNewClassCode.AppendLine(@"
+            //.method public hidebysig static class " + bmpTypeName + @" get_" + item.Name + @"() cil managed 
+            //{
+            //	.maxstack 4
+            //	.locals init (
+            //		[0] bool,
+            //		[1] class " + bmpTypeName + @"
+            //	)
+            //	IL_0000: nop
+            //	IL_0001: ldsfld class " + bmpTypeName + " " + clsName + "::_" + item.Name + @"
+            //	IL_0006: ldnull
+            //	IL_0007: ceq
+            //	IL_0009: stloc.0
+            //	IL_000a: ldloc.0
+            //	IL_000b: brfalse.s IL_002d
+            //	IL_000d: nop
+            //	IL_000e: ldsfld uint8[] " + clsName + @"::_Datas
+            //	IL_0013: ldc.i4 " + item.StartIndex + @"
+            //	IL_0018: ldc.i4 " + item.BsLength + @"
+            //	IL_001d: ldc.i4 " + item.Key + @"
+            //	IL_0022: call class " + bmpTypeName +  @" " + _ClassName_InnerAssemblyHelper20211018 + @"::GetBitmap(uint8[], int32, int32, int32)
+            //	IL_0027: stsfld class " + bmpTypeName + @" " + clsName + @"::_" + item.Name + @"
+            //	IL_002c: nop
+
+            //	// return _Bmp1;
+            //	IL_002d: ldsfld class " + bmpTypeName + @" " + clsName + @"::_" + item.Name + @"
+            //	IL_0032: stloc.1
+            //	// (no C# code)
+            //	IL_0033: br.s IL_0035
+
+            //	IL_0035: ldloc.1
+            //	IL_0036: ret
+            //}
+            //");
+            //                            }
+            //                        }
+            //                    }
+            //                    foreach (var item in dataFile.Items)
+            //                    {
+            //                        if (item.IsBmp == false)
+            //                        {
+            //                            strNewClassCode.AppendLine(@"  .method assembly hidebysig static  string get_" + item.Name + @"() cil managed 
+            //  {
+            //	.maxstack 4
+            //	.locals init (
+            //		[0] string
+            //	)
+            //	IL_0000: nop
+            //	IL_0001: ldsfld uint8[] " + clsName + @"::_Datas
+            //	IL_0006: ldc.i4 " + item.StartIndex + @"
+            //	IL_000b: ldc.i4 " + item.BsLength + @"
+            //	IL_0010: ldc.i4 " + item.Key + @"
+            //	IL_0015: call string "+ _ClassName_InnerAssemblyHelper20211018 + @"::GetString(uint8[], int32, int32, int32)
+            //	IL_001a: stloc.0
+            //	IL_001b: br.s IL_001d
+            //	IL_001d: ldloc.0
+            //	IL_001e: ret
+            //   }");
+            //                        }
+            //                    }
+            //                    strNewClassCode.AppendLine("}");
+            //                    var strCodeText = strNewClassCode.ToString();
+            //                    var newCls = new DCILClass(strCodeText, this.Document);
+            //                    newCls.InnerGenerate = false;
+            //                    cls.CustomAttributes = null;
+            //                    cls.ChildNodes = newCls.ChildNodes;
+            //                    foreach( DCILObject item in cls.ChildNodes )
+            //                    {
+            //                        item.Parent = cls;
+            //                    }
+            //                    this._ModifiedCount++;
+            //                    removeResIndexs.Add(clsItem.Value);
+            //                }
+            //            }
+            //            if (removeResIndexs.Count > 0)
+            //            {
+            //                removeResIndexs.Sort();
+            //                for (int iCount = removeResIndexs.Count - 1; iCount > 0; iCount--)
+            //                {
+            //                    var item2 = this.Document.ChildNodes[removeResIndexs[iCount]];
+            //                    var fn = Path.Combine(this.Document.RootPath, item2.Name);
+            //                    if (File.Exists(fn))
+            //                    {
+            //                        File.Delete(fn);
+            //                    }
+            //                    this.Document.ChildNodes.RemoveAt(removeResIndexs[iCount]);
+            //                }
+            //            }
         }
 
-
+        private static readonly string LibNameForComponentResourceManager = typeof(System.ComponentModel.ComponentResourceManager).Assembly.GetName().Name;
         public bool ChangeComponentResourceManager(DCILClass cls)
         {
             if (cls.BaseType != null && cls.IsInterface == false)
@@ -3336,90 +3741,94 @@ namespace JIEJIE
                     if (item is DCILMethod && item.Name == "InitializeComponent")
                     {
                         var method = (DCILMethod)item;
-                        if (method.ReturnTypeInfo == DCILTypeReference.Type_Void)
+                        if (method.ReturnTypeInfo != DCILTypeReference.Type_Void)
                         {
-                            if (method.Locals != null
-                                && method.Locals.Count > 0
-                                && method.Locals[0].ValueType.Name == "System.ComponentModel.ComponentResourceManager"
-                                && method.OperCodes != null
-                                && method.OperCodes.Count > 10)
+                            continue;
+                        }
+                        DCILMResource res = null;
+                        if (this.Document.Resouces.TryGetValue(cls.Name + DCILMResource.EXT_Resources, out res) == false)
+                        {
+                            continue;
+                        }
+                        if (method.Locals != null
+                            && method.Locals.Count > 0
+                            //&& method.Locals[0].ValueType.Name == "System.ComponentModel.ComponentResourceManager"
+                            && method.OperCodes != null
+                            && method.OperCodes.Count > 10)
+                        {
+                            int localIndex = -1;
+                            for (int iCount2 = 0; iCount2 < method.Locals.Count; iCount2++)
                             {
-                                var codes = method.OperCodes;
-                                int maxLen = Math.Min(10, codes.Count - 5);
-                                for (int iCount = 0; iCount < maxLen; iCount++)
+                                var tn = method.Locals[iCount2].ValueType.Name;
+                                if (tn == "System.ComponentModel.ComponentResourceManager"
+                                    || tn == "System.Resources.ResourceManager")
                                 {
-                                    var ldtoken = codes[iCount] as DCILOperCode_LdToken;
-                                    if (ldtoken != null
-                                        && ldtoken.ClassType?.Name == cls.Name
-                                        && codes[iCount + 1].OperCode == "call"
-                                        && codes[iCount + 2].OperCode == "newobj")
+                                    localIndex = iCount2;
+                                    break;
+                                }
+                            }
+                            if (localIndex < 0)
+                            {
+                                return false;
+                            }
+                            var codes = method.OperCodes;
+                            int maxLen = Math.Min(10, codes.Count - 5);
+                            for (int iCount = 0; iCount < maxLen; iCount++)
+                            {
+                                var ldtoken = codes[iCount] as DCILOperCode_LdToken;
+                                if (ldtoken != null
+                                    && ldtoken.ClassType?.Name == cls.Name
+                                    && codes[iCount + 1].OperCode == "call"
+                                    && codes[iCount + 2].OperCode == "newobj")
+                                {
+                                    var code2 = codes[iCount + 2] as DCILOperCode_HandleMethod;
+                                    if (code2.InvokeInfo.MethodName == ".ctor"
+                                        &&( code2.InvokeInfo.OwnerType.Name == "System.ComponentModel.ComponentResourceManager"
+                                        || code2.InvokeInfo.OwnerType.Name == "System.Resources.ResourceManager"))
                                     {
-                                        var code2 = codes[iCount + 2] as DCILOperCode_HandleMethod;
-                                        if (code2.InvokeInfo.MethodName == ".ctor"
-                                            && code2.InvokeInfo.OwnerType.Name == "System.ComponentModel.ComponentResourceManager")
+                                        var bsWrite = GetBytesForWrite(res.Data);// GetGZipCompressedContentIfNeed(bs);
+                                        string clsName = _ClassNamePrefix + "Res" + AllocIndex();
+                                        string strNewClassCode = FixTypeLibNameForNetCore(_Code_Template_ComponentResourceManager);
+                                        //strNewClassCode = strNewClassCode.Replace("mscorlib", this.Document.LibName_mscorlib);
+                                        strNewClassCode = strNewClassCode.Replace("#CLASSNAME#", clsName);
+                                        //strNewClassCode = strNewClassCode.Replace(
+                                        //    "[mscorlib]System.Resources.ResourceSet",
+                                        //    this.Document.GetTypeNameWithLibraryName("System.Resources.ResourceSet"));
+                                        strNewClassCode = strNewClassCode.Replace(
+                                            "[System]System.ComponentModel.ComponentResourceManager",
+                                            this.Document.GetTypeNameWithLibraryName("System.ComponentModel.ComponentResourceManager",
+                                            LibNameForComponentResourceManager));
+                                        strNewClassCode = strNewClassCode.Replace("#ENCRYKEY#", bsWrite.Item2.ToString());
+                                        strNewClassCode = strNewClassCode.Replace("#GETDATA#", this._ByteDataContainer.GetMethodName(bsWrite.Item1));
+                                        if (bsWrite.Item3 == false)
                                         {
-                                            string resFileName = Path.Combine(this.Document.RootPath, cls.Name + DCILDocument.EXT_resources);
-                                            if (File.Exists(resFileName))
-                                            {
-                                                var bs = File.ReadAllBytes(resFileName);
-                                                var bsWrite = GetBytesForWrite(bs);// GetGZipCompressedContentIfNeed(bs);
-                                                string clsName = _ClassNamePrefix + "Res" + AllocIndex();
-                                                string strNewClassCode = FixTypeLibNameForNetCore(_Code_Template_ComponentResourceManager);
-                                                //strNewClassCode = strNewClassCode.Replace("mscorlib", this.Document.LibName_mscorlib);
-                                                strNewClassCode = strNewClassCode.Replace("#CLASSNAME#", clsName);
-                                                //strNewClassCode = strNewClassCode.Replace(
-                                                //    "[mscorlib]System.Resources.ResourceSet",
-                                                //    this.Document.GetTypeNameWithLibraryName("System.Resources.ResourceSet"));
-                                                strNewClassCode = strNewClassCode.Replace(
-                                                    "[System]System.ComponentModel.ComponentResourceManager",
-                                                    code2.InvokeInfo.OwnerType.NameWithLibraryName);
-                                                strNewClassCode = strNewClassCode.Replace("#ENCRYKEY#", bsWrite.Item2.ToString());
-                                                strNewClassCode = strNewClassCode.Replace("#GETDATA#", this._ByteDataContainer.GetMethodName(bsWrite.Item1));
-                                                if (bsWrite.Item3 == false)
-                                                {
-                                                    strNewClassCode = strNewClassCode.Replace("#GZIPED#", "0");
-                                                }
-                                                else
-                                                {
-                                                    strNewClassCode = strNewClassCode.Replace("#GZIPED#", "1");
-                                                }
-
-                                                var resCls = new DCILClass(strNewClassCode, this.Document);
-                                                this.Document.ChildNodes.Add(resCls);
-                                                _ModifiedCount++;
-                                                code2.InvokeInfo = new DCILInvokeMethodInfo();
-                                                code2.InvokeInfo.ReturnType = DCILTypeReference.Type_Void;
-                                                code2.InvokeInfo.OwnerType = new DCILTypeReference(resCls.Name, DCILTypeMode.Class);
-                                                code2.InvokeInfo.MethodName = ".ctor";
-                                                code2.InvokeInfo.IsInstance = true;
-                                                codes.RemoveAt(iCount + 1);
-                                                codes.RemoveAt(iCount);
-                                                method.Locals[0].ValueType = new DCILTypeReference(resCls.Name, DCILTypeMode.Class);
-                                                int index4 = this.Document.ChildNodes.IndexOf<DCILMResource>(cls.Name + DCILDocument.EXT_resources);
-                                                if (index4 >= 0)
-                                                {
-                                                    this.Document.ChildNodes.RemoveAt(index4);
-                                                }
-                                                else
-                                                {
-
-                                                }
-                                                return true;
-                                            }
-                                            break;
+                                            strNewClassCode = strNewClassCode.Replace("#GZIPED#", "0");
                                         }
+                                        else
+                                        {
+                                            strNewClassCode = strNewClassCode.Replace("#GZIPED#", "1");
+                                        }
+
+                                        var resCls = new DCILClass(strNewClassCode, this.Document);
+                                        this.Document.Classes.Add(resCls);
+                                        _ModifiedCount++;
+                                        code2.InvokeInfo = new DCILInvokeMethodInfo();
+                                        code2.InvokeInfo.ReturnType = DCILTypeReference.Type_Void;
+                                        code2.InvokeInfo.OwnerType = new DCILTypeReference(resCls.Name, DCILTypeMode.Class);
+                                        code2.InvokeInfo.MethodName = ".ctor";
+                                        code2.InvokeInfo.IsInstance = true;
+                                        codes.RemoveAt(iCount + 1);
+                                        codes.RemoveAt(iCount);
+                                        method.Locals[localIndex].ValueType = new DCILTypeReference(resCls.Name, DCILTypeMode.Class);
+                                        this.Document.Resouces.Remove(res.Name);
+                                        return true;
                                     }
                                 }
                             }
-                            int index5 = this.Document.ChildNodes.IndexOf<DCILMResource>(cls.Name + DCILDocument.EXT_resources);
-                            if (index5 >= 0)
-                            {
-                                this.Document.ChildNodes.RemoveAt(index5);
-                            }
-                            else
-                            {
+                        }
+                        if (res != null)
+                        {
 
-                            }
                         }
                         break;
                     }
@@ -3427,6 +3836,7 @@ namespace JIEJIE
             }
             return false;
         }
+
         public static System.Tuple<byte[], byte, bool> GetBytesForWrite(byte[] bs)
         {
             var ms = new System.IO.MemoryStream();
@@ -3460,14 +3870,15 @@ namespace JIEJIE
             }
         }
 
-        public void AddClassInnerAssemblyHelper20210315()
+        public void AddClassInnerAssemblyHelper20211018()
         {
-            var code = FixTypeLibNameForNetCore(_Code_Template_InnerAssemblyHelper20210315);
+            var code = FixTypeLibNameForNetCore(_Code_Template_InnerAssemblyHelper20211018);
             var cls = new DCILClass(code, this.Document);
-            this.Document.ChildNodes.Add(cls);
+            this.Document.Classes.Add(cls);
+            this.Document.ClearCacheForAllClasses();
         }
         private static SortedDictionary<string, string> _NetCore_Type_LibName = null;
-        private string FixTypeLibNameForNetCore( string strCode )
+        private string FixTypeLibNameForNetCore(string strCode)
         {
 #if DOTNETCORE
             if (_NetCore_Type_LibName == null)
@@ -3601,10 +4012,10 @@ namespace JIEJIE
         //    code = code.Replace("[mscorlib]" + typeName, name2);
         //    return code;
         //}
-        private static readonly string _ClassName_InnerAssemblyHelper20210315 = "DCSoft.Common.InnerAssemblyHelper20210315";
+        private static readonly string _ClassName_InnerAssemblyHelper20211018 = "DCSoft.Common.InnerAssemblyHelper20211018";
 
-        private static readonly string _Code_Template_InnerAssemblyHelper20210315 = @"
-.class private auto ansi abstract sealed beforefieldinit DCSoft.Common.InnerAssemblyHelper20210315
+        private static readonly string _Code_Template_InnerAssemblyHelper20211018 = @"
+.class private auto ansi abstract sealed beforefieldinit DCSoft.Common.InnerAssemblyHelper20211018
 	extends [mscorlib]System.Object
 {
 	// Fields
@@ -3728,7 +4139,7 @@ namespace JIEJIE
 		IL_0017: br IL_00a5
 
 		// lock (_CloneStringCrossThead_Event)
-		IL_001c: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event
+		IL_001c: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event
 		// (no C# code)
 		IL_0021: stloc.2
 		IL_0022: ldc.i4.0
@@ -3743,18 +4154,18 @@ namespace JIEJIE
 			// _CloneStringCrossThead_CurrentValue = txt;
 			IL_002e: ldarg.0
 			IL_002f: volatile.
-			IL_0031: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+			IL_0031: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_CurrentValue
 			// _CloneStringCrossThead_Event_Inner.Set();
-			IL_0036: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event_Inner
+			IL_0036: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event_Inner
 			IL_003b: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
 			IL_0040: pop
 			// _CloneStringCrossThead_Event.Reset();
-			IL_0041: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event
+			IL_0041: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event
 			IL_0046: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
 			IL_004b: pop
 			// if (_CloneStringCrossThead_Thread == null)
 			IL_004c: volatile.
-			IL_004e: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Thread
+			IL_004e: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Thread
 			IL_0053: ldnull
 			IL_0054: ceq
 			IL_0056: stloc.s 4
@@ -3765,27 +4176,27 @@ namespace JIEJIE
 			IL_005c: nop
 			// _CloneStringCrossThead_Thread = new Thread(CloneStringCrossThead_Thread);
 			IL_005d: ldnull
-			IL_005e: ldftn void DCSoft.Common.InnerAssemblyHelper20210315::CloneStringCrossThead_Thread()
+			IL_005e: ldftn void DCSoft.Common.InnerAssemblyHelper20211018::CloneStringCrossThead_Thread()
 			IL_0064: newobj instance void [mscorlib]System.Threading.ThreadStart::.ctor(object, native int)
 			IL_0069: newobj instance void [mscorlib]System.Threading.Thread::.ctor(class [mscorlib]System.Threading.ThreadStart)
 			IL_006e: volatile.
-			IL_0070: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Thread
+			IL_0070: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Thread
 			// _CloneStringCrossThead_Thread.Start();
 			IL_0075: volatile.
-			IL_0077: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Thread
+			IL_0077: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Thread
 			IL_007c: callvirt instance void [mscorlib]System.Threading.Thread::Start()
 			// (no C# code)
 			IL_0081: nop
 			IL_0082: nop
 
 			// _CloneStringCrossThead_Event.WaitOne(100);
-			IL_0083: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event
+			IL_0083: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event
 			IL_0088: ldc.i4.s 100
 			IL_008a: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
 			IL_008f: pop
 			// return _CloneStringCrossThead_CurrentValue;
 			IL_0090: volatile.
-			IL_0092: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+			IL_0092: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_CurrentValue
 			IL_0097: stloc.1
 			// (no C# code)
 			IL_0098: leave IL_00a5
@@ -3804,7 +4215,7 @@ namespace JIEJIE
 
 		IL_00a5: ldloc.1
 		IL_00a6: ret
-	} // end of method InnerAssemblyHelper20210315::CloneStringCrossThead
+	} // end of method InnerAssemblyHelper20211018::CloneStringCrossThead
 
 	.method private hidebysig static 
 		void CloneStringCrossThead_Thread () cil managed 
@@ -3827,7 +4238,7 @@ namespace JIEJIE
 			// loop start (head: IL_005d)
 				IL_0004: nop
 				// while (_CloneStringCrossThead_Event_Inner.WaitOne(1000))
-				IL_0005: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event_Inner
+				IL_0005: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event_Inner
 				IL_000a: ldc.i4 1000
 				IL_000f: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
 				// (no C# code)
@@ -3843,7 +4254,7 @@ namespace JIEJIE
 
 				// if (_CloneStringCrossThead_CurrentValue != null)
 				IL_001e: volatile.
-				IL_0020: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+				IL_0020: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_CurrentValue
 				IL_0025: ldnull
 				IL_0026: cgt.un
 				IL_0028: stloc.1
@@ -3854,20 +4265,20 @@ namespace JIEJIE
 				IL_002c: nop
 				// _CloneStringCrossThead_CurrentValue = new string(_CloneStringCrossThead_CurrentValue.ToCharArray());
 				IL_002d: volatile.
-				IL_002f: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+				IL_002f: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_CurrentValue
 				IL_0034: callvirt instance char[] [mscorlib]System.String::ToCharArray()
 				IL_0039: newobj instance void [mscorlib]System.String::.ctor(char[])
 				IL_003e: volatile.
-				IL_0040: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+				IL_0040: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_CurrentValue
 				// (no C# code)
 				IL_0045: nop
 
 				// _CloneStringCrossThead_Event.Set();
-				IL_0046: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event
+				IL_0046: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event
 				IL_004b: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
 				IL_0050: pop
 				// _CloneStringCrossThead_Event_Inner.Reset();
-				IL_0051: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event_Inner
+				IL_0051: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event_Inner
 				IL_0056: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
 				IL_005b: pop
 				// (no C# code)
@@ -3887,13 +4298,13 @@ namespace JIEJIE
 			// _CloneStringCrossThead_Thread = null;
 			IL_0065: ldnull
 			IL_0066: volatile.
-			IL_0068: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Thread
+			IL_0068: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Thread
 			// _CloneStringCrossThead_Event.Reset();
-			IL_006d: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event
+			IL_006d: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event
 			IL_0072: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
 			IL_0077: pop
 			// _CloneStringCrossThead_Event_Inner.Reset();
-			IL_0078: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event_Inner
+			IL_0078: ldsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event_Inner
 			IL_007d: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
 			IL_0082: pop
 			// (no C# code)
@@ -3904,7 +4315,7 @@ namespace JIEJIE
 
 		// (no C# code)
 		IL_0085: ret
-	} // end of method InnerAssemblyHelper20210315::CloneStringCrossThead_Thread
+	} // end of method InnerAssemblyHelper20211018::CloneStringCrossThead_Thread
 
 	.method public hidebysig static 
 		string GetString (
@@ -4007,7 +4418,7 @@ namespace JIEJIE
 
 		IL_004e: ldloc.s 6
 		IL_0050: ret
-	} // end of method InnerAssemblyHelper20210315::GetString
+	} // end of method InnerAssemblyHelper20211018::GetString
 
 	.method public hidebysig static 
 		class [System.Drawing]System.Drawing.Bitmap GetBitmap (
@@ -4091,7 +4502,7 @@ namespace JIEJIE
 
 		IL_003f: ldloc.s 5
 		IL_0041: ret
-	} // end of method InnerAssemblyHelper20210315::GetBitmap
+	} // end of method InnerAssemblyHelper20211018::GetBitmap
 
 	.method public hidebysig static 
 		class [mscorlib]System.Resources.ResourceSet LoadResourceSet (
@@ -4115,7 +4526,7 @@ namespace JIEJIE
 		IL_0001: ldarg.0
 		IL_0002: ldarg.1
 		IL_0003: ldarg.2
-		IL_0004: call class [mscorlib]System.IO.Stream DCSoft.Common.InnerAssemblyHelper20210315::GetStream(uint8[], uint8, bool)
+		IL_0004: call class [mscorlib]System.IO.Stream DCSoft.Common.InnerAssemblyHelper20211018::GetStream(uint8[], uint8, bool)
 		IL_0009: stloc.0
 		// ResourceSet result = new ResourceSet(stream);
 		IL_000a: ldloc.0
@@ -4134,7 +4545,7 @@ namespace JIEJIE
 
 		IL_001c: ldloc.2
 		IL_001d: ret
-	} // end of method InnerAssemblyHelper20210315::LoadResourceSet
+	} // end of method InnerAssemblyHelper20211018::LoadResourceSet
 
 	.method private hidebysig static 
 		class [mscorlib]System.IO.Stream GetStream (
@@ -4306,7 +4717,7 @@ namespace JIEJIE
 
 		IL_00a6: ldloc.s 9
 		IL_00a8: ret
-	} // end of method InnerAssemblyHelper20210315::GetStream
+	} // end of method InnerAssemblyHelper20211018::GetStream
 
 	.method private hidebysig specialname rtspecialname static 
 		void .cctor () cil managed 
@@ -4318,27 +4729,27 @@ namespace JIEJIE
 		// _CloneStringCrossThead_Thread = null;
 		IL_0000: ldnull
 		IL_0001: volatile.
-		IL_0003: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Thread
+		IL_0003: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Thread
 		// _CloneStringCrossThead_Event = new AutoResetEvent(initialState: false);
 		IL_0008: ldc.i4.0
 		IL_0009: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
-		IL_000e: stsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event
+		IL_000e: stsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event
 		// _CloneStringCrossThead_Event_Inner = new AutoResetEvent(initialState: false);
 		IL_0013: ldc.i4.0
 		IL_0014: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
-		IL_0019: stsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_Event_Inner
+		IL_0019: stsfld class [mscorlib]System.Threading.AutoResetEvent DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_Event_Inner
 		// _CloneStringCrossThead_CurrentValue = null;
 		IL_001e: ldnull
 		IL_001f: volatile.
-		IL_0021: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20210315::_CloneStringCrossThead_CurrentValue
+		IL_0021: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) DCSoft.Common.InnerAssemblyHelper20211018::_CloneStringCrossThead_CurrentValue
 		IL_0022: ldnull
 		IL_0023: volatile.
-		IL_0024: stsfld object DCSoft.Common.InnerAssemblyHelper20210315::_NullObject
+		IL_0024: stsfld object DCSoft.Common.InnerAssemblyHelper20211018::_NullObject
 		// }
 		IL_0026: ret
-	} // end of method InnerAssemblyHelper20210315::.cctor
+	} // end of method InnerAssemblyHelper20211018::.cctor
 
-} // end of class DCSoft.Common.InnerAssemblyHelper20210315
+} // end of class DCSoft.Common.InnerAssemblyHelper20211018
 
 ";
 
@@ -4361,7 +4772,7 @@ namespace JIEJIE
 	IL_0009: call uint8[] #GETDATA#()
 	IL_000e: ldc.i4 #ENCRYKEY#
 	IL_0013: ldc.i4.#GZIPED#
-	IL_0014: call class [mscorlib]System.Resources.ResourceSet DCSoft.Common.InnerAssemblyHelper20210315::LoadResourceSet(uint8[], uint8, bool)
+	IL_0014: call class [mscorlib]System.Resources.ResourceSet DCSoft.Common.InnerAssemblyHelper20211018::LoadResourceSet(uint8[], uint8, bool)
 	IL_0019: stfld class [mscorlib]System.Resources.ResourceSet #CLASSNAME#::_Data
 	IL_002b: ret
 } 
@@ -4501,20 +4912,20 @@ namespace JIEJIE
             cls.ChildNodes.AddRange(others);
             this._ModifiedCount++;
         }
-        public void ObfuseClassOrder()
-        {
-            var list = this.Document.ChildNodes;
-            int len = list.Count;
-            for (int iCount = 0; iCount < len; iCount++)
-            {
-                var item = list[iCount];
-                if (item is DCILClass)
-                {
-                    DCUtils.ObfuseListOrder(list, iCount, list.Count - iCount);
-                    break;
-                }
-            }//for
-        }
+        //public void ObfuseClassOrder()
+        //{
+        //    var list = this.Document.ChildNodes;
+        //    int len = list.Count;
+        //    for (int iCount = 0; iCount < len; iCount++)
+        //    {
+        //        var item = list[iCount];
+        //        if (item is DCILClass)
+        //        {
+        //            DCUtils.ObfuseListOrder(list, iCount, list.Count - iCount);
+        //            break;
+        //        }
+        //    }//for
+        //}
 
         private static readonly string _SwitchPrefix = "JIEJIE.NET.SWITCH:";
 
@@ -4569,7 +4980,7 @@ namespace JIEJIE
         private JieJieSwitchs GetRuntimeSwitchs(DCILMethod method, JieJieSwitchs parent)
         {
             JieJieSwitchs result = null;
-            if( _RuntimeSwitchs.TryGetValue( method , out result ))
+            if (_RuntimeSwitchs.TryGetValue(method, out result))
             {
                 return result;
             }
@@ -4589,10 +5000,14 @@ namespace JIEJIE
                     {
                         var code = ((DCILOperCode_LoadString)method.OperCodes[iCount]);
                         var strCode = code.FinalValue;
-                        code.FinalValue = string.Empty;
                         if (strCode != null && strCode.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
                         {
                             //code.OperCode = "\"\"";
+                            code.ReplaceCode = new DCILOperCode(
+                                null,
+                                "ldsfld",
+                                "string [" + this.Document.LibName_mscorlib + "]System.String::Empty");
+                            code.FinalValue = string.Empty;
                             string strSettings = strCode.Substring(_SwitchPrefix.Length);
                             result = new JieJieSwitchs(strSettings, parent);
                             break;
@@ -4600,7 +5015,7 @@ namespace JIEJIE
                     }
                 }
             }
-            if( result == null )
+            if (result == null)
             {
                 result = parent;
             }
@@ -4714,7 +5129,7 @@ namespace JIEJIE
         }
         public bool ObfuscateOperCodeList(DCILMethod method)
         {
-            if (ObfuscateOperCodeList( method, method.OperCodes , false , null ))
+            if (ObfuscateOperCodeList(method, method.OperCodes, false, null))
             {
                 method.Maxstack += 2;
                 ChangeShortInstruction(method.OperCodes);
@@ -4722,16 +5137,16 @@ namespace JIEJIE
             }
             return false;
         }
-        private DCILTypeReference _Type_InnerAssemblyHelper20210315 = null;
-        private void ChangeSpecifyCallTarget( DCILOperCodeList items )
+        private DCILTypeReference _Type_InnerAssemblyHelper20211018 = null;
+        private void ChangeSpecifyCallTarget(DCILOperCodeList items)
         {
-            if( items == null  || items.Count == 0 )
+            if (items == null || items.Count == 0)
             {
                 return;
             }
-            if(_Type_InnerAssemblyHelper20210315 == null )
+            if (_Type_InnerAssemblyHelper20211018 == null)
             {
-                _Type_InnerAssemblyHelper20210315 = new DCILTypeReference(_ClassName_InnerAssemblyHelper20210315, DCILTypeMode.Class);
+                _Type_InnerAssemblyHelper20211018 = new DCILTypeReference(_ClassName_InnerAssemblyHelper20211018, DCILTypeMode.Class);
             }
             // 进行特定方法调用信息的替换
             foreach (var code in items)
@@ -4748,7 +5163,7 @@ namespace JIEJIE
                 //            ((DCILOperCode_HandleMethod)code).InvokeInfo = info;
                 //            code.OperCode = "call";
                 //            info.IsInstance = false;
-                //            info.OwnerType = new DCILTypeReference(_ClassName_InnerAssemblyHelper20210315, DCILTypeMode.Class);
+                //            info.OwnerType = new DCILTypeReference(_ClassName_InnerAssemblyHelper20211018, DCILTypeMode.Class);
                 //            info.MethodName = "Object_ToString";
                 //            info.Paramters = new List<DCILMethodParamter>();
                 //            var p2 = new DCILMethodParamter();
@@ -4768,7 +5183,7 @@ namespace JIEJIE
                         if (info.ParametersCount == 2
                             && ownerTypeName == "System.String")
                         {
-                            callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "String_Equality");
+                            callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "String_Equality");
                         }
                     }
                     else if (methodName == "Concat")
@@ -4776,7 +5191,7 @@ namespace JIEJIE
                         if (info.ParametersCount == 2
                             && ownerTypeName == "System.String")
                         {
-                            callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "String_Concat");
+                            callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "String_Concat");
                         }
                     }
                     else if (methodName == "Enter" || methodName == "Exit")
@@ -4786,20 +5201,20 @@ namespace JIEJIE
                         {
                             if (methodName == "Enter")
                             {
-                                callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "Monitor_Enter");
+                                callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Monitor_Enter");
                             }
                             else
                             {
-                                callCode.ChangeTarget(_Type_InnerAssemblyHelper20210315, "Monitor_Exit");
+                                callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Monitor_Exit");
                             }
                         }
                     }
                 }
             }//foreach
         }
-        private List<DCILOperCode_HandleMethod> _CallOperCodes = new List<DCILOperCode_HandleMethod> ();
+        private List<DCILOperCode_HandleMethod> _CallOperCodes = new List<DCILOperCode_HandleMethod>();
 
-        public bool ObfuscateOperCodeList( DCILMethod method , DCILOperCodeList items, bool isInTryBlock , DCILOperCodeList parentList )
+        public bool ObfuscateOperCodeList(DCILMethod method, DCILOperCodeList items, bool isInTryBlock, DCILOperCodeList parentList)
         {
             if (items == null || items.Count == 0)
             {
@@ -4815,13 +5230,13 @@ namespace JIEJIE
                     {
                         result = true;
                     }
-                    if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20210315)
+                    if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20211018)
                     {
                         ChangeSpecifyCallTarget(tcf._Finally?.OperCodes);
                     }
                 }
             }
-            if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20210315)
+            if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20211018)
             {
                 ChangeSpecifyCallTarget(items);
             }
@@ -4889,12 +5304,12 @@ namespace JIEJIE
             List<DCILOperCode> preGroup = null;
             foreach (var item in items)
             {
-                if(group.Count == 0 && item.HasLabelID() == false )
+                if (group.Count == 0 && item.HasLabelID() == false)
                 {
                     group.Add(new DCILOperCode(CreataLableID(), "nop", null));
                 }
                 group.Add(item);
-                if(preGroup != null )
+                if (preGroup != null)
                 {
                     preGroup.Add(new DCILOperCode(CreataLableID(), "br", group[0].LabelID));
                     preGroup.Add(new DCILOperCodeComment("goto next group"));
@@ -4924,15 +5339,15 @@ namespace JIEJIE
                     }
                 }
             }
-           
+
             var lastGroup = groups[groups.Count - 1];
-            if( lastGroup.Count == 0 )
+            if (lastGroup.Count == 0)
             {
                 // 删除最后一个内容为空的指令组
                 groups.RemoveAt(groups.Count - 1);
                 lastGroup = groups[groups.Count - 1];
             }
-           
+
 
             //for (int iCount = 0; iCount < groups.Count - 1; iCount++)
             //{
@@ -4974,7 +5389,7 @@ namespace JIEJIE
             //    //        }
             //    //    }
             //    //}
-                 
+
             //        group.Add(new DCILOperCode(CreataLableID(), "br", nextGroupLableID));
             //    group.Add(new DCILOperCodeComment("jump next group"));
 
@@ -5023,7 +5438,7 @@ namespace JIEJIE
             //    }
             //}
 
-           
+
             DCILOperCode leaveCode = null;
             if (isInTryBlock)
             {
@@ -5044,7 +5459,7 @@ namespace JIEJIE
             //////    //items.Add(new DCILOperCode(
             //////    //    CreataLableID(),
             //////    //    "ldsfld",
-            //////    //    "object " + _ClassName_InnerAssemblyHelper20210315 + "::_NullObject"));
+            //////    //    "object " + _ClassName_InnerAssemblyHelper20211018 + "::_NullObject"));
             //////    items.Add(new DCILOperCode(
             //////        CreataLableID(),
             //////        "ldc.i4",
@@ -5057,7 +5472,7 @@ namespace JIEJIE
                 items.Add(new DCILOperCode(CreataLableID(), "br", groups[0][0].LabelID));
             }
             DCUtils.ObfuseListOrder(groups);
-            foreach ( var group3 in groups )
+            foreach (var group3 in groups)
             {
                 items.AddRange(group3);
             }
@@ -5202,7 +5617,7 @@ namespace JIEJIE
             {
                 bool changePos = false;
                 var code = items[iCount];
-                if( code.OperCode == "throw")
+                if (code.OperCode == "throw")
                 {
                     changePos = true;
                 }
@@ -5265,7 +5680,7 @@ namespace JIEJIE
                 }
                 items.AddRange(tempList);
             }
-            if ( leaveCode != null )
+            if (leaveCode != null)
             {
                 items.Add(leaveCode.Clone(CreataLableID()));
             }
@@ -5286,7 +5701,7 @@ namespace JIEJIE
             return true;
         }
     }
-    
+
     internal class DCILInvokeMethodInfo : IEqualsValue<DCILInvokeMethodInfo>
     {
         public DCILInvokeMethodInfo()
@@ -5299,7 +5714,7 @@ namespace JIEJIE
         public DCILInvokeMethodInfo(DCILReader reader, bool simpleMode = false)
         {
             this.LineIndex = reader.CurrentLineIndex();
-            if( this.LineIndex == 917962)
+            if (this.LineIndex == 917962)
             {
 
             }
@@ -5383,18 +5798,18 @@ namespace JIEJIE
         public DCILInvokeMethodInfo Clone()
         {
             var result = (DCILInvokeMethodInfo)this.MemberwiseClone();
-            if( this.Paramters != null )
+            if (this.Paramters != null)
             {
                 result.Paramters = new List<DCILMethodParamter>();
-                foreach( var p in this.Paramters )
+                foreach (var p in this.Paramters)
                 {
                     result.Paramters.Add(p.Clone());
                 }
             }
-            if(this.GenericParamters != null )
+            if (this.GenericParamters != null)
             {
                 result.GenericParamters = new List<DCILTypeReference>();
-                foreach( var p in this.GenericParamters )
+                foreach (var p in this.GenericParamters)
                 {
                     result.GenericParamters.Add(p);
                 }
@@ -5429,7 +5844,7 @@ namespace JIEJIE
         public void UpdateLocalInfo(DCILDocument document, Dictionary<string, DCILClass> clses)
         {
             UpdateLocalInfo(this.OwnerType?.LocalClass);
-            
+
         }
         public void UpdateLocalInfo(DCILClass cls)
         {
@@ -5463,7 +5878,7 @@ namespace JIEJIE
                     {
                         gps.SetRuntimeType(this.OwnerType.GenericParamters);
                     }
-                } 
+                }
                 foreach (var item in cls.ChildNodes)
                 {
                     if (item is DCILMethod && item.Name == this.MethodName)
@@ -5625,7 +6040,7 @@ namespace JIEJIE
         public DCILTypeReference OwnerType = null;
         public string MethodName = null;
         public DCILMethod LocalMethod = null;
-        public List<DCILTypeReference> GenericParamters = null; 
+        public List<DCILTypeReference> GenericParamters = null;
         public List<DCILMethodParamter> Paramters = null;
         public int ParametersCount
         {
@@ -5645,7 +6060,7 @@ namespace JIEJIE
         public void WriteTo(DCILWriter writer)
         {
             var strMethodName = this.MethodName;
-            if(strMethodName == "get_CreateEmptyDirectories")
+            if (strMethodName == "get_CreateEmptyDirectories")
             {
 
             }
@@ -5673,7 +6088,7 @@ namespace JIEJIE
             }
             writer.Write(' ');
             var cls = this.LocalMethod?.OwnerClass;
-            if( cls != null && cls.HasGenericParamters == false )
+            if (cls != null && cls.HasGenericParamters == false)
             {
                 writer.Write(cls.NameWithNested);
             }
@@ -5816,7 +6231,21 @@ namespace JIEJIE
                 }
             }
         }
-         
+
+        public void WriteObjects2(System.Collections.IEnumerable objs)
+        {
+            if (objs != null)
+            {
+                foreach (var obj in objs)
+                {
+                    if (obj is DCILObject)
+                    {
+                        ((DCILObject)obj).WriteTo(this);
+                    }
+                }
+            }
+        }
+
         public void WriteObjects(List<DCILObject> objs)
         {
             if (objs != null && objs.Count > 0)
@@ -5839,7 +6268,7 @@ namespace JIEJIE
             {
                 _BaseWriter.Write(txt);
             }
-        } 
+        }
         public void Write(char c)
         {
             EnsureIndent();
@@ -5945,9 +6374,10 @@ namespace JIEJIE
     }
 
     internal class DCILReader
-    { 
+    {
         public DCILReader(string fileName, System.Text.Encoding encoding, DCILDocument doc)
         {
+            this.FileName = fileName;
             using (var reader = new System.IO.StreamReader(fileName, encoding, true))
             {
                 this._Text = reader.ReadToEnd();
@@ -5969,10 +6399,12 @@ namespace JIEJIE
             this._Length = txt.Length;
             this.Document = doc;
         }
+        public string FileName = null;
+        public List<DCILField> FieldsReferenceData = null;
         public string GetSubString(int pos, int len)
         {
             return this._Text.Substring(pos, len);
-        } 
+        }
         public void Close()
         {
             this._Text = null;
@@ -5984,7 +6416,7 @@ namespace JIEJIE
         public int NumOfClass = 0;
         public int NumOfProperty = 0;
 
-        public readonly DCILDocument Document = null; 
+        public readonly DCILDocument Document = null;
         private static readonly string[] _SplitChars = GetSplitWords();
         private static string[] GetSplitWords()
         {
@@ -5998,9 +6430,9 @@ namespace JIEJIE
         private static bool IsSplitChar(char c)
         {
             return c < 127 && _SplitChars[c] != null;
-        } 
+        }
         private static readonly DCILReader _ReaderForSplit = new DCILReader();
-         
+
         public char GetChar(int index)
         {
             if (index >= 0 && index < this._Length)
@@ -6036,7 +6468,7 @@ namespace JIEJIE
                 }
             }
             return char.MinValue;
-        } 
+        }
 
         private int _LastLineIndex = 0;
         private int _LastLineIndex_Position = 0;
@@ -6065,11 +6497,11 @@ namespace JIEJIE
             this._Position = pos;
             return result;
         }
-         
+
         public string ReadWord()
         {
             this._CurrentItemLength = 0;
-        Retry:;
+            Retry:;
             for (; this._Position < this._Length; this._Position++)
             {
                 if (IsWhiteSpace(this._Text[this._Position]) == false)
@@ -6203,7 +6635,7 @@ namespace JIEJIE
         public bool HasContentLeft()
         {
             return this._Position < this._Length;
-        } 
+        }
         public string ReadAfterChar(char c)
         {
             if (this._Position == this._Length)
@@ -6223,7 +6655,7 @@ namespace JIEJIE
                 this._Position = this._Length;
                 return result;
             }
-        } 
+        }
         public void MoveToLineEnd()
         {
             for (; this._Position < this._Length; this._Position++)
@@ -6327,7 +6759,7 @@ namespace JIEJIE
                 }
             }
             return false;
-        } 
+        }
         public string ReadToChar(char c)
         {
             if (this._Position == this._Length)
@@ -6347,7 +6779,7 @@ namespace JIEJIE
                 this._Position = this._Length;
                 return result;
             }
-             
+
         }
         private readonly char[] _CurrentItem = new char[1024];
         private int _CurrentItemLength = 0;
@@ -6363,7 +6795,7 @@ namespace JIEJIE
                 this._CurrentItemLength = 0;
                 return result;
             }
-        } 
+        }
         public string ReadAfterCharsExcludeLastChar(string chrs, out char resultChar)
         {
             if (chrs == null)
@@ -6388,7 +6820,7 @@ namespace JIEJIE
                 }
             }
             return this._Text.Substring(index);
-        } 
+        }
         public string ReadToCharExcludeLastChar(char c)
         {
             if (this._Position == this._Length)
@@ -6410,25 +6842,25 @@ namespace JIEJIE
             var c = this.ReadContentChar();
             if (c == '(')
             {
-                if( this._Position == this._Length )
+                if (this._Position == this._Length)
                 {
                     return string.Empty;
                 }
                 int level = 0;
-                for ( int iCount = this._Position; iCount < this._Length;iCount ++)
+                for (int iCount = this._Position; iCount < this._Length; iCount++)
                 {
                     var c2 = this._Text[iCount];
-                    if( c2 == '(')
+                    if (c2 == '(')
                     {
                         level++;
                     }
-                    else if( c2 == ')')
+                    else if (c2 == ')')
                     {
                         level--;
-                        if( level <0)
+                        if (level < 0)
                         {
                             string result = this._Text.Substring(this._Position, iCount - this._Position);
-                            this._Position = iCount + 1 ;
+                            this._Position = iCount + 1;
                             return result;
                         }
                     }
@@ -6471,7 +6903,7 @@ namespace JIEJIE
             int bufferPosition = 0;
             for (; this._Position < this._Length; this._Position++)
             {
-                
+
                 char c = this._Text[this._Position];
                 if (c == '/' && this._Position < this._Length - 1 && this._Text[this._Position + 1] == '/')
                 {
@@ -6522,7 +6954,7 @@ namespace JIEJIE
             }
             return null;
             // return list.ToArray();
-        } 
+        }
         public int Read()
         {
             if (this._Position < this._Length)
@@ -6544,7 +6976,7 @@ namespace JIEJIE
             {
                 return char.MinValue;
             }
-        } 
+        }
         public string ReadLineTrim()
         {
             return this.ReadLine()?.Trim();
@@ -6671,26 +7103,51 @@ namespace JIEJIE
             }
         }
     }
+    //[Flags]
+    //internal enum DCILRuntimeFlags
+    //{
+    //    COMIMAGE_FLAGS_ILONLY=1,
+    //    /// <summary>
+    //    /// Image can only be loaded into a 32-bit process,
+    //    ///for instance if there are 32-bit vtablefixups, or
+    //    ///casts from native integers to int32. CLI
+    //    ///implementations that have 64-bit native
+    //    ///integers shall refuse loading binaries with this
+    //    ///flag set.
+    //    /// </summary>
+    //    COMIMAGE_FLAGS_32BITREQUIRED =2,
+    //    /// <summary>
+    //    /// Image has a strong name signature.
+    //    /// </summary>
+    //    COMIMAGE_FLAGS_STRONGNAMESIGNED = 8,
+    //}
     internal class DCILDocument : DCILObject, IDisposable
     {
 
-         /// <summary>
+        /// <summary>
         /// 字符串 .resources
         /// </summary>
         public static readonly string EXT_resources = ".resources";
- 
+
         public DCILDocument()
         {
 
         }
 
+        /// <summary>
+        /// 文档注释XML文档
+        /// </summary>
+        public System.Xml.XmlDocument CommentXmlDoc = null;
+
+        //public DCILRuntimeFlags CorFlags = DCILRuntimeFlags.COMIMAGE_FLAGS_ILONLY;
+
         public void LoadByAssembly(string asmFileName, System.Text.Encoding encoding, string ildasmExeFileName)
         {
             var ilFileName = asmFileName + ".il";
             ResourceFileHelper.RunExe(ildasmExeFileName, "\"" + asmFileName + "\" /forward /UTF8 \"/output=" + ilFileName + "\"");
-            LoadByReader(ilFileName, encoding);
-            this.RootPath = Path.GetDirectoryName(asmFileName);
             this.AssemblyFileName = asmFileName;
+            this.RootPath = Path.GetDirectoryName(asmFileName);
+            LoadByReader(ilFileName, encoding);
             var resFileName = Path.GetFileNameWithoutExtension(asmFileName) + ".resouces.dll";
             var dirs = Directory.GetDirectories(Path.GetDirectoryName(asmFileName));
             foreach (var dir in dirs)
@@ -6708,6 +7165,7 @@ namespace JIEJIE
             this.LibraryNames = new Dictionary<string, string>();
             var reader = new DCILReader(fileName, encoding, this);
             this.RootPath = Path.GetDirectoryName(fileName);
+            this.FileName = fileName;
             this.Load(reader);
             reader.Close();
         }
@@ -6752,7 +7210,7 @@ namespace JIEJIE
                 return null;
             }
         }
-         
+
         private Dictionary<DCILTypeReference, DCILTypeReference> _CachedTypes = null;
 
         public Dictionary<string, string> LibraryNames = new Dictionary<string, string>();
@@ -6770,19 +7228,82 @@ namespace JIEJIE
             return null;
         }
 
+        private static Dictionary<string, string> _Standard_Type_LibName = null;
+        public static Dictionary<string, string> GetStandardTypeLibName()
+        {
+            if (_Standard_Type_LibName == null)
+            {
+                _Standard_Type_LibName = new Dictionary<string, string>();
+#if DOTNETCORE
+                _Standard_Type_LibName[typeof(string).FullName] = "System.Runtime";
+                _Standard_Type_LibName[typeof(System.Diagnostics.DebuggerBrowsableAttribute).FullName] = "System.Diagnostics.Debug";
+                _Standard_Type_LibName[typeof(System.Threading.Thread).FullName] = "System.Threading.Thread";
+                _Standard_Type_LibName[typeof(System.IO.MemoryStream).FullName] = "System.Runtime.Extensions";
+                _Standard_Type_LibName[typeof(System.Drawing.Bitmap).FullName] = "System.Drawing.Common";
+                var asms = System.Runtime.Loader.AssemblyLoadContext.Default.Assemblies;
+                foreach (var asm in asms)
+                {
+                    var asmName = asm.GetName().Name;
+                    if ( DCUtils.IsSystemAsseblyName( asmName ))
+                    {
+                        var ts = asm.GetForwardedTypes();
+                        if (ts != null && ts.Length > 0)
+                        {
+                            foreach (var t in ts)
+                            {
+                                var fn2 = DCUtils.GetFullName(t);
+                                if (_Standard_Type_LibName.ContainsKey(fn2) == false)
+                                {
+                                    _Standard_Type_LibName[fn2] = asmName;
+                                }
+                            }
+                        }
+                    }
+                }
+#else
+                var asms = System.AppDomain.CurrentDomain.GetAssemblies();
+                foreach(var asm in asms )
+                {
+                    var asmName = asm.GetName().Name;
+                    if( DCUtils.IsSystemAsseblyName( asmName ))
+                    {
+                        var ts = asm.GetExportedTypes();
+                        if( ts != null &&ts.Length > 0 )
+                        {
+                            foreach(var t in ts)
+                            {
+                                var fn2 = DCUtils.GetFullName(t);
+                                if( _Standard_Type_LibName.ContainsKey( fn2 )== false )
+                                {
+                                    _Standard_Type_LibName[fn2] = asmName;
+                                }
+                            }
+                        }
+                    }
+                }
+#endif
+            }
+            return _Standard_Type_LibName;
+        }
+
         private Dictionary<string, string> _Cache_TypeNameWithLibraryName = new Dictionary<string, string>();
-        public string GetTypeNameWithLibraryName(string typeName, string defaultLibName = null , Type nativeType = null )
+        public string GetTypeNameWithLibraryName(string typeName, string defaultLibName = null, Type nativeType = null)
         {
             if (typeName == null || typeName.Length == 0)
             {
                 throw new ArgumentNullException("typeName");
             }
+            var dic = GetStandardTypeLibName();
             string result = null;
-            if(_Cache_TypeNameWithLibraryName.TryGetValue( typeName , out result ))
+            if (this._Cache_TypeNameWithLibraryName.TryGetValue(typeName, out result))
             {
                 return result;
             }
-            if (this.LibraryNames.TryGetValue(typeName, out result))
+            else if (this.LibraryNames.TryGetValue(typeName, out result))
+            {
+                result = "[" + result + "]" + typeName;
+            }
+            else if (dic.TryGetValue(typeName, out result))
             {
                 result = "[" + result + "]" + typeName;
             }
@@ -6793,7 +7314,7 @@ namespace JIEJIE
             else
             {
                 var t = typeof(string).Assembly.GetType(typeName, false, true);
-                if( t == null )
+                if (t == null)
                 {
 
 #if DOTNETCORE
@@ -6817,7 +7338,7 @@ namespace JIEJIE
 
 #endif
                 }
-                if( t == null )
+                if (t == null)
                 {
                     t = nativeType;
                 }
@@ -6827,28 +7348,24 @@ namespace JIEJIE
                 }
                 else
                 {
-                    result = "[" + t.Module.Name + "]" + t.Namespace + "." + t.Name; 
+                    result = "[" + t.Module.Name + "]" + t.Namespace + "." + t.Name;
                 }
             }
             _Cache_TypeNameWithLibraryName[typeName] = result;
             return result;
         }
-        
+
         public void FixDomState()
         {
             this._CachedTypes = new Dictionary<DCILTypeReference, DCILTypeReference>();
- 
+
             this.LibName_mscorlib = null;
-            foreach (var item in this.ChildNodes)
+            foreach (var item in this.Assemblies)
             {
-                if (this.LibName_mscorlib == null && item is DCILAssembly)
+                if (this.LibName_mscorlib == null && item.IsExtern)
                 {
-                    var asm = (DCILAssembly)item;
-                    if (asm.IsExtern)
-                    {
-                        this.LibName_mscorlib = asm.Name;
-                        break;
-                    }
+                    this.LibName_mscorlib = item.Name;
+                    break;
                 }
             }
 
@@ -6870,24 +7387,48 @@ namespace JIEJIE
                 }
             }
         }
+
+        //public void CollectCustomAttributes( List<DCILCustomAttribute> attrs )
+        //{
+        //    this.AddCustomAttributes(attrs);
+        //    foreach( var asm in this.Assemblies)
+        //    {
+        //        asm.AddCustomAttributes(attrs);
+        //    }
+        //    var clses = GetAllClassesUseCache();
+        //    foreach( var cls in clses.Values)
+        //    {
+        //        cls.AddCustomAttributes(attrs);
+        //        foreach( var node in cls.ChildNodes )
+        //        {
+        //            node.AddCustomAttributes(attrs);
+        //        }
+        //    }
+        //}
+
         public void UpdateLocalInfo()
         {
             this._CachedInvokeMethods = new Dictionary<DCILInvokeMethodInfo, DCILInvokeMethodInfo>();
-            var clses = new Dictionary<string, DCILClass>();
-            GetAllClasses(null, this.ChildNodes, clses);
+            var clses = this.GetAllClassesUseCache(); //new Dictionary<string, DCILClass>();
+            //GetAllClasses(null, this.Classes, clses);
             foreach (var cls in clses.Values)
             {
                 cls.CacheInfo(this, clses);
             }
-            int len = Math.Min(500, this.ChildNodes.Count);
-            for (int iCount = 0; iCount < len; iCount++)
+            foreach (var asm in this.Assemblies)
             {
-                if (this.ChildNodes[iCount] is DCILAssembly)
-                {
-                    var asm = (DCILAssembly)this.ChildNodes[iCount];
-                    asm.CusotmAttributesCacheTypeReference(this);
-                }
+                asm.CusotmAttributesCacheTypeReference(this);
             }
+            this.CusotmAttributesCacheTypeReference(this);
+            //int len = Math.Min(500, this.ChildNodes.Count);
+            //for (int iCount = 0; iCount < len; iCount++)
+            //{
+            //    if (this.ChildNodes[iCount] is DCILAssembly)
+            //    {
+            //        var asm = (DCILAssembly)this.ChildNodes[iCount];
+            //        asm.CusotmAttributesCacheTypeReference(this);
+            //    }
+            //}
             foreach (var item in this._CachedTypes.Values)
             {
                 if (item.HasLibraryName == false)
@@ -6902,32 +7443,45 @@ namespace JIEJIE
                     }
                 }
             }
-             foreach (var item in this._CachedInvokeMethods.Values)
+            foreach (var item in this._CachedInvokeMethods.Values)
             {
                 item.UpdateLocalInfo(this, clses);
             }
-
         }
-        private void GetAllClasses(string baseName, System.Collections.IList list, Dictionary<string, DCILClass> clses)
+
+        private void GetAllClasses(string baseName, List<DCILClass> list, Dictionary<string, DCILClass> clses)
         {
-            foreach (var item in list)
+            foreach (var cls in list)
             {
-                if (item is DCILClass)
+                var name = cls.Name;
+                if (baseName != null)
                 {
-                    var cls = (DCILClass)item;
-                    var name = cls.Name;
-                    if (baseName != null)
-                    {
-                        name = baseName + cls.Name;
-                    }
-                    clses[name] = cls;
-                    if (cls.NestedClasses != null && cls.NestedClasses.Count > 0)
-                    {
-                        GetAllClasses(name + "/", cls.NestedClasses, clses);
-                    }
+                    name = baseName + cls.Name;
+                }
+                clses[name] = cls;
+                if (cls.NestedClasses != null && cls.NestedClasses.Count > 0)
+                {
+                    GetAllClasses(name + "/", cls.NestedClasses, clses);
                 }
             }
         }
+
+        private Dictionary<DCILFieldReference, DCILFieldReference> _Cache_FieldReference = new Dictionary<DCILFieldReference, DCILFieldReference>();
+        internal DCILFieldReference CacheFieldReference(DCILFieldReference field)
+        {
+            if (field == null)
+            {
+                return null;
+            }
+            DCILFieldReference result = null;
+            if (_Cache_FieldReference.TryGetValue(field, out result))
+            {
+                return result;
+            }
+            this._Cache_FieldReference[field] = field;
+            return field;
+        }
+
         internal DCILTypeReference CacheTypeReference(DCILTypeReference tr)
         {
             if (tr == null)
@@ -6976,9 +7530,509 @@ namespace JIEJIE
             info.CacheTypeReference(this);
             return info;
         }
-         
+        public void UpdateCustomAttributeValues()
+        {
+            var cusAttributes = new List<DCILCustomAttribute>();
+            this.AddCustomAttributes(cusAttributes);
+            var clses = this.GetAllClassesUseCache();
+            foreach (var cls in clses.Values)
+            {
+                cls.AddCustomAttributes(cusAttributes);
+                foreach (var node in cls.ChildNodes)
+                {
+                    node.AddCustomAttributes(cusAttributes);
+                }
+            }
+            foreach (var asm in this.Assemblies)
+            {
+                asm.AddCustomAttributes(cusAttributes);
+            }
+            foreach (var item in cusAttributes)
+            {
+                item.ParseValues(new ReadCustomAttributeValueArgs(null, this, Path.GetDirectoryName(this.AssemblyFileName)));
+            }
+        }
+        /// <summary>
+        /// 合并IL文档，并将第一个文档作为主文档进行输出
+        /// </summary>
+        /// <param name="documents">要合并的文档对象列表</param>
+        /// <returns>合并后的文档</returns>
+        public static DCILDocument MergeDocuments(List<DCILDocument> documents)
+        {
+            if (documents == null || documents.Count == 0)
+            {
+                return null;
+            }
+            if (documents.Count == 1)
+            {
+                return documents[0];
+            }
+            int tick = Environment.TickCount;
+            //var cusAttributes = new List<DCILCustomAttribute>();
+            var globalAllClasses = new Dictionary<string, Dictionary<string, DCILClass>>();
+            foreach (var doc in documents)
+            {
+                var libName = doc.Name;
+                var cusAttributes = doc.GetAllCustomAttributesUseCache();
+                foreach (var item in cusAttributes)
+                {
+                    item.ParseValues(new ReadCustomAttributeValueArgs(
+                        documents,
+                        doc,
+                        Path.GetDirectoryName(doc.AssemblyFileName)));
+                    //if (item.Values != null)// debug code
+                    //{
+                    //    foreach (var item2 in item.Values)
+                    //    {
+                    //        if (item2.Value is DCILCustomAttributeValue.TypeRefInfo)
+                    //        {
+                    //            var info = (DCILCustomAttributeValue.TypeRefInfo)item2.Value;
+                    //            if (info.LocalClass != null
+                    //                && info.LocalClass.IsEnum == false)
+                    //            {
+
+                    //            }
+                    //        }
+                    //    }
+                    //}
+                }
+                var clses = doc.GetAllClassesUseCache();
+                DCILClass cls2 = null;
+                if (clses.TryGetValue("'<PrivateImplementationDetails>'", out cls2))
+                {
+                    cls2._Name = "___InnerTempData" + doc.GetHashCode();
+                }
+                globalAllClasses[doc.Name] = clses;
+                foreach (var item in doc._CachedTypes.Values)
+                {
+                    if (item.LocalClass != null)
+                    {
+                        if (item.LocalClass == cls2)
+                        {
+                            item.Name = cls2.Name;
+                        }
+                        else if (item.LocalClass.Parent == cls2)
+                        {
+                            item.Name = item.LocalClass.NameWithNested;
+                        }
+                    }
+                }
+            }//foreach
+
+            var mainDoc = documents[0];
+            foreach (var doc in documents)
+            {
+                foreach (var item in doc._CachedTypes.Values)
+                {
+                    if (item.LibraryName != null && item.LibraryName.Length > 0)
+                    {
+                        Dictionary<string, DCILClass> clses = null;
+                        if (globalAllClasses.TryGetValue(item.LibraryName, out clses))
+                        {
+                            DCILClass cls = null;
+                            if (clses.TryGetValue(item.Name, out cls))
+                            {
+                                item.LocalClass = cls;
+                                item.LibraryName = null;
+                            }
+                        }
+                    }
+                }
+            }//foreach
+            int clsesCount = 0;
+            bool hasAddILDataItem = false;
+            for (int iCount = 1; iCount < documents.Count; iCount++)
+            {
+                var document = documents[iCount];
+                string msg = "       + " + document.Name;
+                if(document.CommentXmlDoc != null )
+                {
+                    msg = msg + "   ( with merge '" + document.Name + ".XML' )";
+                }
+                Console.WriteLine( msg );
+                if (document.Resouces != null)
+                {
+                    foreach (var item in document.Resouces)
+                    {
+                        if (mainDoc.Resouces.ContainsKey(item.Key))
+                        {
+                            ConsoleReportError("       [Warring],Duplicate resource name : " + item.Key);
+                            return null;
+                        }
+                        else
+                        {
+                            mainDoc.Resouces[item.Key] = item.Value;
+                            item.Value.Modified = true;
+                        }
+                    }
+                }
+                foreach (var asm in mainDoc.Assemblies)
+                {
+                    if (string.Compare(asm.Name, document.Name, true) == 0)
+                    {
+                        mainDoc.Assemblies.Remove(asm);
+                        break;
+                    }
+                }
+                var itemNames = new HashSet<string>();
+                foreach (var asm in mainDoc.Assemblies)
+                {
+                    itemNames.Add(asm.Name);
+                }
+                foreach (var asm in document.Assemblies)
+                {
+                    if (asm.IsExtern && itemNames.Contains(asm.Name) == false)
+                    {
+                        mainDoc.Assemblies.Add(asm);
+                    }
+                }
+                itemNames.Clear();
+                foreach (var item in mainDoc.Modules)
+                {
+                    if (item.IsExtern)
+                    {
+                        itemNames.Add(item.Name);
+                    }
+                }
+                foreach (var item in document.Modules)
+                {
+                    if (item.IsExtern == true
+                        && itemNames.Contains(item.Name) == false)
+                    {
+                        mainDoc.Modules.Insert(0, item);
+                    }
+                }
+                // 合并类型
+                itemNames.Clear();
+                foreach (var cls in mainDoc.Classes)
+                {
+                    itemNames.Add(cls.Name);
+                }
+                foreach (var cls in document.Classes)
+                {
+                    if (itemNames.Contains(cls.Name))
+                    {
+                        ConsoleReportError("       [Warring],Duplicate class name : " + cls.Name);
+                        return null;
+                    }
+                    mainDoc.Classes.Add(cls);
+                }
+                if( document.CommentXmlDoc != null )
+                {
+                    // 合并文档注释XML节点
+                    var srcRoot = document.CommentXmlDoc.SelectSingleNode("doc/members");
+                    if( srcRoot != null )
+                    {
+                        var descRoot = mainDoc.CommentXmlDoc?.SelectSingleNode("doc/members");
+                        if(descRoot == null )
+                        {
+                            mainDoc.CommentXmlDoc = new System.Xml.XmlDocument();
+                            mainDoc.CommentXmlDoc.LoadXml("<doc><assembly><name>" + mainDoc.Name + "</name></assembly><members/></doc>");
+                            descRoot = mainDoc.CommentXmlDoc?.SelectSingleNode("doc/members");
+                        }
+                        var doc4 = mainDoc.CommentXmlDoc;
+                        foreach( System.Xml.XmlNode node in srcRoot.ChildNodes )
+                        {
+                            descRoot.AppendChild(doc4.ImportNode( node , true ));
+                        }
+                    }
+                }
+                clsesCount += document.Classes.Count;
+                if (mainDoc._CachedTypes != null && mainDoc._CachedTypes.Count > 0)
+                {
+                    if (mainDoc._Cache_FieldReference != null)
+                    {
+                        foreach (var item in mainDoc._Cache_FieldReference.Values)
+                        {
+                            if (item.OwnerType.LocalClass != null && item.LocalField == null)
+                            {
+                                item.UpdateLocalField(item.OwnerType.LocalClass);
+                            }
+                        }
+                    }
+                    if (mainDoc._CachedInvokeMethods != null)
+                    {
+                        foreach (var item in mainDoc._CachedInvokeMethods.Values)
+                        {
+                            if (item.OwnerType.LocalClass != null && item.LocalMethod == null)
+                            {
+                                item.UpdateLocalInfo(item.OwnerType.LocalClass);
+                            }
+                        }
+                    }
+                }
+                // 清除一些无效的缓存数据
+                mainDoc._AllClasses = null;
+                mainDoc._AllCustomAttributes = null;
+                // 合并缓存的信息
+                mainDoc._HasMergeDocuments = true;
+                mainDoc._CachedInvokeMethods = MergeDictionary<DCILInvokeMethodInfo, DCILInvokeMethodInfo>(
+                    mainDoc._CachedInvokeMethods, document._CachedInvokeMethods);
+                mainDoc._CachedTypes = MergeDictionary<DCILTypeReference, DCILTypeReference>(
+                    mainDoc._CachedTypes, document._CachedTypes);
+                mainDoc._Cache_FieldReference = MergeDictionary<DCILFieldReference, DCILFieldReference>(
+                    mainDoc._Cache_FieldReference, document._Cache_FieldReference);
+                mainDoc._Cache_TypeNameWithLibraryName = MergeDictionary<string, string>(
+                    mainDoc._Cache_TypeNameWithLibraryName, document._Cache_TypeNameWithLibraryName);
+                mainDoc.LibraryNames = MergeDictionary<string, string>(mainDoc.LibraryNames, document.LibraryNames);
+                if (document.ILDatas.Count > 0)
+                {
+                    mainDoc.ILDatas.AddRange(document.ILDatas);
+                    hasAddILDataItem = true;
+                    
+                }
+                document.CleanFieldValue();
+            }//for
+            if(hasAddILDataItem )
+            {
+                int ilDataIDCounter = Math.Abs(Environment.TickCount)/2;
+                foreach (var item in mainDoc.ILDatas)
+                {
+                    item._Name = "I_" + Convert.ToString(ilDataIDCounter++);
+                }
+            }
+            for (int iCount = mainDoc.Assemblies.Count - 1; iCount >= 0; iCount--)
+            {
+                if (mainDoc.Assemblies[iCount].IsExtern)
+                {
+                    var asmName = mainDoc.Assemblies[iCount].Name;
+                    foreach (var doc in documents)
+                    {
+                        if (string.Compare(asmName, doc.Name, true) == 0)
+                        {
+                            mainDoc.Assemblies.RemoveAt(iCount);
+                            break;
+                        }
+                    }
+                }
+            }
+            Console.WriteLine("       Merge " + Convert.ToString(documents.Count - 1)
+                + " assembly files , " + clsesCount + " classes, span "
+                + Math.Abs(Environment.TickCount - tick) + " milliseconds.");
+            return mainDoc;
+        }
+
+        public bool _HasMergeDocuments = false;
+
+        ///// <summary>
+        ///// 合并IL文档
+        ///// </summary>
+        ///// <param name="document">要合并的对象</param>
+        ///// <returns>操作是否成功</returns>
+        //public bool Merge( DCILDocument document )
+        //{
+        //    if( document == this || document == null )
+        //    {
+        //        return true ;
+        //    }
+        //    if (document.Resouces != null)
+        //    {
+        //        foreach (var item in document.Resouces)
+        //        {
+        //            if (this.Resouces.ContainsKey(item.Key))
+        //            {
+        //                ConsoleReportError("       [Warring],Duplicate resource name : " + item.Key);
+        //                return false;
+        //            }
+        //            else
+        //            {
+        //                this.Resouces[item.Key] = item.Value;
+        //                item.Value.Modified = true;
+        //            }
+        //        }
+        //    }
+        //    foreach (var asm in this.Assemblies)
+        //    {
+        //        if (string.Compare(asm.Name, document.Name, true) == 0)
+        //        {
+        //            this.Assemblies.Remove(asm);
+        //            break;
+        //        }
+        //    }
+        //    var itemNames = new HashSet<string>();
+        //    foreach( var asm in this.Assemblies)
+        //    {
+        //        itemNames.Add(asm.Name);
+        //    }
+        //    foreach( var asm in document.Assemblies)
+        //    {
+        //        if( asm.IsExtern && itemNames.Contains( asm.Name )== false )
+        //        {
+        //            this.Assemblies.Add(asm);
+        //        }
+        //    }
+        //    itemNames.Clear();
+        //    foreach (var item in this.Modules)
+        //    {
+        //        if (item.IsExtern)
+        //        {
+        //            itemNames.Add(item.Name);
+        //        }
+        //    }
+        //    foreach( var item in document.Modules )
+        //    {
+        //        if( item.IsExtern == true
+        //            && itemNames.Contains( item.Name ) == false )
+        //        {
+        //            this.Modules.Insert(0,item);
+        //        }
+        //    }
+        //    // 合并类型
+        //    itemNames.Clear();
+        //    foreach (var cls in this.Classes)
+        //    {
+        //        itemNames.Add(cls.Name);
+        //    }
+        //    foreach (var cls in document.Classes)
+        //    {
+        //        if (itemNames.Contains(cls.Name))
+        //        {
+        //            if (cls.Name == "'<PrivateImplementationDetails>'")
+        //            {
+        //                cls._Name = "'<PrivateImplementationDetails_" + document.Name + ">'";
+        //                this.Classes.Add(cls);
+        //            }
+        //            else
+        //            {
+        //                ConsoleReportError("       [Warring],Duplicate class name : " + cls.Name);
+        //                return false;
+        //            }
+        //        }
+        //        this.Classes.Add(cls);
+        //    }
+        //    if (this._CachedTypes != null && this._CachedTypes.Count > 0 )
+        //    {
+        //        var clses = new Dictionary<string, DCILClass>();
+        //        document.GetAllClasses(null, document.Classes , clses);
+        //        foreach( var item in this._CachedTypes.Values )
+        //        {
+        //            if(item.LibraryName == document.Name )
+        //            {
+        //                DCILClass newCls = null;
+        //                if( clses.TryGetValue( item.Name , out newCls ))
+        //                {
+        //                    item.LocalClass = newCls;
+        //                    item.LibraryName = null;
+        //                }
+        //            }
+        //        }
+        //        if (this._Cache_FieldReference != null)
+        //        {
+        //            foreach (var item in this._Cache_FieldReference.Values)
+        //            {
+        //                if (item.OwnerType.LocalClass != null &&  item.LocalField == null )
+        //                {
+        //                    item.UpdateLocalField(item.OwnerType.LocalClass);
+        //                }
+        //            }
+        //        }
+        //        if( this._CachedInvokeMethods != null )
+        //        {
+        //            foreach( var item in this._CachedInvokeMethods.Values)
+        //            {
+        //                if( item.OwnerType.LocalClass != null && item.LocalMethod == null )
+        //                {
+        //                    item.UpdateLocalInfo(item.OwnerType.LocalClass);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    // 合并缓存的信息
+        //    this._CachedInvokeMethods = MergeDictionary<DCILInvokeMethodInfo, DCILInvokeMethodInfo>(this._CachedInvokeMethods, document._CachedInvokeMethods);
+        //    this._CachedTypes = MergeDictionary<DCILTypeReference, DCILTypeReference>(this._CachedTypes, document._CachedTypes);
+        //    this._Cache_FieldReference = MergeDictionary<DCILFieldReference, DCILFieldReference>(this._Cache_FieldReference, document._Cache_FieldReference);
+        //    this._Cache_TypeNameWithLibraryName = MergeDictionary<string, string>(this._Cache_TypeNameWithLibraryName, document._Cache_TypeNameWithLibraryName);
+        //    if (document.ILDatas.Count > 0)
+        //    {
+        //        this.ILDatas.AddRange(document.ILDatas);
+        //        int tick = Environment.TickCount;
+        //        foreach (var item in this.ILDatas)
+        //        {
+        //            item._Name = "I_" + Convert.ToString(tick++);
+        //        }
+        //    }
+        //    document.CleanFieldValue();
+        //    return true ;
+        //}
+
+        private static Dictionary<K, V> MergeDictionary<K, V>(Dictionary<K, V> dic1, Dictionary<K, V> dic2)
+        {
+            if (dic2 == null || dic2.Count == 0)
+            {
+                return dic1;
+            }
+            if (dic1 == null)
+            {
+                return dic2;
+            }
+            Dictionary<K, V> result = dic1;
+            foreach (var item2 in dic2)
+            {
+                dic1[item2.Key] = item2.Value;
+            }
+            return result;
+        }
+
+        private static void ConsoleReportError(string msg)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.WriteLine(msg);
+            Console.ResetColor();
+        }
+        public List<DCILModule> Modules = null;
+        public List<DCILAssembly> Assemblies = null;
+
+        private List<DCILCustomAttribute> _AllCustomAttributes = null;
+        public List<DCILCustomAttribute> GetAllCustomAttributesUseCache()
+        {
+            if (this._AllCustomAttributes == null)
+            {
+                this._AllCustomAttributes = new List<DCILCustomAttribute>();
+                this.AddCustomAttributes(_AllCustomAttributes);
+                foreach (var asm in this.Assemblies)
+                {
+                    if (asm.IsExtern == false)
+                    {
+                        asm.AddCustomAttributes(_AllCustomAttributes);
+                    }
+                }
+                var clses = GetAllClassesUseCache();
+                foreach (var cls in clses.Values)
+                {
+                    cls.AddCustomAttributes(_AllCustomAttributes);
+                    foreach (var node in cls.ChildNodes)
+                    {
+                        node.AddCustomAttributes(_AllCustomAttributes);
+                    }
+                }
+            }
+            return this._AllCustomAttributes;
+        }
+
+        private Dictionary<string, DCILClass> _AllClasses = null;
+        public Dictionary<string, DCILClass> GetAllClassesUseCache()
+        {
+            if (this._AllClasses == null)
+            {
+                this._AllClasses = new Dictionary<string, DCILClass>();
+                this.GetAllClasses(null, this.Classes, _AllClasses);
+            }
+            return this._AllClasses;
+        }
+        public void ClearCacheForAllClasses()
+        {
+            this._AllClasses = null;
+        }
+        public List<DCILClass> Classes = null;
+        public List<DCILUnknowObject> UnknowObjects = null;
+
         public override void Load(DCILReader reader)
         {
+            this.Modules = new List<DCILModule>();
+            this.Assemblies = new List<DCILAssembly>();
+            this.UnknowObjects = new List<DCILUnknowObject>();
+            this.Classes = new List<DCILClass>();
             if (this.ChildNodes == null)
             {
                 this.ChildNodes = new DCILObjectList();
@@ -6995,41 +8049,52 @@ namespace JIEJIE
                 switch (strWord)
                 {
                     case DCILModule.TagName_Module:
-                        this.ChildNodes.Add(new DCILModule(reader));
+                        {
+                            var module = new DCILModule(reader);
+                            if (module.IsExtern == false)
+                            {
+                                if (module.Name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+                                    || module.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    this._Name = module.Name.Substring(0, module.Name.Length - 4);
+                                }
+                            }
+                            this.Modules.Add(module);
+                        }
                         break;
                     case DCILMResource.TagName_mresource:
                         {
                             var item = new DCILMResource(this, reader);
-                            this.ResouceFiles[item.Name] = item;
-                            this.ChildNodes.Add(item);
+                            this.Resouces[item.Name] = item;
+                            //this.ChildNodes.Add(item);
                         }
                         break;
                     case DCILAssembly.TagName:
                         var asm = new DCILAssembly();
                         asm.LoadHeader(reader);
                         bool match = false;
-                        foreach (var item in this.ChildNodes)
+                        foreach (var item in this.Assemblies)
                         {
-                            if (item is DCILAssembly && item.Name == asm.Name)
+                            if (item.Name == asm.Name)
                             {
-                                ((DCILAssembly)item).LoadContent(reader);
+                                item.LoadContent(reader);
                                 match = true;
                             }
                         }
                         if (match == false)
                         {
                             asm.LoadContent(reader);
-                            this.ChildNodes.Add(asm);
+                            this.Assemblies.Add(asm);
                         }
                         break;
                     case DCILCustomAttribute.TagName_custom:
                         {
-                            this.ChildNodes.Add((DCILObject)DCILCustomAttribute.Create(this, reader));
+                            base.ReadCustomAttribute(reader);
                         }
                         break;
                     case DCILData.TagName_Data:
                         {
-                            this.ChildNodes.Add(new DCILData(reader));
+                            this.ILDatas.Add(new DCILData(reader));
                         }
                         break;
                     case DCILClass.TagName:
@@ -7046,26 +8111,95 @@ namespace JIEJIE
                                 else
                                 {
                                     cls.LoadContent(reader);
-                                    this.ChildNodes.Add(cls);
+                                    this.Classes.Add(cls);
                                     classMap[cls.Name] = cls;
                                     reader.NumOfClass++;
                                 }
                             }
                         }
                         break;
+                    //case "corflags":
+                    //    {
+                    //        string str = reader.ReadInstructionContent();
+                    //        int v2 = 0;
+                    //        if(Int32.TryParse( str , out v2 ))
+                    //        {
+                    //            this.CorFlags = (DCILRuntimeFlags) v2;
+                    //        }
+                    //    }
+                    //    break;
                     default:
                         {
-                            this.ChildNodes.Add(new DCILUnknowObject(strWord, reader));
+                            this.UnknowObjects.Add(new DCILUnknowObject(strWord, reader));
                         }
                         break;
                 }
             }
+            DCILMResource.LoadData(this.Resouces.Values, Path.GetDirectoryName(reader.FileName));
+            var resFileName = Path.ChangeExtension(reader.FileName, ".res");
+            if(File.Exists( resFileName ))
+            {
+                this.Win32ResData = File.ReadAllBytes(resFileName);
+            }
+            if (reader.FieldsReferenceData != null
+                && reader.FieldsReferenceData.Count > 0
+                && this.ILDatas != null && this.ILDatas.Count > 0)
+            {
+                var datas = new Dictionary<string, DCILData>();
+                foreach (var item in this.ILDatas)
+                {
+                    datas[item.Name] = item;
+                }
+                foreach (var field in reader.FieldsReferenceData)
+                {
+                    datas.TryGetValue(field.DataLabel, out field.ReferenceData);
+                }
+            }
             FixDomState();
         }
+        public List<DCILData> ILDatas = new List<DCILData>();
+        public void WriteResourceFile(string basePath)
+        {
+            if (this.Resouces != null)
+            {
+                foreach (var item in this.Resouces)
+                {
+                    if (item.Value.Modified)
+                    {
+                        item.Value.WriteDataFile(basePath);
+                    }
+                }
+            }
+        }
+
+        public Dictionary<string, string> CustomInstructions = null;
 
         public override void WriteTo(DCILWriter writer)
         {
-            writer.WriteObjects(this.ChildNodes);
+            writer.WriteObjects2(this.Modules);
+            writer.WriteObjects2(this.Assemblies);
+            writer.WriteObjects2(this.Resouces.Values);
+            if (this.CustomInstructions != null && this.CustomInstructions.Count > 0)
+            {
+                foreach (var item in this.CustomInstructions)
+                {
+                    writer.WriteLine(item.Key + " " + item.Value);
+                }
+                foreach (var item in this.UnknowObjects)
+                {
+                    if (this.CustomInstructions.ContainsKey(item.Name) == false)
+                    {
+                        item.WriteTo(writer);
+                    }
+                }
+            }
+            else
+            {
+                writer.WriteObjects2(this.UnknowObjects);
+            }
+            writer.WriteObjects2(this.CustomAttributes);
+            writer.WriteObjects2(this.Classes);
+            writer.WriteObjects2(this.ILDatas);
         }
 
         public void WriteToFile(string fileName, Encoding encod)
@@ -7075,8 +8209,9 @@ namespace JIEJIE
                 var w2 = new DCILWriter(writer);
                 this.WriteTo(w2);
             }
+            this.WriteResourceFile(Path.GetDirectoryName(fileName));
         }
-         
+
 
         public readonly JieJieSwitchs ProtectedOptions = null;
 
@@ -7087,56 +8222,75 @@ namespace JIEJIE
         /// <returns>语言信息对象</returns>
         public System.Globalization.CultureInfo[] GetSupportCultures()
         {
-            var list = new List<System.Globalization.CultureInfo>();
-         
-            foreach (var dir in Directory.GetDirectories(this.RootPath))
+            var names = new List<string>();
+            foreach (var res in this.Resouces.Values)
             {
-                var fns = Directory.GetFiles(dir, "*" + EXT_resources);
-                if (fns != null && fns.Length > 0)
+                if (res.LocalDatas != null)
                 {
-                    var name = Path.GetFileName(dir);
-                     
+                    foreach (var locName in res.LocalDatas.Keys)
                     {
-                        try
+                        if (names.Contains(locName) == false)
                         {
-                            var cul = System.Globalization.CultureInfo.GetCultureInfo(name);
-                            if (cul != null)
-                            {
-                                list.Add(cul);
-                            }
-                        }
-                        catch
-                        {
-
+                            names.Add(locName);
                         }
                     }
                 }
             }
-            return list.ToArray();
+            if (names.Count > 0)
+            {
+                names.Sort();
+                var list = new List<System.Globalization.CultureInfo>();
+                foreach (var name in names)
+                {
+                    try
+                    {
+                        var cul = System.Globalization.CultureInfo.GetCultureInfo(name);
+                        if (cul != null)
+                        {
+                            list.Add(cul);
+                        }
+                    }
+                    catch (System.Exception ext)
+                    {
+
+                    }
+                }
+                return list.ToArray();
+            }
+            return null;
         }
-         
+
 
         public override string ToString()
         {
             return "ILFile " + this.FileName;
         }
         public readonly int FileSize = 0;
-        public readonly string FileName = null;
-         
+        public string FileName = null;
+
         public string[] SourceLines = null;
         public string RootPath = null;
         public string AssemblyFileName = null;
         public string LibName_mscorlib = "mscorlib";
         public int ModifiedCount = 0;
         public List<DCILOperCode_LoadString> StringDefines = new List<DCILOperCode_LoadString>();
-        public List<DCILObject> AllGroups = new List<DCILObject>();
-        public List<DCILClass> AllClasses = new List<DCILClass>();
+        //public List<DCILObject> AllGroups = new List<DCILObject>();
+        //public List<DCILClass> AllClasses = new List<DCILClass>();
         public List<string> ReferenceAssemblies = new List<string>();
-
-        public SortedDictionary<string, DCILMResource> ResouceFiles = new SortedDictionary<string, DCILMResource>();
+        public byte[] Win32ResData = null;
+        public SortedDictionary<string, DCILMResource> Resouces = new SortedDictionary<string, DCILMResource>();
 
         public List<System.Tuple<DCILMethod, int>> SecurityMethods = new List<Tuple<DCILMethod, int>>();
-
+        public void CleanFieldValue()
+        {
+            this.SourceLines = null;
+            this.StringDefines = null;
+            this.Resouces = null;
+            this.Classes = null;
+            this.ILDatas = null;
+            this.Assemblies = null;
+            this.Modules = null;
+        }
         public void Dispose()
         {
             this.SourceLines = null;
@@ -7145,20 +8299,28 @@ namespace JIEJIE
                 this.StringDefines.Clear();
                 this.StringDefines = null;
             }
-            if (this.AllGroups != null)
+            //if (this.AllGroups != null)
+            //{
+            //    this.AllGroups.Clear();
+            //    this.AllGroups = null;
+            //}
+            if (this.Resouces != null)
             {
-                this.AllGroups.Clear();
-                this.AllGroups = null;
+                this.Resouces.Clear();
+                this.Resouces = null;
             }
-            if (this.ResouceFiles != null)
+            if (this.ILDatas != null)
             {
-                this.ResouceFiles.Clear();
-                this.ResouceFiles = null;
+                this.ILDatas.Clear();
+                this.ILDatas = null;
             }
+            this.Modules = null;
+            this.Classes = null;
+            this.Resouces = null;
         }
 
         public bool _IsDotNetCoreAssembly = false;
-         
+
     }
     internal class DCILOperCodeList : List<DCILOperCode>
     {
@@ -7209,7 +8371,7 @@ namespace JIEJIE
     /// </summary>
     internal class DCILOperCode_HandleClass : DCILOperCode
     {
-        
+
         public DCILOperCode_HandleClass(string lableID, string operCode, DCILReader reader)
         {
             this.LabelID = lableID;
@@ -7232,11 +8394,11 @@ namespace JIEJIE
                 this.ClassType.UpdateLocalClass(clses);
             }
         }
-        
+
         public DCILTypeReference ClassType = null;
 
         public DCILClass LocalClass = null;
- 
+
     }
 
     internal class DCILFieldReference
@@ -7287,7 +8449,16 @@ namespace JIEJIE
             //}
             this.ValueType = document.CacheTypeReference(this.ValueType);
             this.OwnerType = document.CacheTypeReference(this.OwnerType);
-            this.ValueType?.UpdateLocalClass(clses);
+            if (this.ValueType != null)
+            {
+                //var cls2 = this.ValueType.LocalClass;
+                this.ValueType.UpdateLocalClass(clses);
+                //if (this.ValueType.Name.StartsWith("'<PrivateImplementationDetails>'") 
+                //    && this.ValueType.LocalClass == null)
+                //{
+
+                //}
+            }
             if (this.OwnerType != null)
             {
                 this.OwnerType.UpdateLocalClass(clses);
@@ -7308,7 +8479,7 @@ namespace JIEJIE
         public void WriteTo(DCILWriter writer, bool forLdtoken = false)
         {
             writer.Write("  ");
- 
+
             this.ValueType.WriteTo(writer, true);
             if (this.modreq != null && this.modreq.Length > 0)
             {
@@ -7329,6 +8500,60 @@ namespace JIEJIE
             }
         }
 
+        public override bool Equals(object obj)
+        {
+            return EqualsValue(obj as DCILFieldReference);
+        }
+        public bool EqualsValue(DCILFieldReference info2)
+        {
+            if (info2 == null)
+            {
+                return false;
+            }
+            if (info2 == this)
+            {
+                return true;
+            }
+            if (this.FieldName != info2.FieldName)
+            {
+                return false;
+            }
+            if (DCUtils.EqualsStringExt(this.modreq, info2.modreq) == false)
+            {
+                return false;
+            }
+            if (DCILTypeReference.StaticEquals(this.ValueType, info2.ValueType) == false)
+            {
+                return false;
+            }
+            if (DCILTypeReference.StaticEquals(this.OwnerType, info2.OwnerType) == false)
+            {
+                return false;
+            }
+            return true;
+        }
+        private int _HashCode = 0;
+        public override int GetHashCode()
+        {
+            if (this._HashCode == 0)
+            {
+                this._HashCode = this.FieldName.GetHashCode();
+                if (this.modreq != null)
+                {
+                    this._HashCode += this.modreq.GetHashCode();
+                }
+                if (this.OwnerType != null)
+                {
+                    this._HashCode += this.OwnerType.GetHashCode();
+                }
+                if (this.ValueType != null)
+                {
+                    this._HashCode += this.ValueType.GetHashCode();
+                }
+            }
+            return this._HashCode;
+        }
+
     }
 
     /// <summary>
@@ -7336,7 +8561,7 @@ namespace JIEJIE
     /// </summary>
     internal class DCILOperCode_HandleField : DCILOperCode
     {
-        
+
         public DCILOperCode_HandleField(string labelID, string operCode, DCILReader reader)
         {
             this.LabelID = labelID;
@@ -7346,6 +8571,11 @@ namespace JIEJIE
         public DCILFieldReference Value = null;
 
         public DCILField LocalField = null;
+        public void CacheInfo(DCILDocument document)
+        {
+            this.Value = document.CacheFieldReference(this.Value);
+        }
+
         public override void WriteOperData(DCILWriter writer)
         {
             if (this.LocalField != null)
@@ -7375,22 +8605,22 @@ namespace JIEJIE
     /// </summary>
     internal class DCILOperCode_HandleMethod : DCILOperCode
     {
-        
+
         public DCILOperCode_HandleMethod()
         {
 
         }
         public DCILInvokeMethodInfo InvokeInfo = null;
-        public void ChangeTarget( DCILTypeReference type , string methodName )
+        public void ChangeTarget(DCILTypeReference type, string methodName)
         {
             var info = this.InvokeInfo.Clone();
             info.OwnerType = type;
             info.MethodName = methodName;
             this.InvokeInfo = info;
         }
-         
+
         public DCILMethod LocalMethod = null;
-        
+
         public DCILOperCode_HandleMethod(string code, DCILReader reader)
         {
             this.OperCode = code;
@@ -7419,7 +8649,7 @@ namespace JIEJIE
                 writer.WriteWhitespace(Math.Max(1, 10 - this.OperCode.Length));
                 this.InvokeInfo.WriteTo(writer);
             }
-           
+
         }
         public override void WriteOperData(DCILWriter writer)
         {
@@ -7436,6 +8666,8 @@ namespace JIEJIE
     }
     internal class DCILOperCode_Try_Catch_Finally : DCILOperCode
     {
+        public string SingleLineContent = null;
+
         public DCILObject _Try = null;
         public List<DCILCatchBlock> _Catchs = null;
         public DCILObject _Finally = null;
@@ -7520,6 +8752,11 @@ namespace JIEJIE
         public override void WriteTo(DCILWriter writer)
         {
             writer.EnsureNewLine();
+            if( this.SingleLineContent != null &&  this.SingleLineContent.Length > 0 )
+            {
+                writer.WriteLine(".try " + this.SingleLineContent);
+                return;
+            }
             writer.WriteLine(".try");
             writer.WriteStartGroup();
             foreach (var item in this._Try.OperCodes)
@@ -7594,7 +8831,7 @@ namespace JIEJIE
         {
             if (this.Text != null && this.Text.Length > 0)
             {
-                writer.WriteLine( Environment.NewLine + "//" + this.Text);
+                writer.WriteLine(Environment.NewLine + "//" + this.Text);
             }
         }
         public override string ToString()
@@ -7668,7 +8905,7 @@ namespace JIEJIE
             {
                 return ILOperCodeType.Normal;
             }
-        } 
+        }
         public DCILOperCode()
         {
 
@@ -7713,7 +8950,7 @@ namespace JIEJIE
             }
             writer.Write(this.OperCode);
             WriteOperData(writer);
-             
+
         }
         public virtual void WriteOperData(DCILWriter writer)
         {
@@ -7841,7 +9078,7 @@ namespace JIEJIE
                 this.ClassType = document.CacheTypeReference(this.ClassType);
             }
         }
- 
+
         public override void WriteOperData(DCILWriter writer)
         {
             writer.Write(" ");
@@ -7870,7 +9107,7 @@ namespace JIEJIE
                 }
             }
         }
- 
+
     }
 
     internal class DCILStringValue
@@ -7975,9 +9212,9 @@ namespace JIEJIE
             this.IsBinary = v.IsBinary;
             this.FinalValue = v.Value;
             this.OperData = v.RawILText;
-             
+
         }
-         
+
         public DCILOperCode_LoadString(DCILOperCode code)
         {
             this.OperCode = "ldstr";
@@ -8050,7 +9287,7 @@ namespace JIEJIE
             this.Parent = parent;
         }
         public DCILTypeReference ValueType = null;
-     
+
 
         public override void CacheInfo(DCILDocument document, Dictionary<string, DCILClass> clses)
         {
@@ -8066,6 +9303,8 @@ namespace JIEJIE
         }
         public string ConstValue = null;
         public string DataLabel = null;
+        public DCILData ReferenceData = null;
+
         public string MarshalAs = null;
         public string modreq = null;
         public string modopt = null;
@@ -8112,7 +9351,14 @@ namespace JIEJIE
                 else if (strWord == "at")
                 {
                     this.DataLabel = reader.ReadWord();
-
+                    if (this.DataLabel != null && this.DataLabel.Length > 0)
+                    {
+                        if (reader.FieldsReferenceData == null)
+                        {
+                            reader.FieldsReferenceData = new List<DCILField>();
+                        }
+                        reader.FieldsReferenceData.Add(this);
+                    }
                     break;
                 }
                 else if (strWord == "=")
@@ -8134,7 +9380,7 @@ namespace JIEJIE
                     break;
                 }
             }
- 
+
             while (reader.HasContentLeft())
             {
                 int pos = reader.Position;
@@ -8183,6 +9429,11 @@ namespace JIEJIE
             {
                 writer.Write(" = ");
                 writer.Write(this.ConstValue);
+            }
+            else if (this.ReferenceData != null)
+            {
+                writer.Write(" at ");
+                writer.Write(this.ReferenceData.Name);
             }
             else if (this.DataLabel != null && this.DataLabel.Length > 0)
             {
@@ -8250,7 +9501,7 @@ namespace JIEJIE
             list.ResetIndex();
             return list;
         }
-         
+
         public DCILGenericParamterList(int len) : base(len)
         {
 
@@ -8387,7 +9638,7 @@ namespace JIEJIE
             }
             return null;
         }
- 
+
         public void WriteTo(DCILWriter writer)
         {
             if (this.Count > 0)
@@ -8493,7 +9744,7 @@ namespace JIEJIE
             }
             return true;
         }
- 
+
         public static void CacheTypeReference(DCILDocument document, List<DCILGenericParamter> ps)
         {
             if (ps != null)
@@ -8562,7 +9813,7 @@ namespace JIEJIE
         public bool HasInnerGenerateMethod = false;
 
         private static readonly Dictionary<Type, DCILClass> _NativeClasses = new Dictionary<Type, DCILClass>();
-  
+
         public DCILClass(Type nativeType, DCILDocument document) : base(nativeType)
         {
             this.IsEnum = nativeType.IsEnum;
@@ -8596,7 +9847,7 @@ namespace JIEJIE
                     this.ImplementsInterfaces.Add(DCILTypeReference.CreateByNativeType(item, document));
                 }
             }
- 
+
         }
         public readonly Type NativeType = null;
 
@@ -8615,17 +9866,17 @@ namespace JIEJIE
             this.Load(reader);
             this.InnerGenerate = true;
         }
- 
+
         public override void Load(DCILReader reader)
         {
             LoadHeader(reader);
             LoadContent(reader);
 
-        } 
+        }
         private static readonly DCILProperty[] _EmptyArray = new DCILProperty[0];
- 
+
         private static readonly DCILMethod[] _EmptyArray2 = new DCILMethod[0];
- 
+
 
         public override void CacheInfo(DCILDocument document, Dictionary<string, DCILClass> clses)
         {
@@ -8649,9 +9900,9 @@ namespace JIEJIE
                 }
             }
             DCILGenericParamter.CacheTypeReference(document, this.GenericParamters);
-             
+
         }
- 
+
         public void LoadHeader(DCILReader reader)
         {
             this.ChildNodes = new DCILObjectList();
@@ -8806,12 +10057,56 @@ namespace JIEJIE
                         var e2 = new DCILEvent(this, reader);
                         this.ChildNodes.Add(e2);
                         break;
+                    case DCILData.TagName_Data:
+                        var d3 = new DCILData(reader);
+                        if (reader.Document != null)
+                        {
+                            reader.Document.ILDatas.Add(d3);
+                        }
+                        else
+                        {
+                            this.ChildNodes.Add(d3);
+                        }
+                        break;
                     default:
                         this.ChildNodes.Add(new DCILUnknowObject(strWord, reader));
                         break;
                 }
             }
+            if (this.IsEnum)
+            {
+                foreach (var item in this.ChildNodes)
+                {
+                    if (item.Name == "value__")
+                    {
+                        var field = (DCILField)item;
+                        this.EnumByteSize = GetIntegerByteSize(field.ValueType?.NativeType);
+                        break;
+                    }
+                }
+            }
         }
+        internal static int GetIntegerByteSize(Type t)
+        {
+            if (t == typeof(byte) || t == typeof(sbyte))
+            {
+                return 1;
+            }
+            if (t == typeof(short) || t == typeof(ushort))
+            {
+                return 2;
+            }
+            if (t == typeof(int) || t == typeof(uint))
+            {
+                return 4;
+            }
+            if (t == typeof(long) || t == typeof(ulong))
+            {
+                return 8;
+            }
+            return 4;
+        }
+
         public string GetNameWithNestedPlus(bool oldMode)
         {
 
@@ -8889,7 +10184,7 @@ namespace JIEJIE
         {
             writer.Write(".class ");
             base.WriteStyles(writer);
-            if( this._Name == "__DC20210205.__jiejienet_sm")
+            if (this._Name == "__DC20210205.__jiejienet_sm")
             {
 
             }
@@ -8945,6 +10240,7 @@ namespace JIEJIE
         public DCILTypeReference BaseType = null;
         public bool IsMulticastDelegate = false;
         public bool IsEnum = false;
+        public int EnumByteSize = 4;
         public List<DCILTypeReference> GetBaseTypeAndImplementsInterfaces()
         {
             var list = new List<DCILTypeReference>();
@@ -8969,7 +10265,7 @@ namespace JIEJIE
                 }
                 return this._BaseTypeName;
             }
-        } 
+        }
         /// <summary>
         /// 是否为访问程序集资源的包装类型
         /// </summary>
@@ -9025,33 +10321,18 @@ namespace JIEJIE
         public DCILEditorAttribute()
         {
         }
-        public override bool UpdateValuesForRename(RenameMapInfo map)
+        public override void ParseValues(ReadCustomAttributeValueArgs args)
         {
-            bool changed = false;
-            if (this.Values != null)
-            {
-                foreach (var item in this.Values)
-                {
-                    if (item.Value is string)
-                    {
-                        var newName = map.GetNewClassName((string)item.Value);
-                        if (newName != null)
-                        {
-                            item.Value = newName;
-                            changed = true;
-                        }
-                    }
-                }
-            }
-            if (changed)
-            {
-                base.BinaryValue = DCILCustomAttributeValue.GetBinaryValue(this.Values, this.InvokeInfo);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            base.ParseValues(args);
+            DCILTypeConverterAttribute.FixTypeName(this, args);
+        }
+        public override void WriteTo(DCILWriter writer)
+        {
+            base.WriteTo(writer);
+        }
+        public override bool UpdateBinaryValueForLocalClassRename()
+        {
+            return base.UpdateBinaryValueForLocalClassRename();
         }
     }
     internal class DCILTypeConverterAttribute : DCILCustomAttribute
@@ -9061,27 +10342,34 @@ namespace JIEJIE
         public DCILTypeConverterAttribute()
         {
         }
-        public override bool UpdateValuesForRename(RenameMapInfo map)
+        public override void ParseValues(ReadCustomAttributeValueArgs args)
         {
-            if (this.Values != null && this.Values.Length == 1)
+            base.ParseValues(args);
+            FixTypeName(this, args);
+        }
+
+        internal static void FixTypeName(DCILCustomAttribute attr, ReadCustomAttributeValueArgs args)
+        {
+            if (attr.Values != null)
             {
-                var newName = map.GetNewClassName((string)this.Values[0].Value);
-                if (newName != null)
+                foreach (var item in attr.Values)
                 {
-                    this.Values[0].Value = newName;
-                    this.BinaryValue = DCILCustomAttributeValue.GetBinaryValue(this.Values, this.InvokeInfo);
-                    return true;
+                    if (item.Value is string)
+                    {
+                        var str = (string)item.Value;
+                        item.Value = new DCILCustomAttributeValue.TypeRefInfo(str, args);
+                    }
                 }
             }
-            return false;
         }
+
         public string ConvertTypeName
         {
             get
             {
                 if (this.Values != null && this.Values.Length == 1)
                 {
-                    return (string)this.Values[0].Value;
+                    return this.Values[0].Value?.ToString();
                 }
                 return null;
             }
@@ -9095,23 +10383,34 @@ namespace JIEJIE
         {
             this.InvokeInfo = myInvokeInfo;
             this.BinaryValue = bsValue;
-            foreach (var item in base.Values)
+        }
+
+        public override void ParseValues(ReadCustomAttributeValueArgs args)
+        {
+            base.ParseValues(args);
+            if (this.Values != null)
             {
-                switch (item.Name)
+                foreach (var item in this.Values)
                 {
-                    case "StripAfterObfuscation": this.StripAfterObfuscation = (bool)item.Value; break;
-                    case "Exclude": this.Exclude = (bool)item.Value; break;
-                    case "ApplyToMembers": this.ApplyToMembers = (bool)item.Value; break;
-                    case "Feature": this.Feature = (string)item.Value; break;
+                    switch (item.Name)
+                    {
+                        case "StripAfterObfuscation": this.StripAfterObfuscation = (bool)item.Value; break;
+                        case "Exclude": this.Exclude = (bool)item.Value; break;
+                        case "ApplyToMembers": this.ApplyToMembers = (bool)item.Value; break;
+                        case "Feature": this.Feature = (string)item.Value; break;
+                    }
                 }
             }
         }
-
         public bool StripAfterObfuscation = true;
         public bool Exclude = true;
         public bool ApplyToMembers = true;
         public string Feature = "all";
-        public override bool UpdateValuesForRename(RenameMapInfo map)
+        /// <summary>
+        /// 不执行任何操作
+        /// </summary>
+        /// <returns></returns>
+        public override bool UpdateBinaryValueForLocalClassRename()
         {
             return false;
         }
@@ -9123,8 +10422,11 @@ namespace JIEJIE
         {
         }
         public bool IsBoxed = false;
-        public string EnumTypeName = null;
-        public bool MatchCtorParamter = false;
+        public TypeRefInfo EnumType = null;
+        /// <summary>
+        /// 是否为构造函数使用的参数
+        /// </summary>
+        public bool IsCtorParamter = false;
         public byte Flag = 0;
         public DCILElementType ElementType = DCILElementType.None;
         public string Name = null;
@@ -9148,11 +10450,11 @@ namespace JIEJIE
                     var item = values[iCount];
                     if (item.ElementType == DCILElementType.System_Type)
                     {
-                        WriteUTF8String(writer, (string)item.Value);
+                        WriteUTF8String(writer, item.Value.ToString());
                     }
                     else if (item.ElementType == DCILElementType.Enum)
                     {
-                        WriteUTF8String(writer, item.EnumTypeName);
+                        WriteUTF8String(writer, item.EnumType.ToString());
                         WriteAttributeValue(writer, item.ElementType, item.Value);
                     }
                     else
@@ -9168,12 +10470,17 @@ namespace JIEJIE
                 {
                     var item = values[iCount];
                     writer.Write(item.Flag);
+                    writer.Write((byte)item.ElementType);
+                    if (item.EnumType != null)
+                    {
+                        WriteUTF8String(writer, item.EnumType.ToString());
+                    }
+                    WriteUTF8String(writer, item.Name);
                     if (item.IsBoxed)
                     {
                         writer.Write((byte)DCILElementType.Boxed);
                     }
-                    writer.Write((byte)item.ElementType);
-
+                    WriteAttributeValue(writer, item.ElementType, item.Value);
                 }
             }
             else
@@ -9185,7 +10492,10 @@ namespace JIEJIE
             return result;
         }
 
-        public static List<DCILCustomAttributeValue> ParseValues(byte[] bsValue, DCILInvokeMethodInfo invokeInfo)
+        public static List<DCILCustomAttributeValue> ParseValues(
+            byte[] bsValue,
+            DCILInvokeMethodInfo invokeInfo,
+            ReadCustomAttributeValueArgs args)
         {
             if (bsValue == null || bsValue.Length == 0)
             {
@@ -9197,6 +10507,7 @@ namespace JIEJIE
             {
                 throw new InvalidOperationException();
             }
+            args.Reader = reader;
             if (invokeInfo.Paramters != null && invokeInfo.Paramters.Count > 0)
             {
                 // 有参数
@@ -9216,16 +10527,17 @@ namespace JIEJIE
                     _TypeMaps[typeof(float)] = DCILElementType.R4;
                     _TypeMaps[typeof(double)] = DCILElementType.R8;
                     _TypeMaps[typeof(char)] = DCILElementType.Char;
+                    _TypeMaps[typeof(object)] = DCILElementType.Object;
                 }
                 for (int iCount = 0; iCount < invokeInfo.Paramters.Count; iCount++)
                 {
                     var av = new DCILCustomAttributeValue();
-                    av.MatchCtorParamter = true;
+                    av.IsCtorParamter = true;
                     var p = invokeInfo.Paramters[iCount];
                     av.Name = p.ValueType.Name;
                     if (p.ValueType.Name == "System.Type")
                     {
-                        av.Value = ReadUTF8String(reader);
+                        av.Value = new TypeRefInfo(args);// ReadUTF8String(reader);
                         av.ElementType = DCILElementType.System_Type;
                     }
                     else
@@ -9241,7 +10553,7 @@ namespace JIEJIE
                         {
                             et = DCILElementType.I4;
                         }
-                        av.Value = ReadAttributeValue(reader, et);
+                        av.Value = ReadAttributeValue(args, et);
                         av.ElementType = et;
                     }
                     result.Add(av);
@@ -9254,12 +10566,12 @@ namespace JIEJIE
                 for (int iCount = 0; iCount < num; iCount++)
                 {
                     var av = new DCILCustomAttributeValue();
-                    av.MatchCtorParamter = false;
+                    av.IsCtorParamter = false;
                     av.Flag = reader.ReadByte();
                     av.ElementType = (DCILElementType)reader.ReadByte();
                     if (av.ElementType == DCILElementType.Enum)
                     {
-                        av.EnumTypeName = ReadUTF8String(reader);
+                        av.EnumType = new TypeRefInfo(args);
                     }
                     av.Name = ReadUTF8String(reader);
                     if (av.Flag == 83)
@@ -9279,17 +10591,23 @@ namespace JIEJIE
                         av.IsBoxed = true;
                         av.ElementType = (DCILElementType)reader.ReadByte();
                     }
-                    av.Value = ReadAttributeValue(reader, av.ElementType);
+                    av.Value = ReadAttributeValue(args, av.ElementType);
                     result.Add(av);
                 }
             }
             reader.Close();
+            args.Reader = null;
             return result;
         }
 
         private static Dictionary<Type, DCILElementType> _TypeMaps = null;
         protected static void WriteAttributeValue(BinaryWriter writer, DCILElementType type, object Value)
         {
+            if (Value is TypeRefInfo)
+            {
+                ((TypeRefInfo)Value).WriteTo(writer);
+                return;
+            }
             switch (type)
             {
                 case DCILElementType.Boolean:
@@ -9322,30 +10640,249 @@ namespace JIEJIE
                     throw new NotSupportedException(type.ToString());
             }
         }
-        protected static object ReadAttributeValue(BinaryReader reader, DCILElementType type)
+        internal static bool IsPrimateType(DCILElementType type)
+        {
+            return type == DCILElementType.Boolean
+                || type == DCILElementType.I1
+                || type == DCILElementType.U1
+                || type == DCILElementType.Char
+                || type == DCILElementType.I2
+                || type == DCILElementType.U2
+                || type == DCILElementType.I4
+                || type == DCILElementType.U4
+                || type == DCILElementType.I8
+                || type == DCILElementType.U8
+                || type == DCILElementType.R4
+                || type == DCILElementType.R8
+                || type == DCILElementType.String
+                || type == DCILElementType.Enum
+                || type == DCILElementType.Type;
+        }
+        //internal static object ReadPrimativTypeValue( BinaryReader reader , DCILElementType type , out bool isPrimativeType )
+        //{
+        //    switch (type)
+        //    {
+        //        case DCILElementType.Boolean: isPrimativeType = true; return reader.ReadByte() == 1;
+        //        case DCILElementType.I1: isPrimativeType = true; return (sbyte)reader.ReadByte();
+        //        case DCILElementType.U1: isPrimativeType = true; return reader.ReadByte();
+        //        case DCILElementType.Char: isPrimativeType = true; return (char)reader.ReadInt16();
+        //        case DCILElementType.I2: isPrimativeType = true; return reader.ReadInt16();
+        //        case DCILElementType.U2: isPrimativeType = true; return reader.ReadUInt16();
+        //        case DCILElementType.I4: isPrimativeType = true; return reader.ReadInt32();
+        //        case DCILElementType.U4: isPrimativeType = true; return reader.ReadUInt32();
+        //        case DCILElementType.I8: isPrimativeType = true; return reader.ReadInt64();
+        //        case DCILElementType.U8: isPrimativeType = true; return reader.ReadUInt64();
+        //        case DCILElementType.R4: isPrimativeType = true; return reader.ReadSingle();
+        //        case DCILElementType.R8: isPrimativeType = true; return reader.ReadDouble();
+        //        case DCILElementType.String: isPrimativeType = true; return ReadUTF8String(reader);
+        //        case DCILElementType.Type: isPrimativeType = true; return ReadUTF8String(reader);
+        //        default:
+        //            isPrimativeType = false;
+        //            return null;
+        //    }
+        //}
+        protected static object ReadAttributeValue(ReadCustomAttributeValueArgs args, DCILElementType type)
         {
             switch (type)
             {
-                case DCILElementType.Boolean: return reader.ReadByte() == 1;
-                case DCILElementType.I1: return (sbyte)reader.ReadByte();
-                case DCILElementType.U1: return reader.ReadByte();
-                case DCILElementType.Char: return (char)reader.ReadInt16();
-                case DCILElementType.I2: return reader.ReadInt16();
-                case DCILElementType.U2: return reader.ReadUInt16();
-                case DCILElementType.I4: return reader.ReadInt32();
-                case DCILElementType.U4: return reader.ReadUInt32();
-                case DCILElementType.I8: return reader.ReadInt64();
-                case DCILElementType.U8: return reader.ReadUInt64();
-                case DCILElementType.R4: return reader.ReadSingle();
-                case DCILElementType.R8: return reader.ReadDouble();
-                case DCILElementType.String: return ReadUTF8String(reader);
-                case DCILElementType.Enum: return reader.ReadInt32();
-                case DCILElementType.Type: return ReadUTF8String(reader);
+                case DCILElementType.Boolean: return args.Reader.ReadByte() == 1;
+                case DCILElementType.I1: return (sbyte)args.Reader.ReadByte();
+                case DCILElementType.U1: return args.Reader.ReadByte();
+                case DCILElementType.Char: return (char)args.Reader.ReadInt16();
+                case DCILElementType.I2: return args.Reader.ReadInt16();
+                case DCILElementType.U2: return args.Reader.ReadUInt16();
+                case DCILElementType.I4: return args.Reader.ReadInt32();
+                case DCILElementType.U4: return args.Reader.ReadUInt32();
+                case DCILElementType.I8: return args.Reader.ReadInt64();
+                case DCILElementType.U8: return args.Reader.ReadUInt64();
+                case DCILElementType.R4: return args.Reader.ReadSingle();
+                case DCILElementType.R8: return args.Reader.ReadDouble();
+                case DCILElementType.String: return ReadUTF8String(args.Reader);
+                case DCILElementType.Enum:
+                    return args.Reader.ReadInt32();
+                case DCILElementType.Type:
+                    return new TypeRefInfo(args);
+                case DCILElementType.Object:
+                    return new PackageValueInfo(args);
                 default:
                     throw new NotSupportedException(type.ToString());
             }
             return null;
         }
+
+        internal class PackageValueInfo : TypeRefInfo
+        {
+            public PackageValueInfo(ReadCustomAttributeValueArgs args)
+            {
+                this.ValueType = (DCILElementType)args.Reader.ReadByte();
+                if (this.ValueType == DCILElementType.Enum)
+                {
+                    base.Parse(ReadUTF8String(args.Reader));
+                    base.UpdateLocalInfo(args);
+                    if (this.LocalClass != null)
+                    {
+                        this.EnumByteSize = this.LocalClass.EnumByteSize;
+                    }
+                    else
+                    {
+                        var bt = this.NativeType;
+                        this.EnumByteSize = DCILClass.GetIntegerByteSize(bt);
+                        if (bt == null)
+                        {
+
+                        }
+                    }
+                    this.BinValue = args.Reader.ReadBytes(this.EnumByteSize);
+                    switch (this.EnumByteSize)
+                    {
+                        case 1: this.Value = this.BinValue[0]; break;
+                        case 2: this.Value = BitConverter.ToInt16(this.BinValue, 0); break;
+                        case 4: this.Value = BitConverter.ToInt32(this.BinValue, 0); break;
+                        case 8: this.Value = BitConverter.ToInt64(this.BinValue, 0); break;
+                    }
+                }
+                else if (IsPrimateType(this.ValueType))
+                {
+                    this.Value = ReadAttributeValue(args, this.ValueType);
+                }
+                else
+                {
+                    throw new NotSupportedException(this.ValueType.ToString());
+                }
+            }
+            public int EnumByteSize = 4;
+            public DCILElementType ValueType = DCILElementType.None;
+            public object Value = null;
+            public byte[] BinValue = null;
+            public override void WriteTo(BinaryWriter writer)
+            {
+                if (this.TypeName != null && this.TypeName.Length > 0)
+                {
+                    writer.Write((byte)this.ValueType);
+                    if (this.LocalClass != null)
+                    {
+                        WriteUTF8String(writer, this.LocalClass.NameWithNested);
+                    }
+                    else
+                    {
+                        WriteUTF8String(writer, this.ToTypeString());
+                    }
+                    if (this.ValueType == DCILElementType.Enum)
+                    {
+                        writer.Write(this.BinValue, 0, this.BinValue.Length);
+                    }
+                }
+                else if (IsPrimateType(this.ValueType))
+                {
+                    WriteAttributeValue(writer, this.ValueType, this.Value);
+                }
+                else
+                {
+                    throw new NotSupportedException(this.ValueType.ToString());
+                }
+            }
+        }
+
+
+
+        internal class TypeRefInfo : DCILTypeNameInfo
+        {
+            public TypeRefInfo()
+            {
+
+            }
+            public TypeRefInfo(string typeName, ReadCustomAttributeValueArgs args)
+            {
+                base.Parse(typeName);
+                UpdateLocalInfo(args);
+            }
+
+            public TypeRefInfo(ReadCustomAttributeValueArgs args)
+            {
+                var str = ReadUTF8String(args.Reader);
+                base.Parse(str);
+                UpdateLocalInfo(args);
+            }
+            public virtual void WriteTo(BinaryWriter writer)
+            {
+                if (this.LocalClass != null)
+                {
+                    WriteUTF8String(writer, this.LocalClass.NameWithNested);
+                }
+                else
+                {
+                    WriteUTF8String(writer, this.ToTypeString());
+                }
+            }
+
+            protected void UpdateLocalInfo(ReadCustomAttributeValueArgs args)
+            {
+                if (this.HasAssemblyName && args.Documents != null)
+                {
+                    foreach (var doc in args.Documents)
+                    {
+                        if (doc.Name == this.AssemblyName)
+                        {
+                            var clses = doc.GetAllClassesUseCache();
+                            if (clses.TryGetValue(this.TypeName, out this.LocalClass))
+                            {
+                                return;
+                            }
+                            break;
+                        }
+                    }
+                }
+                else if (args.MainDocument != null)
+                {
+                    var clses = args.MainDocument.GetAllClassesUseCache();
+                    if (clses.TryGetValue(this.TypeName, out this.LocalClass))
+                    {
+                        return;
+                    }
+                }
+                var t2 = new DCILTypeReference(this.TypeName, DCILTypeMode.Unsigned);
+                t2.LibraryName = this.AssemblyName;
+                this.NativeType = t2.SearchNativeType(args.AssemblySeachPath);
+            }
+
+            public bool UpdateForLocalClassNameChanged()
+            {
+                bool result = false;
+                if (this.HasAssemblyName)
+                {
+                    if (this.AssemblyName.StartsWith("System."))
+                    {
+
+                    }
+                    this.AssemblyName = null;
+                    this.AssemblyCulture = null;
+                    this.AssemblyPublicKeyToken = null;
+                    this.AssemblyVersion = null;
+                    result = true;
+                }
+                if (this.LocalClass.RenameState == DCILRenameState.Renamed)
+                {
+                    result = true;
+                }
+                return result;
+            }
+
+            public DCILClass LocalClass = null;
+            public Type NativeType = null;
+            public override string ToString()
+            {
+                if (this.LocalClass == null)
+                {
+                    return base.ToTypeString();
+                }
+                else
+                {
+                    return this.LocalClass.NameWithNested;
+                }
+            }
+        }
+
+
 
         protected static void WriteUTF8String(System.IO.BinaryWriter writer, string text)
         {
@@ -9353,6 +10890,10 @@ namespace JIEJIE
             {
                 writer.Write((byte)0xff);
                 return;
+            }
+            if (text.IndexOf("DCSoft.Common,") >= 0)
+            {
+
             }
             if (text.Length == 0)
             {
@@ -9456,6 +10997,20 @@ namespace JIEJIE
 
     }
 
+    internal class ReadCustomAttributeValueArgs
+    {
+        public ReadCustomAttributeValueArgs(List<DCILDocument> documents, DCILDocument mainDoc, string seachPath)
+        {
+            this.Documents = documents;
+            this.MainDocument = mainDoc;
+            this.AssemblySeachPath = seachPath;
+        }
+        public BinaryReader Reader = null;
+        public string AssemblySeachPath = null;
+        public List<DCILDocument> Documents = null;
+        public DCILDocument MainDocument = null;
+    }
+
     internal class DCILCustomAttribute : DCILObject
     {
         public static DCILCustomAttribute Create(DCILObject parent, DCILReader reader)
@@ -9499,73 +11054,104 @@ namespace JIEJIE
 
         public byte[] BinaryValue = null;
 
-        private static readonly DCILCustomAttributeValue[] _EmptyValues = new DCILCustomAttributeValue[0];
         private DCILCustomAttributeValue[] _Values = null;
+        public virtual void ParseValues(ReadCustomAttributeValueArgs args)
+        {
+
+            var list = DCILCustomAttributeValue.ParseValues(this.BinaryValue, this.InvokeInfo, args);
+            if (this.TypeName == "System.Diagnostics.DebuggerTypeProxyAttribute")
+            {
+
+            }
+            if (list == null || list.Count == 0)
+            {
+                this._Values = null;
+            }
+            else
+            {
+                this._Values = list.ToArray();
+            }
+        }
+        public virtual bool UpdateBinaryValueForLocalClassRename()
+        {
+            bool result = false;
+            if (this._Values != null)
+            {
+                foreach (var item in this._Values)
+                {
+                    if (item.EnumType != null
+                        && item.EnumType.LocalClass != null
+                        && item.EnumType.UpdateForLocalClassNameChanged())
+                    {
+                        result = true;
+                    }
+                    if (item.Value is DCILCustomAttributeValue.TypeRefInfo)
+                    {
+                        var info = (DCILCustomAttributeValue.TypeRefInfo)item.Value;
+                        if (info.LocalClass != null && info.UpdateForLocalClassNameChanged())
+                        {
+                            result = true;
+                        }
+                    }
+                }
+            }
+            if (result)
+            {
+                if (this.AttributeTypeName == "DCSoft.Writer.Commands.WriterCommandDescriptionAttribute")
+                {
+
+                }
+                var bs = this.BinaryValue;
+                this.BinaryValue = DCILCustomAttributeValue.GetBinaryValue(this._Values, this.InvokeInfo);
+            }
+            return result;
+        }
 
         public DCILCustomAttributeValue[] Values
         {
             get
             {
-                if (_Values == null)
-                {
-                    var list = DCILCustomAttributeValue.ParseValues(this.BinaryValue, this.InvokeInfo);
-                    if (list == null || list.Count == 0)
-                    {
-                        this._Values = _EmptyValues;
-                    }
-                    else
-                    {
-                        this._Values = list.ToArray();
-                    }
-                }
-                if (this._Values == _EmptyValues)
-                {
-                    return null;
-                }
-                else
-                {
-                    return this._Values;
-                }
+                return this._Values;
             }
         }
-        /// <summary>
-        /// 为重命名而更新属性值
-        /// </summary>
-        /// <param name="map"></param>
-        public virtual bool UpdateValuesForRename(RenameMapInfo map)
-        {
-            if (this.AttributeTypeName == "System.ComponentModel.DefaultValueAttribute")
-            {
-                return false;
-            }
-            if (this.Values == null)
-            {
-                return false;
-            }
-            bool changed = false;
-            foreach (var item in this.Values)
-            {
-                if (item.ElementType == DCILCustomAttributeValue.DCILElementType.System_Type)
-                {
-                    var newName = map.GetNewClassName((string)item.Value);
-                    if (newName != null)
-                    {
-                        changed = true;
-                        item.Value = newName;
-                    }
-                }
-            }
-            if (changed)
-            {
-                this.BinaryValue = DCILCustomAttributeValue.GetBinaryValue(this.Values, this.InvokeInfo);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-         
+        ///// <summary>
+        ///// 为重命名而更新属性值
+        ///// </summary>
+        ///// <param name="map"></param>
+        //public virtual bool UpdateValuesForRename(RenameMapInfo map)
+        //{
+        //    if (this.AttributeTypeName == "System.ComponentModel.DefaultValueAttribute")
+        //    {
+        //        return false;
+        //    }
+        //    if (this.Values == null)
+        //    {
+        //        return false;
+        //    }
+        //    bool changed = false;
+        //    foreach (var item in this.Values)
+        //    {
+        //        if (item.ElementType == DCILCustomAttributeValue.DCILElementType.System_Type)
+        //        {
+        //            var newName = map.GetNewClassName((string)item.Value);
+        //            if (newName != null)
+        //            {
+        //                changed = true;
+        //                item.Value = newName;
+        //            }
+        //        }
+        //    }
+        //    if (changed)
+        //    {
+        //        this.BinaryValue = DCILCustomAttributeValue.GetBinaryValue(this.Values, this.InvokeInfo);
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        return false;
+        //    }
+        //}
+
         public string TypeName
         {
             get
@@ -9580,7 +11166,7 @@ namespace JIEJIE
             writer.Write(" = (");
             writer.WriteHexs(this.BinaryValue);
             writer.WriteLine(")");
-        } 
+        }
         public string HexValue = null;
         public override string ToString()
         {
@@ -9655,7 +11241,7 @@ namespace JIEJIE
                                 }
                             }
                         }
-                        break; 
+                        break;
                     default:
                         {
                             this.ChildNodes.Add(new DCILUnknowObject(strWord, reader));
@@ -9687,7 +11273,14 @@ namespace JIEJIE
 
         public override string ToString()
         {
-            return ".assembly extern " + this._Name;
+            if (this.IsExtern)
+            {
+                return ".assembly extern " + this._Name;
+            }
+            else
+            {
+                return ".assembly " + this._Name;
+            }
         }
     }
     internal class DCILModule : DCILObject
@@ -9757,7 +11350,7 @@ namespace JIEJIE
             writer.Write(this._Name);
             writer.Write(' ');
             writer.WriteLine(this.Data);
-        } 
+        }
         public string Data = null;
         public override string ToString()
         {
@@ -9811,7 +11404,7 @@ namespace JIEJIE
         public DCILRenameState RenameState = DCILRenameState.NotHandled;
 
         public string OldName = null;
-         
+
         protected void WriteCustomAttributes(DCILWriter writer)
         {
             if (this.CustomAttributes != null && this.CustomAttributes.Count > 0)
@@ -9848,12 +11441,12 @@ namespace JIEJIE
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public bool RemoveStyle( string name )
+        public bool RemoveStyle(string name)
         {
-            if( name != null && name.Length > 0 && this.Styles != null )
+            if (name != null && name.Length > 0 && this.Styles != null)
             {
                 int index = this.Styles.IndexOf(name);
-                if( index >= 0 )
+                if (index >= 0)
                 {
                     this.Styles.RemoveAt(index);
                     return true;
@@ -9865,7 +11458,7 @@ namespace JIEJIE
         {
             return RemoveStyle("specialname");
         }
-        
+
 
         public bool AddStyle(string name)
         {
@@ -9883,7 +11476,7 @@ namespace JIEJIE
             }
             return false;
         }
-         
+
         public bool HasStyle(string name)
         {
             return this.Styles != null && this.Styles.Contains(name);
@@ -9912,37 +11505,37 @@ namespace JIEJIE
             list.AddRange(this);
             return list;
         }
-        public int IndexOf<T>(string name) where T : DCILObject
-        {
-            int len = this.Count;
-            for (int iCount = 0; iCount < len; iCount++)
-            {
-                if (this[iCount] is T && this[iCount].Name == name)
-                {
-                    return iCount;
-                }
-            }
-            return -1;
-        }
-        public T[] GetSubArray<T>() where T : DCILObject
-        {
-            var list = new List<T>();
-            foreach (var item in this)
-            {
-                if (item is T)
-                {
-                    list.Add((T)item);
-                }
-            }
-            if (list.Count > 0)
-            {
-                return list.ToArray();
-            }
-            else
-            {
-                return null;
-            }
-        }
+        //public int IndexOf<T>(string name) where T : DCILObject
+        //{
+        //    int len = this.Count;
+        //    for (int iCount = 0; iCount < len; iCount++)
+        //    {
+        //        if (this[iCount] is T && this[iCount].Name == name)
+        //        {
+        //            return iCount;
+        //        }
+        //    }
+        //    return -1;
+        //}
+        //public T[] GetSubArray<T>() where T : DCILObject
+        //{
+        //    var list = new List<T>();
+        //    foreach (var item in this)
+        //    {
+        //        if (item is T)
+        //        {
+        //            list.Add((T)item);
+        //        }
+        //    }
+        //    if (list.Count > 0)
+        //    {
+        //        return list.ToArray();
+        //    }
+        //    else
+        //    {
+        //        return null;
+        //    }
+        //}
     }
 
     internal class DCILObject
@@ -9959,7 +11552,7 @@ namespace JIEJIE
             }
         }
         public string Type = null;
-       // public string Header = null;
+        // public string Header = null;
         public virtual void Load(DCILReader reader)
         {
 
@@ -9968,10 +11561,10 @@ namespace JIEJIE
         {
 
         }
-         
-        public int StartLineIndex = 0; 
+
+        public int StartLineIndex = 0;
         public DCILOperCodeList OperCodes = null;
-        public List<T> GetAllOperCodes<T> () where T : DCILOperCode
+        public List<T> GetAllOperCodes<T>() where T : DCILOperCode
         {
             var list = new List<T>();
             this.CollectOperCodes<T>(list);
@@ -10024,12 +11617,29 @@ namespace JIEJIE
                     }
                 }
             }
-        } 
+        }
+        /// <summary>
+        /// 子节点列表
+        /// </summary>
         public DCILObjectList ChildNodes = null;
+        /// <summary>
+        /// 父节点
+        /// </summary>
         public DCILObject Parent = null;
+        /// <summary>
+        /// 指定的混淆设置
+        /// </summary>
         public DCILObfuscationAttribute ObfuscationSettings = null;
-
-
+        /// <summary>
+        /// 是否具有自定义特性
+        /// </summary>
+        public bool HasCustomAttributes
+        {
+            get
+            {
+                return this.CustomAttributes != null && this.CustomAttributes.Count > 0;
+            }
+        }
         public List<DCILCustomAttribute> CustomAttributes = null;
         public void CusotmAttributesCacheTypeReference(DCILDocument document)
         {
@@ -10052,6 +11662,13 @@ namespace JIEJIE
             if (item is DCILObfuscationAttribute)
             {
                 this.ObfuscationSettings = (DCILObfuscationAttribute)item;
+            }
+        }
+        internal void AddCustomAttributes(List<DCILCustomAttribute> attrs)
+        {
+            if (this.CustomAttributes != null && this.CustomAttributes.Count > 0)
+            {
+                attrs.AddRange(this.CustomAttributes);
             }
         }
         internal void RemoveObfuscationAttribute()
@@ -10118,7 +11735,7 @@ namespace JIEJIE
             }
             return null;
         }
-    } 
+    }
     internal class DCILData : DCILObject
     {
         public const string TagName_Data = ".data";
@@ -10188,7 +11805,7 @@ namespace JIEJIE
             }
             return str.ToString();
         }
-    } 
+    }
     internal enum DCILTypeMode
     {
         Primitive,
@@ -10200,8 +11817,139 @@ namespace JIEJIE
         GenericTypeInMethodDefine,
         NotSpecify
     }
+    /// <summary>
+    /// 类型名称信息
+    /// </summary>
+    internal class DCILTypeNameInfo
+    {
+        public DCILTypeNameInfo()
+        {
 
+        }
+        public DCILTypeNameInfo(string name)
+        {
+            Parse(name);
+        }
+        public void Parse(string name)
+        {
+            if (name == null || name.Length == 0)
+            {
+                return;
+            }
+            if (name[0] == '[')
+            {
+                int index = name.IndexOf(']');
+                if (index > 0)
+                {
+                    // 符合 [LibrayName]TypeName,例如 [System]System.Object
+                    this.AsmNamePrefix = true;
+                    this.AssemblyName = name.Substring(1, index - 2);
+                    this.TypeName = name.Substring(index + 1);
+                    return;
+                }
+            }
+            int index2 = name.IndexOf(',');
+            if (index2 > 0)
+            {
+                this.AsmNamePrefix = false;
+                // 例如 System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+                this.TypeName = name.Substring(0, index2);
+                var items = name.Substring(index2 + 1).Split(',');
+                foreach (var item in items)
+                {
+                    var item2 = item.Trim();
+                    int index3 = item2.IndexOf('=');
+                    if (index3 < 0 && this.AssemblyName == null)
+                    {
+                        this.AssemblyName = item2;
+                    }
+                    else if (index3 > 0)
+                    {
+                        var name2 = item2.Substring(0, index3).Trim();
+                        var v2 = item2.Substring(index3 + 1);
+                        switch (name2.ToLower())
+                        {
+                            case "version": this.AssemblyVersion = v2; break;
+                            case "culture": this.AssemblyCulture = v2; break;
+                            case "publickeytoken": this.AssemblyPublicKeyToken = v2; break;
+                        }
+                    }
+                }
+            }
+            if (this.TypeName == null)
+            {
+                this.TypeName = name;
+            }
+        }
+        public string TypeName = null;
+        public string AssemblyName = null;
+        public bool HasAssemblyName
+        {
+            get
+            {
+                return this.AssemblyName != null && this.AssemblyName.Length > 0;
+            }
+        }
+        public string AssemblyVersion = null;
+        public string AssemblyCulture = null;
+        public string AssemblyPublicKeyToken = null;
+        public bool AsmNamePrefix = false;
+        public override string ToString()
+        {
+            return ToTypeString();
+        }
+        protected string ToTypeString()
+        {
+            var str = new StringBuilder();
+            if (this.AsmNamePrefix)
+            {
+                str.Append("[" + this.AssemblyName + "]");
+                str.Append(this.TypeName);
+            }
+            else
+            {
+                str.Append(this.TypeName);
+                bool hasItem = false;
+                if (this.HasAssemblyName)
+                {
+                    str.Append(',');
+                    str.Append(this.AssemblyName);
+                    if (this.AssemblyName == "DCSoft.Common")
+                    {
 
+                    }
+                    hasItem = true;
+                }
+                if (this.AssemblyVersion != null && this.AssemblyVersion.Length > 0)
+                {
+                    if (hasItem)
+                    {
+                        str.Append(',');
+                    }
+                    hasItem = true;
+                    str.Append("Version=" + this.AssemblyVersion);
+                }
+                if (this.AssemblyCulture != null && this.AssemblyCulture.Length > 0)
+                {
+                    if (hasItem)
+                    {
+                        str.Append(',');
+                    }
+                    str.Append("Culture=" + this.AssemblyCulture);
+                    hasItem = true;
+                }
+                if (this.AssemblyPublicKeyToken != null && this.AssemblyPublicKeyToken.Length > 0)
+                {
+                    if (hasItem)
+                    {
+                        str.Append(',');
+                    }
+                    str.Append("PublicKeyToken=" + this.AssemblyPublicKeyToken);
+                }
+            }
+            return str.ToString();
+        }
+    }
 
     /// <summary>
     /// see"Partition II Metadata.doc",topic 7.1
@@ -10379,13 +12127,13 @@ namespace JIEJIE
                 return result;
             }
             return null;
-        } 
+        }
         public static DCILTypeReference LoadText(string text)
         {
             var reader = new DCILReader(text, null);
             return Load(reader.ReadWord(), reader);
         }
-        private static readonly Dictionary<Type, DCILTypeReference> _Cache_CreateByNativeType 
+        private static readonly Dictionary<Type, DCILTypeReference> _Cache_CreateByNativeType
             = new Dictionary<Type, DCILTypeReference>();
         public static DCILTypeReference CreateByNativeType(Type t, DCILDocument document)
         {
@@ -10503,7 +12251,7 @@ namespace JIEJIE
                 || reader == null)
             {
                 return new DCILTypeReference(firstWord, reader);
-            } 
+            }
             DCILTypeReference result = null;
             if (_PrimitiveTypes.TryGetValue(firstWord, out result))
             {
@@ -10536,7 +12284,7 @@ namespace JIEJIE
             if (word[0] == '!')
             {
                 return true;
-            } 
+            }
             return false;
         }
         private static readonly Dictionary<string, Type> _NativeTypes = new Dictionary<string, Type>();
@@ -10564,9 +12312,9 @@ namespace JIEJIE
             Type result = null;
             if (_NativeTypes.TryGetValue(this.NameWithLibraryName, out result) == false)
             {
-                if (this.LibraryName != null 
+                if (this.LibraryName != null
                     && this.LibraryName.Length > 0
-                    && _MissLibNames.Contains( this.LibraryName ) == false )
+                    && _MissLibNames.Contains(this.LibraryName) == false)
                 {
                     bool findAsm = false;
                     if (_LocalAssemblies == null)
@@ -10593,7 +12341,7 @@ namespace JIEJIE
                                 asmFileName = Path.Combine(searchPath, this.LibraryName + ".dll");
                             }
                         }
-                        if( File.Exists( asmFileName ) == false )
+                        if (File.Exists(asmFileName) == false)
                         {
                             asmFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this.LibraryName + ".dll");
                         }
@@ -10673,10 +12421,15 @@ namespace JIEJIE
         }
         public void UpdateLocalClass(Dictionary<string, DCILClass> clses)
         {
+            var bc = this.LocalClass;
             clses.TryGetValue(this.Name, out this.LocalClass);
+            if (bc != null && this.LocalClass == null)
+            {
+
+            }
         }
 
-        public DCILClass LocalClass = null; 
+        public DCILClass LocalClass = null;
         public bool Handled = false;
         private int _HashCode = 0;
 
@@ -10730,7 +12483,7 @@ namespace JIEJIE
             {
                 return false;
             }
-        } 
+        }
         public bool EqualsValue(DCILTypeReference t)
         {
             if (t == null)
@@ -10775,7 +12528,7 @@ namespace JIEJIE
             }
             return true;
         }
-         
+
         public DCILTypeMode Mode = DCILTypeMode.Primitive;
         /// <summary>
         /// 是否为本地类型
@@ -10885,7 +12638,7 @@ namespace JIEJIE
             this.Name = type;
             this.Mode = m;
         }
- 
+
         public string NameWithLibraryName
         {
             get
@@ -10993,7 +12746,7 @@ namespace JIEJIE
                 }
             }
             return false;
-        } 
+        }
         public string Name = null;
         public List<DCILTypeReference> GenericParamters = null;
         public string LibraryName = null;
@@ -11026,7 +12779,7 @@ namespace JIEJIE
             {
 
             }
- 
+
             switch (this.Mode)
             {
                 case DCILTypeMode.Primitive:
@@ -11105,7 +12858,7 @@ namespace JIEJIE
                 case DCILTypeMode.Unsigned:
                     writer.Write("unsigned " + this.Name);
                     break;
-            } 
+            }
             if (this.GenericParamters != null && this.GenericParamters.Count > 0)
             {
 
@@ -11194,7 +12947,12 @@ namespace JIEJIE
         {
             if (this.LocalClass != null)
             {
-                writer.Write(this.LocalClass.NameWithNested);
+                var nwn = this.LocalClass.NameWithNested;
+                //if(nwn.StartsWith("'<PrivateImplementationDetails>'"))
+                //{
+
+                //}
+                writer.Write(nwn);
             }
             else
             {
@@ -11206,6 +12964,10 @@ namespace JIEJIE
                     writer.Write(this.LibraryName);
                     writer.Write(']');
                 }
+                //if(this.Name.StartsWith("'<PrivateImplementationDetails>'"))
+                //{
+
+                //}
                 writer.Write(this.Name);
             }
         }
@@ -11477,7 +13239,7 @@ namespace JIEJIE
                 writer.Write("()");
             }
         }
-    } 
+    }
     internal class DCILMethod : DCILMemberInfo
     {
         /// <summary>
@@ -11489,7 +13251,7 @@ namespace JIEJIE
 
         internal class NameCompaer : IComparer<DCILMethod>
         {
-            public NameCompaer( bool comareClassName )
+            public NameCompaer(bool comareClassName)
             {
                 this._CompareClassName = comareClassName;
             }
@@ -11497,10 +13259,10 @@ namespace JIEJIE
 
             public int Compare(DCILMethod x, DCILMethod y)
             {
-                if( this._CompareClassName )
+                if (this._CompareClassName)
                 {
                     int v = string.Compare(x.OwnerClass?.Name, y.OwnerClass?.Name);
-                    if(v!= 0 )
+                    if (v != 0)
                     {
                         return v;
                     }
@@ -11549,26 +13311,26 @@ namespace JIEJIE
         public DCILMethod SimpleClone()
         {
             var method = (DCILMethod)this.MemberwiseClone();
-            if(this.Styles != null )
+            if (this.Styles != null)
             {
                 method.Styles = new List<string>(this.Styles);
             }
             return method;
         }
-      
-        public bool FlagsForPrivate = true ;
+
+        public bool FlagsForPrivate = true;
 
         public int IndexOfExtLocals = int.MinValue;
         /// <summary>
         /// 是否处于某个重载链条中
         /// </summary>
         public bool IsInOverrideList = false;
-         
+
         public readonly System.Reflection.MethodInfo _NativeMethod = null;
         public string _NativeDecilaryTypeName = null;
         public DCILMethod(
             System.Reflection.MethodInfo method,
-            DCILDocument document, 
+            DCILDocument document,
             DCILGenericParamterList typeGps) : base(method)
         {
             this.IsFromInterface = method.DeclaringType.IsInterface;
@@ -11587,7 +13349,7 @@ namespace JIEJIE
             this.IsSpecialname = method.IsSpecialName;
             this.IsAbstract = method.IsAbstract;
             this.IsFinal = method.IsFinal;
-             
+
             if (method.IsGenericMethod)
             {
                 var gps = method.GetGenericArguments();
@@ -11609,13 +13371,13 @@ namespace JIEJIE
                     dcp.IsIn = p.IsIn;
                     dcp.IsOut = p.IsOut;
                     var pt2 = p.ParameterType;
- 
+
                     dcp.ValueType = CreateFromNative(declaringType, method, pt2, document);
                     if (dcp.ValueType != null && typeGps != null)
                     {
                         dcp.ValueType = dcp.ValueType.Transform(typeGps);
                     }
-                     
+
                     if (p.DefaultValue != null && DBNull.Value.Equals(p.DefaultValue) == false)
                     {
                         dcp.DefaultValue = p.DefaultValue.ToString();
@@ -11630,21 +13392,21 @@ namespace JIEJIE
 
         public bool IsStatic = false;
 
- 
+
         public bool IsPublic = false;
-    
+
         public bool IsVirtual = false;
-    
+
         public bool IsInstance = false;
- 
+
         public bool IsSpecialname = false;
-     
+
         public bool IsNewslot = false;
- 
+
         public bool IsFinal = false;
 
         public bool IsAbstract = false;
- 
+
         /// <summary>
         /// 是否具有泛型样式
         /// </summary>
@@ -11686,7 +13448,7 @@ namespace JIEJIE
             base.ChangeName(newName);
             this._SignString = null;
             //this._SignStringWithoutName = null;
-        } 
+        }
         private static DCILTypeReference CreateFromNative(
             Type declaringType,
             System.Reflection.MethodInfo method,
@@ -11751,7 +13513,7 @@ namespace JIEJIE
             result2 = result2.ChangeArrayAndPointerSettings(endFix);
             return result2;
         }
-         
+
         public DCILMemberInfo ParentMember = null;
 
         public override void CacheInfo(DCILDocument document, Dictionary<string, DCILClass> clses)
@@ -11788,7 +13550,11 @@ namespace JIEJIE
                 else if (item is DCILOperCode_HandleField)
                 {
                     var code = (DCILOperCode_HandleField)item;
-                    code.Value?.UpdateLocalInfo(document, clses);
+                    if (code.Value != null)
+                    {
+                        code.Value.UpdateLocalInfo(document, clses);
+                        code.CacheInfo(document);
+                    }
                 }
                 else if (item is DCILOperCode_HandleMethod)
                 {
@@ -11904,7 +13670,7 @@ namespace JIEJIE
                 return false;
             }
             return true;
-        } 
+        }
         public DCILInvokeMethodInfo _Override = null;
 
         public bool EntryPoint = false;
@@ -11928,7 +13694,7 @@ namespace JIEJIE
                 if (strWord == "pinvokeimpl")
                 {
                     this.Pinvokeimpl = reader.ReadStyleExtValue();
-                    if( this.Pinvokeimpl !=null && this.Pinvokeimpl.Contains("udev_monitor_new_from_netlink"))
+                    if (this.Pinvokeimpl != null && this.Pinvokeimpl.Contains("udev_monitor_new_from_netlink"))
                     {
 
                     }
@@ -11962,7 +13728,10 @@ namespace JIEJIE
             }
             this.Parameters = DCILMethodParamter.ReadParameters(reader);
             this.DeclearEndFix = reader.ReadAfterCharExcludeLastChar('{').Trim();
-
+            //if(this._Name == "SetValueCore")
+            //{
+            //    int v3 = reader.CurrentLineIndex();
+            //}
             InnerLoadILOperCode(this, reader);
 
             this.IsStatic = base.HasStyle("instance") == false;
@@ -11982,7 +13751,11 @@ namespace JIEJIE
                 return (DCILClass)this.Parent;
             }
         }
-         
+        /// <summary>
+        /// 存在特别结构的指令，无法混淆流程。
+        /// </summary>
+        public bool OperCodeSpecifyStructure = false;
+
         public string ReturnMarshal = null;
         public string permissionset = null;
         public string permission = null;
@@ -12052,7 +13825,7 @@ namespace JIEJIE
                             }
                             break;
                     }
-                     
+
                     reader.NumOfOperCode++;
                 }
                 else if (strWord == ".try"
@@ -12061,18 +13834,25 @@ namespace JIEJIE
                     || strWord == "fault")
                 {
 
-
-
                     DCILOperCode_Try_Catch_Finally tryBlock = null;
                     if (strWord == ".try")
                     {
                         tryBlock = new DCILOperCode_Try_Catch_Finally();
                         operInfoList.Add(tryBlock);
-                        tryBlock._Try = new DCILObject();
-                        tryBlock._Try._Name = ".try";
-                        tryBlock._Try.OperCodes = new DCILOperCodeList();
-                        tryBlock._Try.Parent = rootObject;
-                        InnerLoadILOperCode(tryBlock._Try, reader);
+                        string word4 = reader.PeekWord();
+                        if (word4.StartsWith("IL"))
+                        {
+                            tryBlock.SingleLineContent = reader.ReadLine();
+                            this.OperCodeSpecifyStructure = true;
+                        }
+                        else
+                        {
+                            tryBlock._Try = new DCILObject();
+                            tryBlock._Try._Name = ".try";
+                            tryBlock._Try.OperCodes = new DCILOperCodeList();
+                            tryBlock._Try.Parent = rootObject;
+                            InnerLoadILOperCode(tryBlock._Try, reader);
+                        }
                     }
                     else if (strWord == "catch")
                     {
@@ -12222,7 +14002,7 @@ namespace JIEJIE
         public string OldSignature = null;
         public void UpdateOldSignature()
         {
-            this.OldSignature = InnerGetSignString(this.ReturnTypeInfo, null , this.GenericParamters, ((DCILClass)this.Parent)?.GenericParamters, this.Parameters);
+            this.OldSignature = InnerGetSignString(this.ReturnTypeInfo, null, this.GenericParamters, ((DCILClass)this.Parent)?.GenericParamters, this.Parameters);
         }
 
 
@@ -12235,7 +14015,7 @@ namespace JIEJIE
             }
             return this._SignString;
         }
-         
+
         /// <summary>
         /// 获得方法签名字符串
         /// </summary>
@@ -12470,7 +14250,7 @@ namespace JIEJIE
 
         public JieJieSwitchs ProtectedOptions = null;
 
-        public string ReturnType = null; 
+        public string ReturnType = null;
         public override DCILMethod GetOwnerMethod()
         {
             return this;
@@ -12500,9 +14280,75 @@ namespace JIEJIE
         public int Index = int.MinValue;
         public string Name = null;
         public DCILTypeReference ValueType = null;
+        public override string ToString()
+        {
+            var str = new StringBuilder();
+            if( this.Index >= 0 )
+            {
+                str.Append("[" + this.Index + "]");
+            }
+            str.Append(this.ValueType.ToString());
+            if(this.Name != null && this.Name.Length > 0 )
+            {
+                str.Append(" " + this.Name);
+            }
+            return str.ToString();
+        }
     }
+
     internal class DCILMResource : DCILObject
     {
+        public const string EXT_Resources = ".resources";
+       
+        public static void LoadData(System.Collections.Generic.IEnumerable<DCILMResource> reses, string basePath)
+        {
+            if (basePath == null || basePath.Length == 0)
+            {
+                throw new ArgumentNullException("basePath");
+            }
+            if (System.IO.Directory.Exists(basePath) == false)
+            {
+                throw new System.IO.DirectoryNotFoundException(basePath);
+            }
+            var subDirs = System.IO.Directory.GetDirectories(basePath);
+            foreach (var res in reses)
+            {
+                
+                if (res.Name.IndexOf("LocalWebServer")>=0)
+                {
+
+                }
+                //if( res.IsResources == false )
+                //{
+                //    continue;
+                //}
+                var rfn = res.RuntimeFileName;
+                var fn = Path.Combine(basePath, rfn);
+                if (File.Exists(fn))
+                {
+                    res.Data = File.ReadAllBytes(fn);
+                    if (res.IsResources)
+                    {
+                        foreach (var subDir in subDirs)
+                        {
+                            var dir2 = Path.GetFileName(subDir);
+                            var fn2 = Path.Combine(
+                                subDir, 
+                                Path.GetFileNameWithoutExtension(rfn) + "." + dir2 + EXT_Resources);
+                            if (System.IO.File.Exists(fn2))
+                            {
+                                if (res.LocalDatas == null)
+                                {
+                                    res.LocalDatas = new SortedDictionary<string, byte[]>();
+                                }
+                                res.LocalDatas[dir2] = System.IO.File.ReadAllBytes(fn2);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public const string TagName_mresource = ".mresource";
         public DCILMResource()
         {
@@ -12524,7 +14370,261 @@ namespace JIEJIE
                 this._Name = reader.ReadWord();
             }
             reader.ReadAfterCharExcludeLastChar('}');
+            this.IsResources = this._Name.EndsWith(EXT_Resources);
         }
+        private string RuntimeFileName
+        {
+            get
+            {
+                var rfn = this.Name;
+                if (rfn == null || rfn.Length == 0)
+                {
+                    return null;
+                }
+                if (rfn[0] == '\'' && rfn.Length > 2 && rfn[rfn.Length - 1] == '\'')
+                {
+                    rfn = rfn.Substring(1, rfn.Length - 2);
+                }
+                return rfn;
+            }
+        }
+        public bool Modified = false;
+        public bool IsResources = false;
+
+        public byte[] Data = null;
+        public SortedDictionary<string, byte[]> LocalDatas = null;
+        public bool HasBmpValue
+        {
+            get
+            {
+                foreach (var item in this.ResourceValues)
+                {
+                    if (item.Value.Value is System.Drawing.Bitmap)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        private Dictionary<string, MResourceItem> _ResourceValues = null;
+        public Dictionary<string, MResourceItem> ResourceValues
+        {
+            get
+            {
+                if (this._ResourceValues == null && this.Data != null && this.Data.Length > 0)
+                {
+                    this._ResourceValues = new Dictionary<string, MResourceItem>();
+                    FillValues2(new System.IO.MemoryStream(this.Data), this._ResourceValues);
+                }
+                return this._ResourceValues;
+            }
+        }
+
+        public bool ChangeLanguage(string language)
+        {
+            if (language == null || language.Length == 0)
+            {
+                return false;
+            }
+            if (this.Data == null || this.Data.Length == 0)
+            {
+                return false;
+            }
+            byte[] localData = null;
+            if (this.LocalDatas == null || this.LocalDatas.TryGetValue(language, out localData) == false)
+            {
+                return false;
+            }
+            if (localData == null || localData.Length == 0)
+            {
+                return false;
+            }
+            this._ResourceValues = new Dictionary<string, MResourceItem>();
+            FillValues2(new System.IO.MemoryStream(this.Data), this._ResourceValues);
+            if (FillValues2(new System.IO.MemoryStream(localData), this._ResourceValues) > 0)
+            {
+                Console.WriteLine("    Change resource language : " + this.Name);
+
+                var ms = new System.IO.MemoryStream();
+                using (var writer = new System.Resources.ResourceWriter(ms))
+                {
+                    var names = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var item in this._ResourceValues.Values)
+                    {
+                        if (names.ContainsKey(item.Name) == false)
+                        {
+                            if (item.Value is string)
+                            {
+                                writer.AddResource(item.Name, (string)item.Value);
+                            }
+                            else
+                            {
+                                writer.AddResourceData(item.Name, item.Type, item.Data);
+                            }
+                            names[item.Name] = null;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.BackgroundColor = ConsoleColor.White;
+                            Console.WriteLine("       [Warring],Duplicate resource item name : " + this.Name + " # " + item.Key);
+                            Console.ResetColor();
+                        }
+                    }
+                }
+                this.Data = ms.ToArray();
+                ms.Close();
+                this.Modified = true;
+                return true;
+            }
+            return false;
+        }
+#if DOTNETCORE
+        private static int FillValues2(System.IO.Stream stream, Dictionary<string, MResourceItem> values)
+        {
+            int result = 0;
+            using (var reader = new System.Resources.Extensions.DeserializingResourceReader(stream))
+            {
+                var enumer = reader.GetEnumerator();
+                while (enumer.MoveNext())
+                {
+                    string name = Convert.ToString(enumer.Key);
+                    string resType = null;
+                    byte[] itemData = null;
+                    object enumValue = enumer.Value;
+                    if( enumValue is string )
+                    {
+                        resType = null;
+                        itemData = System.Text.Encoding.UTF8.GetBytes((string)enumValue);
+                    }
+                    else if( enumValue is System.Drawing.Bitmap )
+                    {
+                        resType = "System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";// typeof(System.Drawing.Bitmap).AssemblyQualifiedName;
+                        var ms = new System.IO.MemoryStream();
+                        _bf.Serialize(ms, enumValue);
+                        itemData = ms.ToArray();
+                        ms.Close();
+                    }
+                    if (itemData != null && itemData.Length > 0)
+                    {
+                        var item = new MResourceItem();
+                        item.Name = name;
+                        item.Type = resType;
+                        item.Data = itemData;
+                        item.Value = enumer.Value;
+                        values[name] = item;
+                        //values[name] = new Tuple<string, byte[]>(resType, itemData);
+                        result++;
+                    }
+                }
+            }
+            return result;
+        }
+        private static System.Runtime.Serialization.Formatters.Binary.BinaryFormatter _bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+#else
+        private static int FillValues2(System.IO.Stream stream, Dictionary<string, MResourceItem> values)
+        {
+            int result = 0;
+            using (var reader = new System.Resources.ResourceReader(stream))
+            {
+                var enumer = reader.GetEnumerator();
+                while (enumer.MoveNext())
+                {
+                    string name = Convert.ToString(enumer.Key);
+                    string resType = null;
+                    byte[] itemData = null;
+                    reader.GetResourceData(name, out resType, out itemData);
+                    if (resType != null && resType.Length > 0 && itemData != null && itemData.Length > 0)
+                    {
+                        var item = new MResourceItem();
+                        item.Name = name;
+                        item.Type = resType;
+                        item.Data = itemData;
+                        item.Value = enumer.Value;
+                        values[name] = item;
+                        //values[name] = new Tuple<string, byte[]>(resType, itemData);
+                        result++;
+                    }
+                }
+            }
+            return result;
+        }
+#endif
+
+        public bool WriteDataFile(string basePath)
+        {
+            if (this.Data != null && this.Data.Length > 0)
+            {
+                var fn = Path.Combine(basePath, this.RuntimeFileName);
+                File.WriteAllBytes(fn, this.Data);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public class MResourceItem
+        {
+            public string Name = null;
+            public string Type = null;
+            public object Value = null;
+            public bool IsBmp
+            {
+                get
+                {
+                    return this.Value is System.Drawing.Bitmap;
+                }
+            }
+            public byte[] Data = null;
+            public int StartIndex = 0;
+            public int BSLength = 0;
+            public int Key = 0;
+        }
+        public byte[] EncryptData()
+        {
+            var items = this.ResourceValues.Values;
+            var lstData = new List<byte>();
+            var rnd = new System.Random();
+            foreach (var item in items)
+            {
+                item.StartIndex = lstData.Count;
+                item.Key = rnd.Next(1000, int.MaxValue - 1000);
+                if (item.Value is string)
+                {
+                    string str = (string)item.Value;
+                    int key = item.Key;
+                    for (int iCount = 0; iCount < str.Length; iCount++, key++)
+                    {
+                        var v = str[iCount] ^ key;
+                        lstData.Add((byte)(v >> 8));
+                        lstData.Add((byte)(v & 0xff));
+                    }
+                }
+                else if (item.Value is System.Drawing.Bitmap)
+                {
+                    var ms2 = new System.IO.MemoryStream();
+                    ((System.Drawing.Bitmap)item.Value).Save(ms2, System.Drawing.Imaging.ImageFormat.Bmp);
+                    var bs = ms2.ToArray();
+                    ms2.Close();
+                    var key = (byte)item.Key;
+                    for (int iCount = 0; iCount < bs.Length; iCount++, key++)
+                    {
+                        lstData.Add((byte)(bs[iCount] ^ key));
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException(item.Value.GetType().FullName);
+                }
+                item.BSLength = lstData.Count - item.StartIndex;
+            }
+            var result = lstData.ToArray();
+            return result;
+        }
+
         public override void WriteTo(DCILWriter writer)
         {
             writer.Write(".mresource ");
@@ -12544,7 +14644,7 @@ namespace JIEJIE
         {
             return "Resource " + this._Name;
         }
-         
+
         public bool IsPublic = true;
 
     }
@@ -12740,7 +14840,7 @@ namespace JIEJIE
                 writer.WriteLine();
             }
             writer.WriteEndGroup();
-        } 
+        }
         public override void CacheInfo(DCILDocument document, Dictionary<string, DCILClass> clses)
         {
             DCILMethodParamter.CacheTypeReference(document, this.Parameters);
@@ -12794,7 +14894,7 @@ namespace JIEJIE
 
     internal class IDGenerator
     {
-        public IDGenerator(string strPreFix, string memberPrefix )
+        public IDGenerator(string strPreFix, string memberPrefix)
         {
             //this.Length = len;
             //this._Indexs = new int[len];
@@ -12898,6 +14998,17 @@ namespace JIEJIE
 
     internal static class DCUtils
     {
+        public static bool IsSystemAsseblyName(string asmName)
+        {
+            if( asmName == null || asmName .Length == 0 )
+            {
+                throw new ArgumentNullException("asmName");
+            }
+            return asmName.StartsWith("mscor", StringComparison.OrdinalIgnoreCase)
+                || asmName.StartsWith("System.", StringComparison.OrdinalIgnoreCase)
+                || string.Compare(asmName, "System", true) == 0
+                || asmName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
+        }
         internal static bool IsWhitespace(char c)
         {
             return c == ' ' || c == '\t' || c == '\r' || c == '\n';
@@ -13066,9 +15177,9 @@ namespace JIEJIE
             //return s1 == s2;
         }
         public static int ExpandResourcesToPath(
-            System.Reflection.Assembly asm, 
-            string resBaseName, 
-            string rootPath, 
+            System.Reflection.Assembly asm,
+            string resBaseName,
+            string rootPath,
             bool overWrite)
         {
             int result = 0;
@@ -13149,7 +15260,7 @@ namespace JIEJIE
                 return -1;
             }
         }
-         
+
         public static string SearchFileDeeply(string rootDir, string fileName)
         {
             if (File.Exists(Path.Combine(rootDir, fileName)))
@@ -13176,7 +15287,7 @@ namespace JIEJIE
         }
         public static int CleanDirectory(string rootDir)
         {
-            if( rootDir == null || rootDir.Length == 0 )
+            if (rootDir == null || rootDir.Length == 0)
             {
                 return 0;
             }
@@ -13252,7 +15363,7 @@ namespace JIEJIE
                 return v.ToString() + '.' + mod.ToString() + unit;
             }
         }
-         
+
         public static void ObfuseListOrder(System.Collections.IList list)
         {
             ObfuseListOrder(list, 0, list.Count);
@@ -13274,57 +15385,57 @@ namespace JIEJIE
                 list[index] = temp;
             }
         }
-         
+
     }
 
     internal static class ResourceFileHelper
     {
-         
-        public static MyResourceDataFileList ExecuteByExe(
-            string exeFileName, 
-            string rootPath,
-            string languageName, 
-            System.Collections.IList containerClassNames)
-        {
-            var args = new StringBuilder();
-            args.Append("\"rootpath=" + rootPath + "\"");
-            if (languageName != null && languageName.Length > 0)
-            {
-                args.Append(" language=" + languageName);
-            }
-            if (containerClassNames != null && containerClassNames.Count > 0)
-            {
-                args.Append(" \"containerclassnames=");
-                for (int iCount = 0; iCount < containerClassNames.Count; iCount++)
-                {
-                    args.Append(containerClassNames[iCount]);
-                    if (iCount != containerClassNames.Count - 1)
-                    {
-                        args.Append(',');
-                    }
-                }
-                args.Append('"');
-            }
-            //___Main(ParseCommandLineArgs(args.ToString()));
-            RunExe(exeFileName, args.ToString());
-            var result = new MyResourceDataFileList();
-            if (result.LoadFromStdFileName(rootPath))
-            {
-                return result;
-            }
-            else
-            {
-                return null;
-            }
-        }
+
+        //public static MyResourceDataFileList ExecuteByExe(
+        //    string exeFileName, 
+        //    string rootPath,
+        //    string languageName, 
+        //    System.Collections.IList containerClassNames)
+        //{
+        //    var args = new StringBuilder();
+        //    args.Append("\"rootpath=" + rootPath + "\"");
+        //    if (languageName != null && languageName.Length > 0)
+        //    {
+        //        args.Append(" language=" + languageName);
+        //    }
+        //    if (containerClassNames != null && containerClassNames.Count > 0)
+        //    {
+        //        args.Append(" \"containerclassnames=");
+        //        for (int iCount = 0; iCount < containerClassNames.Count; iCount++)
+        //        {
+        //            args.Append(containerClassNames[iCount]);
+        //            if (iCount != containerClassNames.Count - 1)
+        //            {
+        //                args.Append(',');
+        //            }
+        //        }
+        //        args.Append('"');
+        //    }
+        //    //___Main(ParseCommandLineArgs(args.ToString()));
+        //    RunExe(exeFileName, args.ToString());
+        //    var result = new MyResourceDataFileList();
+        //    if (result.LoadFromStdFileName(rootPath))
+        //    {
+        //        return result;
+        //    }
+        //    else
+        //    {
+        //        return null;
+        //    }
+        //}
 
         public static void RunExe(string exeFileName, string argument)
         {
-            if( exeFileName == null || exeFileName.Length == 0 )
+            if (exeFileName == null || exeFileName.Length == 0)
             {
                 throw new ArgumentNullException("exeFileName");
             }
-            if( File.Exists( exeFileName ) == false )
+            if (File.Exists(exeFileName) == false)
             {
                 throw new FileNotFoundException(exeFileName);
             }
@@ -13332,9 +15443,9 @@ namespace JIEJIE
             pstart.FileName = exeFileName;
             pstart.Arguments = argument;
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("   >>Execute command line:");
+            Console.Write("   >>RUN:");
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write("\"" + pstart.FileName + "\" " );
+            Console.Write("\"" + pstart.FileName + "\" ");
             if (argument != null && argument.Length > 0)
             {
                 Console.Write(" ");
@@ -13343,7 +15454,7 @@ namespace JIEJIE
             }
             Console.ResetColor();
             Console.WriteLine();
-            System.Diagnostics.Debug.WriteLine(">>Execute command line: \"" + pstart.FileName + "\" " + pstart.Arguments);
+            System.Diagnostics.Debug.WriteLine(">>RUN: \"" + pstart.FileName + "\" " + pstart.Arguments);
             pstart.UseShellExecute = false;
             //pstart.CreateNoWindow = false;
             var p = System.Diagnostics.Process.Start(pstart);
@@ -13352,422 +15463,422 @@ namespace JIEJIE
 
 
 
-        public static bool ExpendResouceToFile(string resName, string fileName, bool overWrite)
-        {
-            if (overWrite == false && File.Exists(fileName))
-            {
-                return true;
-            }
-            var ms = System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream(resName);
-            if (ms != null)
-            {
-                using (var stream = new System.IO.FileStream(fileName, FileMode.Create, FileAccess.Write))
-                {
-                    var bsTemp = new byte[1024];
-                    while (true)
-                    {
-                        int len = ms.Read(bsTemp, 0, bsTemp.Length);
-                        if (len > 0)
-                        {
-                            stream.Write(bsTemp, 0, len);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }//while
-                }//using
-                ms.Close();
-                return true;
-            }
-            return false;
-        }
+        //public static bool ExpendResouceToFile(string resName, string fileName, bool overWrite)
+        //{
+        //    if (overWrite == false && File.Exists(fileName))
+        //    {
+        //        return true;
+        //    }
+        //    var ms = System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream(resName);
+        //    if (ms != null)
+        //    {
+        //        using (var stream = new System.IO.FileStream(fileName, FileMode.Create, FileAccess.Write))
+        //        {
+        //            var bsTemp = new byte[1024];
+        //            while (true)
+        //            {
+        //                int len = ms.Read(bsTemp, 0, bsTemp.Length);
+        //                if (len > 0)
+        //                {
+        //                    stream.Write(bsTemp, 0, len);
+        //                }
+        //                else
+        //                {
+        //                    break;
+        //                }
+        //            }//while
+        //        }//using
+        //        ms.Close();
+        //        return true;
+        //    }
+        //    return false;
+        //}
 
-        public static MyResourceDataFileList Execute(
-            string rootPath, 
-            string language,
-            System.Collections.IList containerClassNames)
-        {
-            if (rootPath == null || rootPath.Length == 0 || Directory.Exists(rootPath) == false)
-            {
-                return null;
-            }
-            if (language != null && language.Length > 0)
-            {
-                var fns = Directory.GetFiles(rootPath, "*.resources");
-                foreach (var fn in fns)
-                {
-                    Console.WriteLine("    Merge resource file:" + System.IO.Path.GetFileName( fn));
-                    CombineResourceFile(fn, language, fn);
-                }
-            }
-            if (containerClassNames != null && containerClassNames.Count > 0)
-            {
-                var values = new MyResourceDataFileList();
-                foreach (var name in containerClassNames)
-                {
-                    var fn = Path.Combine(rootPath, (string)name);
-                    if (fn.EndsWith(DCILDocument.EXT_resources, StringComparison.Ordinal) == false)
-                    {
-                        fn = fn + DCILDocument.EXT_resources;
-                    }
-                    if (File.Exists(fn))
-                    {
-                        values.Add(new MyResourceDataFile(fn));
-                    }
-                }
-                //values.SaveToStdFileName(rootPath);
-                return values;
-            }
-            return null;
-        }
+        //public static MyResourceDataFileList Execute(
+        //    string rootPath, 
+        //    string language,
+        //    System.Collections.IList containerClassNames)
+        //{
+        //    if (rootPath == null || rootPath.Length == 0 || Directory.Exists(rootPath) == false)
+        //    {
+        //        return null;
+        //    }
+        //    if (language != null && language.Length > 0)
+        //    {
+        //        var fns = Directory.GetFiles(rootPath, "*.resources");
+        //        foreach (var fn in fns)
+        //        {
+        //            Console.WriteLine("    Merge resource file:" + System.IO.Path.GetFileName( fn));
+        //            CombineResourceFile(fn, language, fn);
+        //        }
+        //    }
+        //    if (containerClassNames != null && containerClassNames.Count > 0)
+        //    {
+        //        var values = new MyResourceDataFileList();
+        //        foreach (var name in containerClassNames)
+        //        {
+        //            var fn = Path.Combine(rootPath, (string)name);
+        //            if (fn.EndsWith(DCILDocument.EXT_resources, StringComparison.Ordinal) == false)
+        //            {
+        //                fn = fn + DCILDocument.EXT_resources;
+        //            }
+        //            if (File.Exists(fn))
+        //            {
+        //                values.Add(new MyResourceDataFile(fn));
+        //            }
+        //        }
+        //        //values.SaveToStdFileName(rootPath);
+        //        return values;
+        //    }
+        //    return null;
+        //}
 
-        public static readonly string EXT_resources = ".resources";
-
-
+        //public static readonly string EXT_resources = ".resources";
 
 
-        public static bool CombineResourceFile(string fileName, string language, string outputFileName)
-        {
-            if (language == null || language.Length == 0)
-            {
-                return false;
-            }
-            if (fileName == null || fileName.Length == 0)
-            {
-                throw new ArgumentNullException("fileName");
-            }
-            if (File.Exists(fileName) == false)
-            {
-                throw new FileNotFoundException(fileName);
-            }
-            var values = new Dictionary<string, System.Tuple<string, byte[]>>();
-            FillValues2(fileName, values);
-            var rootPath = Path.GetDirectoryName(fileName);
-            var fn2 = Path.Combine(
-                Path.Combine(rootPath, language),
-                Path.GetFileNameWithoutExtension(fileName) + "." + language + EXT_resources);
-            if (File.Exists(fn2))
-            {
-                if (FillValues2(fn2, values) > 0)
-                {
-                    if (outputFileName == null || outputFileName.Length == 0)
-                    {
-                        outputFileName = fileName;
-                    }
 
-                    using (var writer = new System.Resources.ResourceWriter(outputFileName))
-                    {
-                        var names = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-                        foreach (var item in values)
-                        {
-                            if (names.ContainsKey(item.Key) == false)
-                            {
-                                writer.AddResourceData(item.Key, item.Value.Item1, item.Value.Item2);
-                                names[item.Key] = null;
-                            }
-                            else
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.BackgroundColor = ConsoleColor.White;
-                                Console.WriteLine("   [Warring],Duplicate resource item name:" + Path.GetFileName( fileName )+ " # " + item.Key);
-                                Console.ResetColor();
-                            }
-                        }
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
-#if DOTNETCORE
-        public static int FillValues2(string fileName, Dictionary<string, System.Tuple<string, byte[]>> values)
-        {
-            int result = 0;
-            using (var reader = new System.Resources.Extensions.DeserializingResourceReader(fileName))
-            {
-                var enumer = reader.GetEnumerator();
-                while (enumer.MoveNext())
-                {
-                    string name = Convert.ToString(enumer.Key);
-                    string resType = null;
-                    byte[] itemData = null;
-                    object enumValue = enumer.Value;
-                    if( enumValue is string )
-                    {
-                        resType = null;
-                        itemData = System.Text.Encoding.UTF8.GetBytes((string)enumValue);
-                    }
-                    else if( enumValue is System.Drawing.Bitmap )
-                    {
-                        resType = "System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";// typeof(System.Drawing.Bitmap).AssemblyQualifiedName;
-                        var ms = new System.IO.MemoryStream();
-                        _bf.Serialize(ms, enumValue);
-                        itemData = ms.ToArray();
-                        ms.Close();
-                    }
-                    if (resType != null && resType.Length > 0 && itemData != null && itemData.Length > 0)
-                    {
-                        values[name] = new Tuple<string, byte[]>(resType, itemData);
-                        result++;
-                    }
-                }
-            }
-            return result;
-        }
-        private static System.Runtime.Serialization.Formatters.Binary.BinaryFormatter _bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-#else
-        public static int FillValues2(string fileName, Dictionary<string, System.Tuple<string, byte[]>> values)
-        {
-            int result = 0;
-            using (var reader = new System.Resources.ResourceReader(fileName))
-            {
-                var enumer = reader.GetEnumerator();
-                while (enumer.MoveNext())
-                {
-                    string name = Convert.ToString(enumer.Key);
-                    string resType = null;
-                    byte[] itemData = null;
-                    reader.GetResourceData(name, out resType, out itemData);
-                    if (resType != null && resType.Length > 0 && itemData != null && itemData.Length > 0)
-                    {
-                        values[name] = new Tuple<string, byte[]>(resType, itemData);
-                        result++;
-                    }
-                }
-            }
-            return result;
-        }
-#endif
+
+        //        public static bool CombineResourceFile(string fileName, string language, string outputFileName)
+        //        {
+        //            if (language == null || language.Length == 0)
+        //            {
+        //                return false;
+        //            }
+        //            if (fileName == null || fileName.Length == 0)
+        //            {
+        //                throw new ArgumentNullException("fileName");
+        //            }
+        //            if (File.Exists(fileName) == false)
+        //            {
+        //                throw new FileNotFoundException(fileName);
+        //            }
+        //            var values = new Dictionary<string, System.Tuple<string, byte[]>>();
+        //            FillValues2(fileName, values);
+        //            var rootPath = Path.GetDirectoryName(fileName);
+        //            var fn2 = Path.Combine(
+        //                Path.Combine(rootPath, language),
+        //                Path.GetFileNameWithoutExtension(fileName) + "." + language + EXT_resources);
+        //            if (File.Exists(fn2))
+        //            {
+        //                if (FillValues2(fn2, values) > 0)
+        //                {
+        //                    if (outputFileName == null || outputFileName.Length == 0)
+        //                    {
+        //                        outputFileName = fileName;
+        //                    }
+
+        //                    using (var writer = new System.Resources.ResourceWriter(outputFileName))
+        //                    {
+        //                        var names = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        //                        foreach (var item in values)
+        //                        {
+        //                            if (names.ContainsKey(item.Key) == false)
+        //                            {
+        //                                writer.AddResourceData(item.Key, item.Value.Item1, item.Value.Item2);
+        //                                names[item.Key] = null;
+        //                            }
+        //                            else
+        //                            {
+        //                                Console.ForegroundColor = ConsoleColor.Red;
+        //                                Console.BackgroundColor = ConsoleColor.White;
+        //                                Console.WriteLine("   [Warring],Duplicate resource item name:" + Path.GetFileName( fileName )+ " # " + item.Key);
+        //                                Console.ResetColor();
+        //                            }
+        //                        }
+        //                    }
+        //                    return true;
+        //                }
+        //            }
+        //            return false;
+        //        }
+        //#if DOTNETCORE
+        //        public static int FillValues2(string fileName, Dictionary<string, System.Tuple<string, byte[]>> values)
+        //        {
+        //            int result = 0;
+        //            using (var reader = new System.Resources.Extensions.DeserializingResourceReader(fileName))
+        //            {
+        //                var enumer = reader.GetEnumerator();
+        //                while (enumer.MoveNext())
+        //                {
+        //                    string name = Convert.ToString(enumer.Key);
+        //                    string resType = null;
+        //                    byte[] itemData = null;
+        //                    object enumValue = enumer.Value;
+        //                    if( enumValue is string )
+        //                    {
+        //                        resType = null;
+        //                        itemData = System.Text.Encoding.UTF8.GetBytes((string)enumValue);
+        //                    }
+        //                    else if( enumValue is System.Drawing.Bitmap )
+        //                    {
+        //                        resType = "System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";// typeof(System.Drawing.Bitmap).AssemblyQualifiedName;
+        //                        var ms = new System.IO.MemoryStream();
+        //                        _bf.Serialize(ms, enumValue);
+        //                        itemData = ms.ToArray();
+        //                        ms.Close();
+        //                    }
+        //                    if (resType != null && resType.Length > 0 && itemData != null && itemData.Length > 0)
+        //                    {
+        //                        values[name] = new Tuple<string, byte[]>(resType, itemData);
+        //                        result++;
+        //                    }
+        //                }
+        //            }
+        //            return result;
+        //        }
+        //        private static System.Runtime.Serialization.Formatters.Binary.BinaryFormatter _bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        //#else
+        //        public static int FillValues2(string fileName, Dictionary<string, System.Tuple<string, byte[]>> values)
+        //        {
+        //            int result = 0;
+        //            using (var reader = new System.Resources.ResourceReader(fileName))
+        //            {
+        //                var enumer = reader.GetEnumerator();
+        //                while (enumer.MoveNext())
+        //                {
+        //                    string name = Convert.ToString(enumer.Key);
+        //                    string resType = null;
+        //                    byte[] itemData = null;
+        //                    reader.GetResourceData(name, out resType, out itemData);
+        //                    if (resType != null && resType.Length > 0 && itemData != null && itemData.Length > 0)
+        //                    {
+        //                        values[name] = new Tuple<string, byte[]>(resType, itemData);
+        //                        result++;
+        //                    }
+        //                }
+        //            }
+        //            return result;
+        //        }
+        //#endif
     }
 
-    internal class MyResourceDataFileList : List<MyResourceDataFile>
-    {
-        public static readonly string StdFileName = "dcsoft20210306.resouces.dat";
-        public MyResourceDataFileList()
-        {
+    //    internal class MyResourceDataFileList : List<MyResourceDataFile>
+    //    {
+    //        public static readonly string StdFileName = "dcsoft20210306.resouces.dat";
+    //        public MyResourceDataFileList()
+    //        {
 
-        }
-        public MyResourceDataFileList(List<string> fileNames)
-        {
-            foreach (var fn in fileNames)
-            {
-                this.Add(new MyResourceDataFile(fn));
-            }
-        }
+    //        }
+    //        public MyResourceDataFileList(List<string> fileNames)
+    //        {
+    //            foreach (var fn in fileNames)
+    //            {
+    //                this.Add(new MyResourceDataFile(fn));
+    //            }
+    //        }
 
-        public Dictionary<string, MyResourceDataFile> GetFileTable()
-        {
-            var result = new Dictionary<string, MyResourceDataFile>();
-            foreach (var item in this)
-            {
-                result[item.Name] = item;
-            }
-            return result;
-        }
-        public bool LoadFromStdFileName(string rootPath)
-        {
-            var fn = Path.Combine(rootPath, StdFileName);
-            if (File.Exists(fn))
-            {
-                Load(fn);
-                return true;
-            }
-            return false;
-        }
-        public void SaveToStdFileName(string rootPath)
-        {
-            var fn = Path.Combine(rootPath, StdFileName);
-            Save(fn);
-        }
-        public void Load(string fileName)
-        {
-            using (var reader = new System.IO.BinaryReader(
-                new System.IO.FileStream(fileName, FileMode.Open, FileAccess.Read)))
-            {
-                int fileCount = reader.ReadInt32();
-                for (int fileIndex = 0; fileIndex < fileCount; fileIndex++)
-                {
-                    var dataFile = new MyResourceDataFile();
-                    dataFile.FileName = reader.ReadString();
-                    dataFile.Name = reader.ReadString();
-                    var bsLength = reader.ReadInt32();
-                    if (bsLength > 0)
-                    {
-                        dataFile.Datas = reader.ReadBytes(bsLength);
-                    }
-                    var itemCount = reader.ReadInt32();
-                    for (int iCount = 0; iCount < itemCount; iCount++)
-                    {
-                        var newItem = new MyResourceDataFile.MyResourceDataItem();
-                        newItem.Name = reader.ReadString();
-                        newItem.StartIndex = reader.ReadInt32();
-                        newItem.BsLength = reader.ReadInt32();
-                        newItem.Key = reader.ReadInt32();
-                        newItem.IsBmp = reader.ReadBoolean();
-                        dataFile.Items.Add(newItem);
-                    }
-                    this.Add(dataFile);
-                }
-            }
-        }
-        public void Save(string fileName)
-        {
-            using (var writer = new System.IO.BinaryWriter(
-                new System.IO.FileStream(fileName, FileMode.Create, FileAccess.ReadWrite)))
-            {
-                writer.Write(this.Count);
-                foreach (var dataFile in this)
-                {
-                    writer.Write(dataFile.FileName);
-                    writer.Write(dataFile.Name);
-                    if (dataFile.Datas == null || dataFile.Datas.Length == 0)
-                    {
-                        writer.Write(0);
-                    }
-                    else
-                    {
-                        writer.Write(dataFile.Datas.Length);
-                        writer.Write(dataFile.Datas, 0, dataFile.Datas.Length);
-                    }
-                    if (dataFile.Items == null || dataFile.Items.Count == 0)
-                    {
-                        writer.Write(0);
-                    }
-                    else
-                    {
-                        writer.Write(dataFile.Items.Count);
-                        foreach (var item in dataFile.Items)
-                        {
-                            writer.Write(item.Name);
-                            writer.Write(item.StartIndex);
-                            writer.Write(item.BsLength);
-                            writer.Write(item.Key);
-                            writer.Write(item.IsBmp);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //        public Dictionary<string, MyResourceDataFile> GetFileTable()
+    //        {
+    //            var result = new Dictionary<string, MyResourceDataFile>();
+    //            foreach (var item in this)
+    //            {
+    //                result[item.Name] = item;
+    //            }
+    //            return result;
+    //        }
+    //        public bool LoadFromStdFileName(string rootPath)
+    //        {
+    //            var fn = Path.Combine(rootPath, StdFileName);
+    //            if (File.Exists(fn))
+    //            {
+    //                Load(fn);
+    //                return true;
+    //            }
+    //            return false;
+    //        }
+    //        public void SaveToStdFileName(string rootPath)
+    //        {
+    //            var fn = Path.Combine(rootPath, StdFileName);
+    //            Save(fn);
+    //        }
+    //        public void Load(string fileName)
+    //        {
+    //            using (var reader = new System.IO.BinaryReader(
+    //                new System.IO.FileStream(fileName, FileMode.Open, FileAccess.Read)))
+    //            {
+    //                int fileCount = reader.ReadInt32();
+    //                for (int fileIndex = 0; fileIndex < fileCount; fileIndex++)
+    //                {
+    //                    var dataFile = new MyResourceDataFile();
+    //                    dataFile.FileName = reader.ReadString();
+    //                    dataFile.Name = reader.ReadString();
+    //                    var bsLength = reader.ReadInt32();
+    //                    if (bsLength > 0)
+    //                    {
+    //                        dataFile.Datas = reader.ReadBytes(bsLength);
+    //                    }
+    //                    var itemCount = reader.ReadInt32();
+    //                    for (int iCount = 0; iCount < itemCount; iCount++)
+    //                    {
+    //                        var newItem = new MyResourceDataFile.MyResourceDataItem();
+    //                        newItem.Name = reader.ReadString();
+    //                        newItem.StartIndex = reader.ReadInt32();
+    //                        newItem.BsLength = reader.ReadInt32();
+    //                        newItem.Key = reader.ReadInt32();
+    //                        newItem.IsBmp = reader.ReadBoolean();
+    //                        dataFile.Items.Add(newItem);
+    //                    }
+    //                    this.Add(dataFile);
+    //                }
+    //            }
+    //        }
+    //        public void Save(string fileName)
+    //        {
+    //            using (var writer = new System.IO.BinaryWriter(
+    //                new System.IO.FileStream(fileName, FileMode.Create, FileAccess.ReadWrite)))
+    //            {
+    //                writer.Write(this.Count);
+    //                foreach (var dataFile in this)
+    //                {
+    //                    writer.Write(dataFile.FileName);
+    //                    writer.Write(dataFile.Name);
+    //                    if (dataFile.Datas == null || dataFile.Datas.Length == 0)
+    //                    {
+    //                        writer.Write(0);
+    //                    }
+    //                    else
+    //                    {
+    //                        writer.Write(dataFile.Datas.Length);
+    //                        writer.Write(dataFile.Datas, 0, dataFile.Datas.Length);
+    //                    }
+    //                    if (dataFile.Items == null || dataFile.Items.Count == 0)
+    //                    {
+    //                        writer.Write(0);
+    //                    }
+    //                    else
+    //                    {
+    //                        writer.Write(dataFile.Items.Count);
+    //                        foreach (var item in dataFile.Items)
+    //                        {
+    //                            writer.Write(item.Name);
+    //                            writer.Write(item.StartIndex);
+    //                            writer.Write(item.BsLength);
+    //                            writer.Write(item.Key);
+    //                            writer.Write(item.IsBmp);
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
 
-    internal class MyResourceDataFile
-    {
-        internal class MyResourceDataItem
-        {
-            public string Name = null;
-            public int StartIndex = 0;
-            public int BsLength = 0;
-            public int Key = 0;
-            public bool IsBmp = false;
-            public object Value = null;
-            public override string ToString()
-            {
-                return this.Name + ":" + this.Value;
-            }
-        }
-        public override string ToString()
-        {
-            return this.Name;
-        }
-        public string Name = null;
-        public string FileName = null;
-        public List<MyResourceDataItem> Items = new List<MyResourceDataItem>();
-        public byte[] Datas = null;
-        public bool HasBmp
-        {
-            get
-            {
-                foreach (var item in this.Items)
-                {
-                    if (item.IsBmp)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
+    //    internal class MyResourceDataFile
+    //    {
+    //        internal class MyResourceDataItem
+    //        {
+    //            public string Name = null;
+    //            public int StartIndex = 0;
+    //            public int BsLength = 0;
+    //            public int Key = 0;
+    //            public bool IsBmp = false;
+    //            public object Value = null;
+    //            public override string ToString()
+    //            {
+    //                return this.Name + ":" + this.Value;
+    //            }
+    //        }
+    //        public override string ToString()
+    //        {
+    //            return this.Name;
+    //        }
+    //        public string Name = null;
+    //        public string FileName = null;
+    //        public List<MyResourceDataItem> Items = new List<MyResourceDataItem>();
+    //        public byte[] Datas = null;
+    //        public bool HasBmp
+    //        {
+    //            get
+    //            {
+    //                foreach (var item in this.Items)
+    //                {
+    //                    if (item.IsBmp)
+    //                    {
+    //                        return true;
+    //                    }
+    //                }
+    //                return false;
+    //            }
+    //        }
 
-        public MyResourceDataFile()
-        {
+    //        public MyResourceDataFile()
+    //        {
 
-        }
-        private static readonly Random _Random = new Random();
-        public MyResourceDataFile(string fileName)
-        {
-#if DOTNETCORE
-            var reader = new System.Resources.Extensions.DeserializingResourceReader(fileName);
-#else
-            var reader = new System.Resources.ResourceReader(fileName);
-#endif
+    //        }
+    //        private static readonly Random _Random = new Random();
+    //        public MyResourceDataFile(string fileName)
+    //        {
+    //#if DOTNETCORE
+    //            var reader = new System.Resources.Extensions.DeserializingResourceReader(fileName);
+    //#else
+    //            var reader = new System.Resources.ResourceReader(fileName);
+    //#endif
 
-            this.FileName = fileName;
-            this.Name = Path.GetFileNameWithoutExtension(fileName);
-            var objValues = new Dictionary<string, object>();
-            var strValues = new Dictionary<string, string>();
-            var resouceSet = new System.Resources.ResourceSet(reader);
-            var enumer = resouceSet.GetEnumerator();
-            var lstData = new List<byte>();
-            bool hasBmpValue = false;
-            while (enumer.MoveNext())
-            {
-                string itemName = (string)enumer.Key;
-                var item = new MyResourceDataItem();
-                item.Name = itemName;
-                item.StartIndex = lstData.Count;
-                item.Key = _Random.Next(1000, int.MaxValue - 1000);
-                item.Value = enumer.Value;
-                if (enumer.Value is string)
-                {
-                    item.IsBmp = false;
-                    string str = (string)item.Value;
-                    int key = item.Key;
-                    for (int iCount = 0; iCount < str.Length; iCount++, key++)
-                    {
-                        var v = str[iCount] ^ key;
-                        lstData.Add((byte)(v >> 8));
-                        lstData.Add((byte)(v & 0xff));
-                    }
-                }
-                else if (enumer.Value is System.Drawing.Bitmap)
-                {
-                    item.IsBmp = true;
-                    hasBmpValue = true;
-                    var ms = new System.IO.MemoryStream();
-                    ((System.Drawing.Bitmap)item.Value).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                    var bs2 = ms.ToArray();
-                    byte key = (byte)item.Key;
-                    for (int iCount = 0; iCount < bs2.Length; iCount++, key++)
-                    {
-                        bs2[iCount] = (byte)(bs2[iCount] ^ key);
-                    }
-                    lstData.AddRange(bs2);
-                }
-                else
-                {
-                    throw new NotSupportedException(item.Value.GetType().FullName);
-                }
-                item.BsLength = lstData.Count - item.StartIndex;
-                this.Items.Add(item);
-            }
-            resouceSet.Close();
-            this.Datas = lstData.ToArray();
-        }
-    }
+    //            this.FileName = fileName;
+    //            this.Name = Path.GetFileNameWithoutExtension(fileName);
+    //            var objValues = new Dictionary<string, object>();
+    //            var strValues = new Dictionary<string, string>();
+    //            var resouceSet = new System.Resources.ResourceSet(reader);
+    //            var enumer = resouceSet.GetEnumerator();
+    //            var lstData = new List<byte>();
+    //            bool hasBmpValue = false;
+    //            while (enumer.MoveNext())
+    //            {
+    //                string itemName = (string)enumer.Key;
+    //                var item = new MyResourceDataItem();
+    //                item.Name = itemName;
+    //                item.StartIndex = lstData.Count;
+    //                item.Key = _Random.Next(1000, int.MaxValue - 1000);
+    //                item.Value = enumer.Value;
+    //                if (enumer.Value is string)
+    //                {
+    //                    item.IsBmp = false;
+    //                    string str = (string)item.Value;
+    //                    int key = item.Key;
+    //                    for (int iCount = 0; iCount < str.Length; iCount++, key++)
+    //                    {
+    //                        var v = str[iCount] ^ key;
+    //                        lstData.Add((byte)(v >> 8));
+    //                        lstData.Add((byte)(v & 0xff));
+    //                    }
+    //                }
+    //                else if (enumer.Value is System.Drawing.Bitmap)
+    //                {
+    //                    item.IsBmp = true;
+    //                    hasBmpValue = true;
+    //                    var ms = new System.IO.MemoryStream();
+    //                    ((System.Drawing.Bitmap)item.Value).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+    //                    var bs2 = ms.ToArray();
+    //                    byte key = (byte)item.Key;
+    //                    for (int iCount = 0; iCount < bs2.Length; iCount++, key++)
+    //                    {
+    //                        bs2[iCount] = (byte)(bs2[iCount] ^ key);
+    //                    }
+    //                    lstData.AddRange(bs2);
+    //                }
+    //                else
+    //                {
+    //                    throw new NotSupportedException(item.Value.GetType().FullName);
+    //                }
+    //                item.BsLength = lstData.Count - item.StartIndex;
+    //                this.Items.Add(item);
+    //            }
+    //            resouceSet.Close();
+    //            this.Datas = lstData.ToArray();
+    //        }
+    //    }
 
     [System.Runtime.InteropServices.ComVisible(false)]
-    internal static class InnerAssemblyHelper20210315
+    internal static class InnerAssemblyHelper20211018
     {
-        public static bool EqualString( string s1 , string s2 )
+        public static bool EqualString(string s1, string s2)
         {
             return string.Equals(s1, s2);
         }
 
         private static volatile System.Threading.Thread _CloneStringCrossThead_Thread = null;
-        private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event 
+        private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event
             = new System.Threading.AutoResetEvent(false);
-        private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner 
+        private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
             = new System.Threading.AutoResetEvent(false);
         private static volatile string _CloneStringCrossThead_CurrentValue = null;
         /// <summary>
@@ -13898,7 +16009,7 @@ namespace JIEJIE
             }
             return ms;
         }
-         
+
     }
 
 
@@ -14128,5 +16239,4 @@ namespace JIEJIE
         }
 
     }
-
 }

@@ -723,11 +723,58 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 
 ## 7 , Clean document comment xml file.
    JIEJIE.NET can clean document comment xml file. remove member xml element which it renamed.
+
+## 8 , Save rename map xml file.
+   JIEJIE.NET can save rename map xml file just like the following:
+```XML
+<dotfuscatorMap>
+   <header>
+      <timestamp>2021-10-23 9:13:25</timestamp>
+      <product version="1.4.0.1" user="yfyuan">JieJie.NET</product>
+   </header>
+   <mapping>
+      <module>
+         <name>DCSoft.Writer.ForASPNETCore.dll</name>
+         <type>
+            <name>DCSoft.MyLicense.D8CLicNothing217Helper</name>
+            <newname>zzz.z0ZzZzxgk</newname>
+            <fieldlist>
+               <field>
+                  <signature>System.Collections.Generic.Dictionary`2&lt;object,object&gt;</signature>
+                  <name>_Fields</name>
+                  <newname>z0xjk</newname>
+               </field>
+            </fieldlist>
+         </type>
+         <type>
+            <name>DCSoft.MyLicense.D8CLicNothing063Attribute</name>
+            <newname>zzz.z0ZzZzzgk</newname>
+         </type>
+         <type>
+            <name>DCSoft.Writer.Controls.Web.WebServerCommand</name>
+            <newname>zzz.z0ZzZzlfk</newname>
+            <fieldlist>
+               <field>
+                  <signature>string</signature>
+                  <name>_Description</name>
+                  <newname>z0zjk</newname>
+               </field>
+```
+## 9 , Merge assembly files.
+   When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
+   <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
+
+## 10 , Custom instruction.
+	 JIEJIE.NET support change .coreflags|.subsystem instruction. Some time, .NET assembly is design for x86/x64,JIEJIE.NET can change the target platform.for example use command line:
+```
+	>jiejie.net.exe d:\\aa.dll .corflags=0x1
+```
+   This can change the result assembly file to x64 platform.
    
-## 8 , Support .NET Core 3.1
+## 11 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
 
-## 9 , Easy to use.
+## 12 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -745,7 +792,15 @@ My new tool is a .NET framework console  application.
                 +/-rename      = enable/disable rename type or member's name.
                 +/-allocationcallstack  = enable/disable encrypt string value allocation callstack.
             ]
+        mapxml=[optional, a file/directory name to save map infomation for class/member's old name and new name in xml format.]
         pause =[optional,pause the console after finish process.]
+        debugmode=[optional,Allow show some debug info text.]
+        sdkpath=[optional,set the direcotry full name of ildasm.exe.]
+        prefixfortyperename=[optional, the prefix use to rename type name.]
+        prefixformemberrename=[optional,the prefix use to rename type's member name.]
+        deletetempfile=[optional,delete template file after job finshed.default is false.]
+        merge=[optional,some .net assembly file to merge to the result file. '*' for all referenced assembly files.]
+        .custominstructurename=[optional, some custom IL instruction , for example '.subsystem=0x2'.]
 
      Example 1, protect d:\a.dll ,this will modify dll file.
         >JIEJIE.NET.exe d:\a.dll  
