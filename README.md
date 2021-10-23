@@ -766,12 +766,10 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
    When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
-## 10 , Custom instruction.
-
-	 JIEJIE.NET support change .coreflags or .subsystem instruction. Some times, .NET assembly is design for x86 or x64, JIEJIE.NET can modify the target platform. 
-<br/>For example use command line :
+## 10 Custom instruction.
+	 JIEJIE.NET support change .coreflags or .subsystem instruction. For example , a .NET assembly is design for x86 , using the following command line: 
 <br/> `jiejie.net.exe d:\aa.dll .corflags=0x1`
-<br/>This can change the result assembly file to x64 platform.
+<br/>This can modify the result assembly file to x64 platform.
    
 ## 11 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
