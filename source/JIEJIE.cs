@@ -784,7 +784,7 @@ namespace JIEJIE
         /// <returns>操作是否成功</returns>
         public bool SaveAssemblyFile(string asmFileName, bool checkUseNgen)
         {
-            this.Document.DisplayMethodRefCount();
+            //this.Document.DisplayMethodRefCount();
 
             if (asmFileName == null || asmFileName.Length == 0)
             {
