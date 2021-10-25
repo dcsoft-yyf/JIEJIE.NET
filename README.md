@@ -2,7 +2,8 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2021-10-23: Merge multi assembly files to a single assembly file.Custom instruction.
+<br/> 2021-10-25: Hidden array define.
+<br/> 2021-10-23: Merge multi assembly files to a single assembly file.change target platform.
 <br/> 2021-9-21 : Clean document comment xml element which renamed.
 <br/> 2021-9-9  : package small properties and change call/callvirt instructions.
 <br/> 2021-8-23 : Add feature: Support .NET core,fix some bugs.
@@ -761,20 +762,56 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
                   <newname>z0zjk</newname>
                </field>
 ```
-
-## 9 , Merge assembly files.
+## 9 , Hidden array define.
+   People offen define array in source code , for example :
+```C#
+public static byte[] GetBytes()
+{
+	return new byte[]
+	{
+		85,
+		203,
+		85,
+		204,
+		85,
+		255,
+		85,
+		245,
+		85,
+		247,
+		85,
+		171,
+		85,
+		165,
+		142,
+		157,
+		142,
+		184};
+}
+```
+   After use JIEJIE.NET, the code change to :
+```C#
+public static byte[] GetBytes()
+{
+	byte[] array = new byte[18];
+	InnerAssemblyHelper20211018.MyInitializeArray(array, (RuntimeFieldHandle)/*OpCode not supported: LdMemberToken*/);
+	return array;
+}
+```
+   Many information has been hidden.
+## 10 , Merge assembly files.
    When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
-## 10 Custom instruction.
-	 JIEJIE.NET support change .coreflags or .subsystem instruction. For example , a .NET assembly is design for x86 , using the following command line: 
+## 11 Change target platform
+  JIEJIE.NET support change .coreflags or .subsystem arguments to change the target platform for result assembly . For example , a .NET assembly is design for x86 , using the following command line: 
 <br/> `jiejie.net.exe d:\aa.dll .corflags=0x1`
 <br/>This can modify the result assembly file to x64 platform.
    
-## 11 , Support .NET Core 3.1
+## 12 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
 
-## 12 , Easy to use.
+## 13 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -800,7 +837,8 @@ My new tool is a .NET framework console  application.
       prefixformemberrename=[optional,the prefix use to rename type's member name.]
       deletetempfile=[optional,delete template file after job finshed.default is false.]
       merge=[optional,some .net assembly file to merge to the result file. '*' for all referenced assembly files.]
-      .custominstructurename=[optional, some custom IL instruction , for example '.subsystem=0x2'.]
+      .subsystem=[optional, it a integer value, '2' for application in GUI mode.'3' for application in console mode.]
+      .corflags=[optional, it is a integer flag,'3' for 32-bit process without strong name signature, '1' for 64-bit wihout strong name, '9' for 32-bit with strong name ,'10' for 64-bit with strong name.]
 
    Example 1, protect d:\a.dll ,this will modify dll file.
       >JIEJIE.NET.exe d:\a.dll  
