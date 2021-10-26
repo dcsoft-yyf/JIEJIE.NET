@@ -49,21 +49,21 @@ namespace JIEJIE
             //    //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.ASPNETDemo\bin\DCSoft.Writer.ForASPNET.dll",
             //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForASPNET\bin\debug\DCSoft.Writer.ForASPNET.dll",
             //    //@"C:\Users\yfyuan\source\repos\WindowsFormsApp13\bin\Debug\WindowsFormsApp13.exe",
-            //    @"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\Bin\DCSoft.WinFormDemo.exe",
+            //    //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\Bin\DCSoft.WinFormDemo.exe",
             //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Common\bin\Debug\DCSoft.Common.dll",//D:\temp2\DCSoft.Writer.ForWinForm.dll",//D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo\bin\Debug\netcoreapp3.1\DCSoft.Writer.ForASPNETCore.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForWinForm\bin\debug\DCSoft.Writer.ForWinForm.dll",
+            //    @"E:\Source\DCSoft\08代码\DCSoft\DCWriterForWinForm\bin\debug\DCSoft.Writer.ForWinForm.dll",
             //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WinForms\Source\bin\Debug\DCSoft.WinForms.dll",
-            //   // @"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Data\Source\bin\Debug\DCSoft.Data.dll",
+            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Data\Source\bin\Debug\DCSoft.Data.dll",
             //    //@"D:\temp2\DCSoft.Writer.ForWinForm.dll",
             //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\bin_netcore\debug\netcoreapp3.0\DCSoft.Writer.ForASPNETCore.dll",
             //    @"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib",
             //    //@"output=D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo",
             //    @"snk=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\yyf.snk",
             //    @"merge=*",
-            //    ".subsystem=3",
-            //    ".corflags=10",
+            //    //".subsystem=3",
+            //    ".corflags=1",
             //    //"switch=-rename,-controlfow,-strings,-resources,-memberorder,-removemember,-allocationcallstack" 
-            //    "switch=-rename" ,
+            //    //"switch=-rename" ,
             //    "prefixfortyperename=zzz.z0ZzZz",
             //    "prefixformemberrename=z0",
             //    @"mapxml=d:\temp3\",
@@ -3211,7 +3211,7 @@ namespace JIEJIE
                 return _Datas.Count - 1;
             }
 
-            public DCILClass WriteTo(DCILDocument document)
+            public DCILClass WriteTo(DCILDocument document , DCJieJieNetEngine eng )
             {
                 var str = new StringBuilder();
                 var LibName_mscorlib = document.LibName_mscorlib;
@@ -3241,7 +3241,15 @@ namespace JIEJIE
                     int labelIndex = 10;
                     foreach (var index in _FieldIndexs)
                     {
-                        labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ldc.i4 " + _Datas[index].Length);
+                        var field = eng.GetOperCodeForInt32Value(null, _Datas[index].Length)?.LocalField;
+                        if (field == null)
+                        {
+                            labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ldc.i4 " + _Datas[index].Length);
+                        }
+                        else
+                        {
+                            labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ldsfld int32 " + field.Parent.Name + "::" + field.Name);
+                        }
                         labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": newarr [" + LibName_mscorlib + "]System.Byte");
                         labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": dup");
                         labelIndex += 10; str.AppendLine("IL_" + labelIndex + ": ldtoken field valuetype " + FullClassName + @"/_DATA" + index + " " + FullClassName + @"::_Field" + index);
@@ -3772,7 +3780,7 @@ namespace JIEJIE
         {
             if (this._ByteDataContainer != null && this._ByteDataContainer.HasData())
             {
-                var cls = this._ByteDataContainer.WriteTo(this.Document);
+                var cls = this._ByteDataContainer.WriteTo(this.Document , this );
                 if( cls != null )
                 {
                     HandleClass(cls, this.Switchs);
@@ -5056,7 +5064,53 @@ namespace JIEJIE
                 }
             }
         }
-
+        private DCILClass _Int32ValueContainerClass = null;
+        private Dictionary<int, DCILField> _Int32ValueFields = null;
+        private DCILOperCode_HandleField GetOperCodeForInt32Value( string labelID , int v )
+        {
+            if(this._Int32ValueContainerClass == null )
+            {
+                this._Int32ValueContainerClass = new DCILClass(@"
+.class private auto ansi abstract sealed beforefieldinit __DC20210205._Int32ValueContainer extends[" + this.Document.LibName_mscorlib + @"]System.Object
+{
+    .method private hidebysig specialname rtspecialname static 
+		void .cctor () cil managed 
+	{
+		.maxstack 5
+        IL_99999: ret
+    }
+}", this.Document);
+                this.Document.Classes.Add(_Int32ValueContainerClass);
+                this.Document.ClearCacheForAllClasses();
+                this._Int32ValueFields = new Dictionary<int, DCILField>();
+            }
+            DCILField field = null;
+            if(this._Int32ValueFields.TryGetValue( v , out field ) == false )
+            {
+                if (this._Int32ValueFields.Count > 10000)
+                {
+                    // 超出处理范围
+                    return null;
+                }
+                field = new DCILField();
+                field.Parent = this._Int32ValueContainerClass;
+                field.AddStyles("public","static", "initonly");
+                field.ValueType = DCILTypeReference.Type_Int32;
+                field._Name = "_" + this._Int32ValueContainerClass.ChildNodes.Count;
+                this._Int32ValueContainerClass.ChildNodes.Add(field);
+                this._Int32ValueFields[v] = field;
+                int labelIndex = 99999 - this._Int32ValueFields.Count * 4;
+                this._Int32ValueContainerClass.Method_Cctor.OperCodes.Insert(
+                    0,
+                    new DCILOperCode_HandleField("IL_" + labelIndex.ToString(), "stsfld", field));
+                labelIndex--;
+                this._Int32ValueContainerClass.Method_Cctor.OperCodes.Insert(
+                    0,
+                    new DCILOperCode("IL_" + labelIndex.ToString(), "ldc.i4", v.ToString()));
+            }
+            var result =new DCILOperCode_HandleField(labelID, "ldsfld", field);
+            return result;
+        }
         private static readonly Random _Random = new Random();
 
         private int _LableIDCounter = 0;
@@ -5135,7 +5189,7 @@ namespace JIEJIE
             }
             return false;
         }
-        private void ChangeSpecifyCallTarget(DCILOperCodeList items)
+        private void ChangeSpecifyCallTarget(DCILOperCodeList items , DCILMethod method)
         {
             if (items == null || items.Count == 0)
             {
@@ -5147,8 +5201,9 @@ namespace JIEJIE
             }
             // 进行特定方法调用信息的替换
             DCILOperCode preCode = null;
-            foreach (var code in items)
+            for(int codeIndex = 0; codeIndex <items.Count; codeIndex ++)
             {
+                var code = items[codeIndex];
                 //if( code.OperCode == "callvirt")
                 //{
                 //    var info = ((DCILOperCode_HandleMethod)code).InvokeInfo;
@@ -5189,30 +5244,6 @@ namespace JIEJIE
                         callCode.InvokeInfo.IsInstance = false;
                         callCode.OperCode = "call";
                     }
-                    //var info = callCode.InvokeInfo;
-                    //var methodName = info.MethodName;
-                    //var ownerTypeName = info.OwnerType?.Name;
-
-                    //if (methodName == "Dispose")
-                    //{
-                    //    if (info.ParametersCount == 0
-                    //        && ownerTypeName == "System.IDisposable")
-                    //    {
-                    //        callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "MyDispose");
-                    //        callCode.InvokeInfo.IsInstance = false;
-                    //        callCode.OperCode = "call";
-                    //    }
-                    //}
-                    //else if(methodName == "ToString")
-                    //{
-                    //    if( info.ParametersCount == 0 
-                    //        && ownerTypeName == "System.Object")
-                    //    {
-                    //        callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Object_ToString");
-                    //        callCode.InvokeInfo.IsInstance = false;
-                    //        callCode.OperCode = "call";
-                    //    }
-                    //}
                 }
                 else if (code.OperCode == "call")
                 {
@@ -5247,6 +5278,21 @@ namespace JIEJIE
                     else if (callCode.MatchTypeAndMethod("System.Runtime.CompilerServices.RuntimeHelpers", "InitializeArray", 2))
                     {
                         callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "MyInitializeArray");
+                        for(int iCount = 0; iCount < 8 ; iCount ++)
+                        {
+                            var index2 = codeIndex - iCount;
+                            if(index2 >= 0 && (items[index2].OperCode == "ldc.i4" || items[index2].OperCode == "ldc.i4.s"))
+                            {
+                                var code2 = items[index2];
+                                var intValue = DCUtils.ConvertToInt32(code2.OperData);
+                                var newCode = GetOperCodeForInt32Value( code2.LabelID, intValue);
+                                if (newCode != null)
+                                {
+                                    items[index2] = newCode;
+                                }
+                                break;
+                            }
+                        }
                     }
                     else if (callCode.MatchTypeAndMethod("System.Threading.Monitor", "Enter", 1))
                     {
@@ -5256,59 +5302,29 @@ namespace JIEJIE
                     {
                         callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Monitor_Exit");
                     }
-
-                    //var info = callCode.InvokeInfo;
-                    //var methodName = info.MethodName;
-                    //var ownerTypeName = info.OwnerType?.Name;
-                    //if (methodName == "op_Equality") // 混淆字符串相等符号
-                    //{
-                    //    if (info.ParametersCount == 2
-                    //        && ownerTypeName == "System.String")
-                    //    {
-                    //        callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "String_Equality");
-                    //    }
-                    //}
-                    //else if (methodName == "Concat")
-                    //{
-                    //    if (info.ParametersCount == 2
-                    //        && ownerTypeName == "System.String")
-                    //    {
-                    //        callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "String_Concat");
-                    //    }
-                    //}
-                    //else if(methodName == "IsNullOrEmpty")
-                    //{
-                    //    if (info.ParametersCount == 1
-                    //       && ownerTypeName == "System.String")
-                    //    {
-                    //        callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "String_IsNullOrEmpty");
-                    //    }
-                    //}
-                    //else if( methodName == "GetTypeFromHandle")
-                    //{
-                    //    if(ownerTypeName == "System.Type")
-                    //    {
-                    //        callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Type_GetTypeFromHandle");
-                    //    }
-                    //}
-                    //else if (methodName == "Enter" || methodName == "Exit")
-                    //{
-                    //    if (ownerTypeName == "System.Threading.Monitor"
-                    //        && info.ParametersCount == 1)
-                    //    {
-                    //        if (methodName == "Enter")
-                    //        {
-                    //            callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Monitor_Enter");
-                    //        }
-                    //        else
-                    //        {
-                    //            callCode.ChangeTarget(_Type_InnerAssemblyHelper20211018, "Monitor_Exit");
-                    //        }
-                    //    }
-                    //}
                 }
                 preCode = code;
             }//foreach
+            if(method.Name == ".cctor")
+            {
+                //if(method.Parent.Name == "DCSoft.Writer.UGHelper")
+                //{
+
+                //}
+                for(int iCount = items.Count -1;  iCount >= 0; iCount --)
+                {
+                    var code = items[iCount];
+                    if( code.OperCode == "ldc.i4")
+                    {
+                        var intValue = DCUtils.ConvertToInt32(code.OperData);
+                        var newCode = GetOperCodeForInt32Value( code.LabelID , intValue);
+                        if (newCode != null)
+                        {
+                            items[iCount] = newCode;
+                        }
+                    }
+                }
+            }
         }
         private List<DCILOperCode_HandleMethod> _CallOperCodes = new List<DCILOperCode_HandleMethod>();
 
@@ -5330,13 +5346,13 @@ namespace JIEJIE
                     }
                     if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20211018)
                     {
-                        ChangeSpecifyCallTarget(tcf._Finally?.OperCodes);
+                        ChangeSpecifyCallTarget(tcf._Finally?.OperCodes , method);
                     }
                 }
             }
             if (method?.OwnerClass?.Name != _ClassName_InnerAssemblyHelper20211018)
             {
-                ChangeSpecifyCallTarget(items);
+                ChangeSpecifyCallTarget(items , method);
             }
             //if (method.Name == "get_BoundsSelection" && method.Parent.Name == "DCSoft.Writer.Controls.WriterControl")
             //{
@@ -8541,6 +8557,18 @@ namespace JIEJIE
 
     internal class DCILFieldReference
     {
+        public DCILFieldReference( DCILField field )
+        {
+            if(field == null )
+            {
+                throw new ArgumentNullException("field");
+            }
+            this.ValueType = field.ValueType;
+            this.OwnerType = new DCILTypeReference((DCILClass)field.Parent);
+            this.FieldName = field.Name;
+            this.LocalField = field;
+        }
+
         public DCILFieldReference(DCILReader reader)
         {
             this.ValueType = DCILTypeReference.Load(reader);
@@ -8556,7 +8584,10 @@ namespace JIEJIE
                 this.FieldName = reader.ReadWord();
             }
         }
-
+        public override string ToString()
+        {
+            return this.ValueType?.ToString() + " " + this.OwnerType?.Name + "::" + this.FieldName;
+        }
         public DCILTypeReference ValueType = null;
         public DCILTypeReference OwnerType = null;
         public DCILField LocalField = null;
@@ -8706,6 +8737,19 @@ namespace JIEJIE
             this.OperCode = operCode;
             this.Value = new DCILFieldReference(reader);
         }
+        public DCILOperCode_HandleField(string labelID, string operCode, DCILField localField )
+        {
+            this.LabelID = labelID;
+            this.OperCode = operCode;
+            this.Value = new DCILFieldReference(localField);
+            this.LocalField = localField;
+        }
+
+        public override string ToString()
+        {
+            return this.LabelID + " : " + this.OperCode + " " + this.Value.ToString();
+        }
+
         public DCILFieldReference Value = null;
 
         public DCILField LocalField = null;
@@ -10041,11 +10085,12 @@ namespace JIEJIE
             this.InnerGenerate = true;
         }
 
+        public DCILMethod Method_Cctor = null;
+
         public override void Load(DCILReader reader)
         {
             LoadHeader(reader);
             LoadContent(reader);
-
         }
         private static readonly DCILProperty[] _EmptyArray = new DCILProperty[0];
 
@@ -10191,6 +10236,10 @@ namespace JIEJIE
                             var m = new DCILMethod(this, reader);
                             this.ChildNodes.Add(m);
                             reader.NumOfMethod++;
+                            if(m.Name == ".cctor")
+                            {
+                                this.Method_Cctor = m;
+                            }
                         }
                         break;
                     case DCILProperty.TagName_property:
@@ -11633,7 +11682,17 @@ namespace JIEJIE
             return RemoveStyle("specialname");
         }
 
-
+        public void AddStyles(params string[] names)
+        {
+            if (names != null && names.Length > 0)
+            {
+                if (this.Styles == null)
+                {
+                    this.Styles = new List<string>();
+                }
+                this.Styles.AddRange(names);
+            }
+        }
         public bool AddStyle(string name)
         {
             if (name != null && name.Length > 0)
@@ -12154,6 +12213,7 @@ namespace JIEJIE
         public static readonly DCILTypeReference Type_Void = null;
         public static readonly DCILTypeReference Type_String = null;
         public static readonly DCILTypeReference Type_Object = null;
+        public static readonly DCILTypeReference Type_Int32 = null;
         static DCILTypeReference()
         {
             PrimitiveTypeNames = new HashSet<string>();
@@ -12200,7 +12260,10 @@ namespace JIEJIE
             Type_Void = _PrimitiveTypes["void"];
             Type_String = _PrimitiveTypes["string"];
             Type_Object = _PrimitiveTypes["object"];
+            Type_Int32 = _PrimitiveTypes["int32"];
+
             _Cache_CreateByNativeType[typeof(string)] = Type_String;
+
         }
 
         public bool EqualsValue(DCILTypeReference type, DCILGenericParamterList gps)
@@ -15183,6 +15246,23 @@ namespace JIEJIE
 
     internal static class DCUtils
     {
+        public static int ConvertToInt32( string v )
+        {
+            if(v == null || v.Length == 0 )
+            {
+                throw new ArgumentNullException("v");
+            }
+            if (v.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                int result = int.Parse(v.Substring(2), System.Globalization.NumberStyles.HexNumber);
+                return result;
+            }
+            else
+            {
+                return Convert.ToInt32(v);
+            }
+        }
+
         public static bool IsSystemAsseblyName(string asmName)
         {
             if( asmName == null || asmName .Length == 0 )
