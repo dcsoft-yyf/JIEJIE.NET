@@ -797,7 +797,9 @@ public static byte[] GetBytes()
 public static byte[] GetBytes()
 {
 	byte[] array = new byte[18];
-	InnerAssemblyHelper20211018.MyInitializeArray(array, (RuntimeFieldHandle)/*OpCode not supported: LdMemberToken*/);
+	InnerAssemblyHelper20211018.MyInitializeArray(
+		array, 
+		(RuntimeFieldHandle)/*OpCode not supported: LdMemberToken*/);
 	return array;
 }
 ```
@@ -830,7 +832,8 @@ private static XTextSignImageElement GetHandledSignImageElement(XTextContainerEl
 	{
 		return null;
 	}
-	XTextElementList elementsByType = container.GetElementsByType(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._956_413));
+	XTextElementList elementsByType = container.GetElementsByType(
+	    _RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._956_413));
 	if (elementsByType != null && elementsByType.Count > 0)
 	{
 		elementsByType.GetEnumerator();
