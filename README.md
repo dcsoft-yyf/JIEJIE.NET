@@ -807,44 +807,41 @@ public static byte[] GetBytes()
 ## 10, Encrypt typeof() instruction.
    People offen use typeof() instruction to get Type. But this contains some information can used by cracter. JIEJIE.NET can hidden it. For example :
 ```C#
-private static XTextSignImageElement GetHandledSignImageElement( XTextContainerElement container )
+public static string CheckXmlSerialize()
 {
-    if( container == null )
-    {
-        return null;
-    }
-    var list = container.GetElementsByType(typeof(XTextSignImageElement));
-    if( list != null && list.Count > 0 )
-    {
-        foreach( XTextSignImageElement img in list )
-        {
-            return img;
-        }
-    }
-    return null;
+    List<Type> rootTypes = new List<Type>();
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextDocument));
+    rootTypes.Add(typeof(DCSoft.TemperatureChart.TemperatureDocument));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextAccountingNumberElement));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextBarcodeFieldElement));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextBeanFieldElement));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextBlankLineElement));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextBlockElement));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextBookmark));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextButtonElement));
+    rootTypes.Add(typeof(DCSoft.Writer.Dom.XTextCharElement));
+    string result = WriterUtils.CheckXmlName(rootTypes);
+    return result;
 }
 ```
    After use JIEJIE.NET, the code change to :
 ```C#
-private static XTextSignImageElement GetHandledSignImageElement(XTextContainerElement container)
+public static string CheckXmlSerialize()
 {
-	if (container == null)
-	{
-		return null;
-	}
-	XTextElementList elementsByType = container.GetElementsByType(
-	    _RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._956_413));
-	if (elementsByType != null && elementsByType.Count > 0)
-	{
-		elementsByType.GetEnumerator();
-		using List<XTextElement>.Enumerator enumerator = /*Error near IL_0011: Stack underflow*/;
-		if (enumerator.MoveNext())
-		{
-			return (XTextSignImageElement)enumerator.Current;
-		}
-	}
-	return null;
+	List<Type> list = new List<Type>();
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._1002_827));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._1964_633));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._4356_95));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._680_162));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._533_68));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._4013_536));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._3964_1144));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._628_824));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._464_234));
+	list.Add(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._3013_501));
+	return WriterUtils.CheckXmlName(list);
 }
+
 ```
    If it work with rename, Cracter is very difficult to find the Type value.
    
