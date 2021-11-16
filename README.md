@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2021-11-11: Encrypt typeof() instruction.
 <br/> 2021-11-11: Encrypt byte array and integer values.fix for COM interop.
 <br/> 2021-11-1 : Remove property/event which renamed.
 <br/> 2021-10-25: Hidden array define.
@@ -800,20 +801,64 @@ public static byte[] GetBytes()
 	return array;
 }
 ```
+
+## 10, Encrypt typeof() instruction.
+   People offen use typeof() instruction to get Type. But this contains some information can used by cracter. JIEJIE.NET can hidden it. For example :
+```C#
+private static XTextSignImageElement GetHandledSignImageElement( XTextContainerElement container )
+{
+    if( container == null )
+    {
+        return null;
+    }
+    var list = container.GetElementsByType(typeof(XTextSignImageElement));
+    if( list != null && list.Count > 0 )
+    {
+        foreach( XTextSignImageElement img in list )
+        {
+            return img;
+        }
+    }
+    return null;
+}
+```
+   After use JIEJIE.NET, the code change to :
+```C#
+private static XTextSignImageElement GetHandledSignImageElement(XTextContainerElement container)
+{
+	if (container == null)
+	{
+		return null;
+	}
+	XTextElementList elementsByType = container.GetElementsByType(_RuntimeTypeHandleContainer.GetTypeInstance(_Int32ValueContainer._956_413));
+	if (elementsByType != null && elementsByType.Count > 0)
+	{
+		elementsByType.GetEnumerator();
+		using List<XTextElement>.Enumerator enumerator = /*Error near IL_0011: Stack underflow*/;
+		if (enumerator.MoveNext())
+		{
+			return (XTextSignImageElement)enumerator.Current;
+		}
+	}
+	return null;
+}
+```
+   If it work with rename, Cracter is very difficult to find the Type value.
+   
    Many information has been hidden.
-## 10 , Merge assembly files.
+## 11 , Merge assembly files.
    When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
-## 11 Change target platform
+## 12 Change target platform
   JIEJIE.NET support change .coreflags or .subsystem arguments to change the target platform for result assembly . For example , a .NET assembly is design for x86 , using the following command line: 
 <br/> `jiejie.net.exe d:\aa.dll .corflags=0x1`
 <br/>This can modify the result assembly file to x64 platform.
    
-## 12 , Support .NET Core 3.1
+## 13 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
 
-## 13 , Easy to use.
+## 14 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
