@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2021-11-19: Encrypt enum value when calling method.
 <br/> 2021-11-16: Encrypt typeof() instruction.
 <br/> 2021-11-11: Encrypt byte array and integer values.fix for COM interop.
 <br/> 2021-11-1 : Remove property/event which renamed.
@@ -846,19 +847,79 @@ public static string CheckXmlSerialize()
    If it work with rename, Cracter is very difficult to find the Type value.
    
    Many information has been hidden.
-## 11 , Merge assembly files.
+## 11 , Encrypt enum values.
+   Many code whitch call funcions use enum values, for example:
+```C#
+public Dictionary<string, string> GetAllOptionValues()
+{
+    Dictionary<string, string> result = new Dictionary<string, string>();
+    foreach (PropertyInfo p in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+    {
+        object v = p.GetValue(this, null);
+        foreach (PropertyInfo p2 in v.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (p2.CanRead == false || p2.CanWrite == false)
+            {
+                continue;
+            }
+            object v2 = p2.GetValue(v, null);
+            if (v2 != null)
+            {
+                string txt = v2.ToString();
+                if (v2 is System.Drawing.Color)
+                {
+                    txt = XMLSerializeHelper.ColorToString((Color)v2);
+                }
+                result[p.Name + '.' + p2.Name] = txt;
+            }
+        }//foreach
+    }//foreach
+    return result;
+}
+```
+After use JIEJIE.NET, It change to:
+```C#
+public Dictionary<string, string> GetAllOptionValues()
+{
+    Dictionary<string, string> result = new Dictionary<string, string>();
+    foreach (PropertyInfo p in this.GetType().GetProperties((BindingFlags)_Int32ValueContainer._22_20))
+    {
+        object v = p.GetValue(this, null);
+        foreach (PropertyInfo p2 in v.GetType().GetProperties((BindingFlags)_Int32ValueContainer._22_20))
+        {
+            if (p2.CanRead == false || p2.CanWrite == false)
+            {
+                continue;
+            }
+            object v2 = p2.GetValue(v, null);
+            if (v2 != null)
+            {
+                string txt = v2.ToString();
+                if (v2 is System.Drawing.Color)
+                {
+                    txt = XMLSerializeHelper.ColorToString((Color)v2);
+                }
+                result[p.Name + '.' + p2.Name] = txt;
+            }
+        }//foreach
+    }//foreach
+    return result;
+}
+```
+   Some information has been hidden.
+## 12 , Merge assembly files.
    When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
-## 12 Change target platform
+## 13 Change target platform
   JIEJIE.NET support change .coreflags or .subsystem arguments to change the target platform for result assembly . For example , a .NET assembly is design for x86 , using the following command line: 
 <br/> `jiejie.net.exe d:\aa.dll .corflags=0x1`
 <br/>This can modify the result assembly file to x64 platform.
    
-## 13 , Support .NET Core 3.1
+## 14 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
 
-## 14 , Easy to use.
+## 15 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -894,7 +955,7 @@ My new tool is a .NET framework console  application.
 
 ```
 
-## So many cool features! But JieJie.NET only has 16000 C# code lines!
+## So many cool features! But JieJie.NET only has 18000 C# code lines!
    
    So it is small and without any third party component.
 
