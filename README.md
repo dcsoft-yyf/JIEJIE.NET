@@ -2,7 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2021-12-14: Let software run faster and less memory used.
+<br/> 2021-12-14: Let software run faster and less memory used.support `crossgen.exe` for .net core.
 <br/> 2021-12-06: Support `ldtoken method`.
 <br/> 2021-11-19: Encrypt enum value when calling method.
 <br/> 2021-11-16: Encrypt typeof() instruction.
