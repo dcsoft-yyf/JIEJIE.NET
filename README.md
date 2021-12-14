@@ -2,7 +2,8 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2021-12-06: Support ldtoken method.
+<br/> 2021-12-14: Let software run faster and less memory used.
+<br/> 2021-12-06: Support `ldtoken method`.
 <br/> 2021-11-19: Encrypt enum value when calling method.
 <br/> 2021-11-16: Encrypt typeof() instruction.
 <br/> 2021-11-11: Encrypt byte array and integer values.fix for COM interop.
@@ -734,39 +735,28 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
 ## 8 , Save rename map xml file.
    JIEJIE.NET can save rename map xml file just like the following:
 ```XML
-<dotfuscatorMap>
-   <header>
-      <timestamp>2021-10-23 9:13:25</timestamp>
-      <product version="1.4.0.1" user="yfyuan">JieJie.NET</product>
-   </header>
-   <mapping>
-      <module>
-         <name>DCSoft.Writer.ForASPNETCore.dll</name>
-         <type>
-            <name>DCSoft.MyLicense.D8CLicNothing217Helper</name>
-            <newname>zzz.z0ZzZzxgk</newname>
-            <fieldlist>
-               <field>
-                  <signature>System.Collections.Generic.Dictionary`2&lt;object,object&gt;</signature>
-                  <name>_Fields</name>
-                  <newname>z0xjk</newname>
-               </field>
-            </fieldlist>
-         </type>
-         <type>
-            <name>DCSoft.MyLicense.D8CLicNothing063Attribute</name>
-            <newname>zzz.z0ZzZzzgk</newname>
-         </type>
-         <type>
-            <name>DCSoft.Writer.Controls.Web.WebServerCommand</name>
-            <newname>zzz.z0ZzZzlfk</newname>
-            <fieldlist>
-               <field>
-                  <signature>string</signature>
-                  <name>_Description</name>
-                  <newname>z0zjk</newname>
-               </field>
+<jiejie.net.map methodCount="18347">
+   <method newsign="zzz.z0ZzZzgvg.z0aa(System.IO.Stream)" oldsign="DCSoft.Writer.Serialization.Html.IWriterHtmlDocumentWriter.SaveMHT(System.IO.Stream 'stream')" newshort="(Stream)" newname="zzz.z0ZzZzgvg.z0aa" />
+   <method newsign="zzz.z0ZzZztvg.z0aa(System.IO.Stream)" oldsign="DCSoft.Writer.Html.HtmlDocumentWriter.SaveMHT(System.IO.Stream 'stream')" newshort="(Stream)" newname="zzz.z0ZzZztvg.z0aa" />
+   <method newsign="zzz.z0ZzZzmok.z0aak(String)" oldsign="Open_Newtonsoft_Json.Linq.JTokenWriter.WriteRaw(String json)" newshort="(String)" newname="zzz.z0ZzZzmok.z0aak" />
+   <method newsign="zzz.z0ZzZzkrk.z0aak(String)" oldsign="Open_Newtonsoft_Json.JsonTextWriter.WriteRaw(String json)" newshort="(String)" newname="zzz.z0ZzZzkrk.z0aak" />
+   <method newsign="zzz.z0ZzZzhrk.z0aak(String)" oldsign="Open_Newtonsoft_Json.JsonWriter.WriteRaw(String json)" newshort="(String)" newname="zzz.z0ZzZzhrk.z0aak" />
+   <method newsign="zzz.z0ZzZzcaj.z0ab(DCSoft.Writer.Dom.XTextImageElement)" oldsign="DCSoft.TypeProviders.TypeProvider_XTextImageElement.GetRuntimeImage(DCSoft.Writer.Dom.XTextImageElement thisElement)" newshort="(XTextImageElement)" newname="zzz.z0ZzZzcaj.z0ab" />
+   <method newsign="DCSoft.Writer.Dom.XTextImageElement.z0ZzZztlf.z0ab(DCSoft.Writer.Dom.XTextImageElement)" oldsign="DCSoft.Writer.Dom.XTextImageElement.ITypeProvider_XTextImageElement.GetRuntimeImage(DCSoft.Writer.Dom.XTextImageElement thisElement)" newshort="(XTextImageElement)" newname="DCSoft.Writer.Dom.XTextImageElement.z0ZzZztlf.z0ab" />
+   <method newsign="DCSoft.Writer.Dom.XTextCheckBoxElementBase.z0ZzZzbzg.z0ac(DCSoft.Writer.Dom.XTextCheckBoxElementBase,Boolean)" oldsign="DCSoft.Writer.Dom.XTextCheckBoxElementBase.ITypeProvider_XTextCheckBoxElementBase.SetInnerEditorChecked(DCSoft.Writer.Dom.XTextCheckBoxElementBase element,Boolean 'value')" newshort="(XTextCheckBoxElementBase,Boolean)" newname="DCSoft.Writer.Dom.XTextCheckBoxElementBase.z0ZzZzbzg.z0ac" />
+   <method newsign="zzz.z0ZzZzmaj.z0ac(DCSoft.Writer.Dom.XTextCheckBoxElementBase,Boolean)" oldsign="DCSoft.TypeProviders.TypeProvider_XTextCheckBoxElementBase.SetInnerEditorChecked(DCSoft.Writer.Dom.XTextCheckBoxElementBase element,Boolean 'value')" newshort="(XTextCheckBoxElementBase,Boolean)" newname="zzz.z0ZzZzmaj.z0ac" />
+   <method newsign="DCSoft.Writer.Dom.XTextFieldElementBase.z0ad(DCSoft.Writer.Dom.XTextElement)" oldsign="DCSoft.Writer.Dom.XTextFieldElementBase.IsParentOrSupParent(DCSoft.Writer.Dom.XTextElement element)" newshort="(XTextElement)" newname="DCSoft.Writer.Dom.XTextFieldElementBase.z0ad" />
+   <method newsign="DCSoft.Writer.Dom.XTextElement.z0ad(DCSoft.Writer.Dom.XTextElement)" oldsign="DCSoft.Writer.Dom.XTextElement.IsParentOrSupParent(DCSoft.Writer.Dom.XTextElement parentElement)" newshort="(XTextElement)" newname="DCSoft.Writer.Dom.XTextElement.z0ad" />
+   <method newsign="DCSoft.Writer.Dom.XTextDocument.z0ad(DCSoft.Writer.Dom.XTextElement)" oldsign="DCSoft.Writer.Dom.XTextDocument.IsParentOrSupParent(DCSoft.Writer.Dom.XTextElement parentElement)" newshort="(XTextElement)" newname="DCSoft.Writer.Dom.XTextDocument.z0ad" />
+   <method newsign="zzz.z0ZzZzlok.z0adk(Object,zzz.z0ZzZztok)" oldsign="Open_Newtonsoft_Json.Linq.JConstructor.set_Item(Object key,Open_Newtonsoft_Json.Linq.JToken 'value')" newshort="(Object,z0ZzZztok)" newname="zzz.z0ZzZzlok.z0adk" />
+   <method newsign="zzz.z0ZzZzfok.z0adk(Object,zzz.z0ZzZztok)" oldsign="Open_Newtonsoft_Json.Linq.JObject.set_Item(Object key,Open_Newtonsoft_Json.Linq.JToken 'value')" newshort="(Object,z0ZzZztok)" newname="zzz.z0ZzZzfok.z0adk" />
+   <method newsign="zzz.z0ZzZzzik.z0adk(Object,zzz.z0ZzZztok)" oldsign="Open_Newtonsoft_Json.Linq.JArray.set_Item(Object key,Open_Newtonsoft_Json.Linq.JToken 'value')" newshort="(Object,z0ZzZztok)" newname="zzz.z0ZzZzzik.z0adk" />
+   <method newsign="zzz.z0ZzZztok.z0adk(Object,zzz.z0ZzZztok)" oldsign="Open_Newtonsoft_Json.Linq.JToken.set_Item(Object key,Open_Newtonsoft_Json.Linq.JToken 'value')" newshort="(Object,z0ZzZztok)" newname="zzz.z0ZzZztok.z0adk" />
+   <method newsign="zzz.z0ZzZzbyg.z0ae(DCSoft.Writer.Dom.XTextDocumentList)" oldsign="DCSoft.DCPDF.PDFBuilder.set_Documents(DCSoft.Writer.Dom.XTextDocumentList 'value')" newshort="(XTextDocumentList)" newname="zzz.z0ZzZzbyg.z0ae" />
 ```
+Use command line `JIEJIE.NET.EXE translate=map.xml`,User can translate stack trace information.The UI is :
+<br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/snapshort.png"/>
+
 ## 9 , Hidden array define.
    People offen define array in source code , for example :
 ```C#
