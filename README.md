@@ -755,7 +755,7 @@ When hakers capture one key member,for example `_RegisterCode` , and analyse oth
    <method newsign="zzz.z0ZzZzbyg.z0ae(DCSoft.Writer.Dom.XTextDocumentList)" oldsign="DCSoft.DCPDF.PDFBuilder.set_Documents(DCSoft.Writer.Dom.XTextDocumentList 'value')" newshort="(XTextDocumentList)" newname="zzz.z0ZzZzbyg.z0ae" />
 ```
 Use command line `JIEJIE.NET.EXE translate=map.xml`,User can translate stack trace information.The UI is :
-<br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/snapshort.png"/>
+<br/><img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/translate.png"/>
 
 ## 9 , Hidden array define.
    People offen define array in source code , for example :
