@@ -947,7 +947,7 @@ My new tool is a .NET framework console  application.
 
 ```
 
-## So many cool features! But JieJie.NET only has 18000 C# code lines!
+## So many cool features! But JieJie.NET only has 20000 lines C# source code!
    
    So it is small and without any third party component.
 
