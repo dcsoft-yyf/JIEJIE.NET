@@ -45,12 +45,13 @@ namespace JIEJIE
         [STAThreadAttribute]
         static void Main(string[] args)
         {
-           
-            
+
+             
 #endif
 
             string inputAssmblyFileName = null;
             string outputAssemblyFileName = null;
+            string inputTempPath = null;
             bool pause = false;
             //const string _SwapCallModeFlag = "4325faf20210820";
             var eng = new DCJieJieNetEngine();
@@ -83,6 +84,9 @@ namespace JIEJIE
                                     DCJieJieNetEngine.ConsoleTranslateStackTraceUseMapXml(argValue);
                                     return;
                                 }
+                                break;
+                            case "inputtemppath":
+                                inputTempPath = argValue;
                                 break;
                             case "input":
                                 inputAssmblyFileName = argValue;
@@ -203,84 +207,108 @@ namespace JIEJIE
      Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
         >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk switch=+contorlfow,-resources
 **************************** MADE IN CHINA **********************************************";
+                var startDir = Path.GetDirectoryName(typeof(DCJieJieNetEngine).Assembly.Location);
+                string inputDir = null;
                 if (inputAssmblyFileName != null && inputAssmblyFileName.Length > 0)
                 {
-                    if (File.Exists(inputAssmblyFileName))
+                    inputTempPath = null;
+                    if (File.Exists(inputAssmblyFileName) == false)
                     {
-                        Console.Title = "JieJie.NET - " + inputAssmblyFileName;
-                        Console.WriteLine("**************************** MADE IN CHINA **********************************************");
-                        Console.ResetColor();
-                        var inputDir = Path.GetDirectoryName(inputAssmblyFileName);
-                        var startDir = Path.GetDirectoryName(typeof(DCJieJieNetEngine).Assembly.Location);
-                        System.AppDomain taskDomain = null;
-                        if (string.Compare(startDir, inputDir, true) != 0 && eng.Switchs.Rename )
-                        {
-#if DOTNETCORE
-                            DCILTypeReference._AsmLoader = new System.Runtime.Loader.AssemblyLoadContext("jiejie.net temp");
-#else
-                            // 使用跨域来解决来源程序集不在同一个路径的问题
-                            System.AppDomainSetup appSetup = new System.AppDomainSetup();
-                            appSetup.PrivateBinPath = inputDir;
-                            appSetup.ApplicationName = "jiejie.net temp";
-                            appSetup.ApplicationBase = inputDir;
-                            if (AppDomain.CurrentDomain.ApplicationTrust != null)
-                            {
-                                appSetup.ApplicationTrust = AppDomain.CurrentDomain.ApplicationTrust;
-                            }
-                            taskDomain = System.AppDomain.CreateDomain("jiejie.net temp", AppDomain.CurrentDomain.Evidence, appSetup);
-                            var taskEng = (DCJieJieNetEngine)taskDomain.CreateInstanceFromAndUnwrap(eng.GetType().Assembly.Location, eng.GetType().FullName);
-                            eng.CopytSettingsTo(taskEng);
-                            eng.Dispose();
-                            eng = taskEng;
-#endif
-                        }
-                        if (eng.LoadAssemblyFile(inputAssmblyFileName, mergeFileNames) == false)
-                        {
-                            return;
-                        }
-                        eng.SetDocumentCustomInstructions( customInstructions );
-                        eng.HandleDocument();
-                        if (outputAssemblyFileName == null || outputAssemblyFileName.Length == 0)
-                        {
-                            var dir = Path.Combine(Path.GetDirectoryName(inputAssmblyFileName), "jiejie.net_result");
-                            if (Directory.Exists(dir) == false)
-                            {
-                                Directory.CreateDirectory(dir);
-                            }
-                            outputAssemblyFileName = Path.Combine(
-                                dir, 
-                                Path.GetFileName(inputAssmblyFileName));
-                        }
-                        else if (System.IO.Directory.Exists(outputAssemblyFileName))
-                        {
-                            outputAssemblyFileName = Path.Combine(
-                                outputAssemblyFileName,
-                                Path.GetFileName(inputAssmblyFileName));
-                        }
-                        eng.SaveAssemblyFile(outputAssemblyFileName, true);
-                        if (eng.DeleteTempFile)
-                        {
-                            // 删除临时文件
-                            eng.DeleteTemplateDirecotry();
-                        }
-                        eng.Dispose();
-                        eng = null;
-#if ! DOTNETCORE
-                        if (taskDomain != null)
-                        {
-                            System.AppDomain.Unload(taskDomain);
-                        }
-#endif
+                        ConsoleWriteError("Can not find file '" + inputAssmblyFileName + "'.");
+                        return;
                     }
-                    else
+                    Console.Title = "JIEJIE.NET - " + inputAssmblyFileName;
+                    inputDir = Path.GetDirectoryName(inputAssmblyFileName);
+                    inputTempPath = null;
+                }
+                else if (inputTempPath != null && inputTempPath.Length > 0)
+                {
+                    if (Directory.Exists(inputTempPath) == false)
                     {
-                        ConsoleWriteError("Can not find file : " + inputAssmblyFileName);
+                        ConsoleWriteError("Can not find path '" + inputTempPath + "'.");
+                        return;
+                    }
+                    Console.Title = "JIEJIE.NET use IL - " + inputTempPath;
+                    inputDir = inputTempPath;
+                    inputAssmblyFileName = null;
+                }
+                else
+                {
+                    Console.ResetColor();
+                    Console.WriteLine(strInfoMore);
+                    return;
+                }
+                Console.WriteLine("**************************** MADE IN CHINA **********************************************");
+                Console.ResetColor();
+                System.AppDomain taskDomain = null;
+                if (string.Compare(startDir, inputDir, true) != 0 && eng.Switchs.Rename)
+                {
+#if DOTNETCORE
+                        DCILTypeReference._AsmLoader = new System.Runtime.Loader.AssemblyLoadContext("jiejie.net temp");
+#else
+                    // 使用跨域来解决来源程序集不在同一个路径的问题
+                    System.AppDomainSetup appSetup = new System.AppDomainSetup();
+                    appSetup.PrivateBinPath = inputDir;
+                    appSetup.ApplicationName = "jiejie.net temp";
+                    appSetup.ApplicationBase = inputDir;
+                    if (AppDomain.CurrentDomain.ApplicationTrust != null)
+                    {
+                        appSetup.ApplicationTrust = AppDomain.CurrentDomain.ApplicationTrust;
+                    }
+                    taskDomain = System.AppDomain.CreateDomain("jiejie.net temp", AppDomain.CurrentDomain.Evidence, appSetup);
+                    var taskEng = (DCJieJieNetEngine)taskDomain.CreateInstanceFromAndUnwrap(eng.GetType().Assembly.Location, eng.GetType().FullName);
+                    eng.CopytSettingsTo(taskEng);
+                    eng.Dispose();
+                    eng = taskEng;
+#endif
+                }
+                if (inputAssmblyFileName != null)
+                {
+                    if (eng.LoadAssemblyFile(inputAssmblyFileName, mergeFileNames) == false)
+                    {
+                        return;
                     }
                 }
                 else
                 {
-                    Console.WriteLine(strInfoMore);
+                    if(eng.LoadILFromTempPath( inputTempPath ) == false )
+                    {
+                        return;
+                    }
                 }
+                eng.SetDocumentCustomInstructions(customInstructions);
+                eng.HandleDocument();
+                if (outputAssemblyFileName == null || outputAssemblyFileName.Length == 0)
+                {
+                    var dir = Path.Combine(Path.GetDirectoryName(inputAssmblyFileName), "jiejie.net_result");
+                    if (Directory.Exists(dir) == false)
+                    {
+                        Directory.CreateDirectory(dir);
+                    }
+                    outputAssemblyFileName = Path.Combine(
+                        dir,
+                        Path.GetFileName(eng.GetDocumentAssemblyFileName()));
+                }
+                else if (System.IO.Directory.Exists(outputAssemblyFileName))
+                {
+                    outputAssemblyFileName = Path.Combine(
+                        outputAssemblyFileName,
+                        Path.GetFileName(eng.GetDocumentAssemblyFileName()));
+                }
+                eng.SaveAssemblyFile(outputAssemblyFileName, true);
+                if (eng.DeleteTempFile)
+                {
+                    // 删除临时文件
+                    eng.DeleteTemplateDirecotry();
+                }
+                eng.Dispose();
+                eng = null;
+#if !DOTNETCORE
+                if (taskDomain != null)
+                {
+                    System.AppDomain.Unload(taskDomain);
+                }
+#endif
             }
             catch (System.Exception ext)
             {
@@ -490,7 +518,12 @@ namespace JIEJIE
                 this._ByteDataContainer.Dispose();
                 this._ByteDataContainer = null;
             }
-            
+            if( this._Int32ValueString != null )
+            {
+                this._Int32ValueString.Dispose();
+                this._Int32ValueString = null;
+            }
+     
             DCILTypeReference.ClearCacheNativeTypes();
             if(this._Cache_BaseMethods != null )
             {
@@ -504,12 +537,20 @@ namespace JIEJIE
                     item.Value.Clear();
                 }
                 this._Cache_BaseMethods.Clear();
+                this._Cache_BaseMethods = null;
             }
             if(this._CallOperCodes != null )
             {
                 this._CallOperCodes.Clear();
                 this._CallOperCodes = null;
             }
+            this._NewPNameGen = null;
+            this._LabelGen_MyInitializeArray = null;
+            this.ContentEncoding = null;
+            this.SnkFileName = null;
+            this._InputAssemblyDirectory = null;
+            this._InputAssemblyFileName = null;
+            this.TempDirectory = null;
             GC.Collect();
         }
         /// <summary>
@@ -842,6 +883,55 @@ namespace JIEJIE
                 {
                     break;
                 }
+                if (maps.ContainsKey(strWord) == false)
+                {
+                    string clsName = null;
+                    string methodName = null;
+                    if (strWord.IndexOf('.') > 0 && reader.PeekContentChar() == '(')
+                    {
+                        methodName = DCUtils.GetShortName(strWord, out clsName);
+                    }
+                    else if (reader.PeekContentChar() == ':')
+                    {
+                        if (reader.ReadContentChar() == ':' && reader.Read() == ':')
+                        {
+                            clsName = strWord;
+                            methodName = reader.ReadWord();
+                        }
+                    }
+                    if (clsName != null && methodName != null)
+                    {
+                        if (maps.ContainsKey(clsName + "." + methodName))
+                        {
+                            strWord = clsName + "." + methodName;
+                        }
+                        else
+                        {
+                            if (clsMaps.ContainsKey(clsName))
+                            {
+                                strResult.Append(clsMaps[clsName]);
+                            }
+                            else
+                            {
+                                strResult.Append(clsName);
+                            }
+                            strResult.Append('.');
+                            strResult.Append(methodName);
+                            int lineIndex = reader.CurrentLineIndex();
+                            TranslateMethodParameter(reader, strResult, clsMaps, shortClsMaps);
+                            if (lineIndex == reader.CurrentLineIndex())
+                            {
+                                strResult.Append(reader.ReadLineTrim());
+                            }
+                            strResult.AppendLine();
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
                 if (maps.ContainsKey(strWord))
                 {
                     // 直接命中名称
@@ -898,36 +988,10 @@ namespace JIEJIE
                     }//foreach
                     if (find == false)
                     {
-                        strResult.Append(infos[0].OldSign + "[ !! Maby !!]");
+                        strResult.Append(infos[0].OldSign + "[!! Maby !!]");
                     }
                     strResult.Append(reader.ReadLineTrim());
                     strResult.AppendLine();
-                }
-                else if (strWord.IndexOf('.') > 0 && reader.PeekContentChar() == '(')
-                {
-                    string clsName = null;
-                    string methodName = DCUtils.GetShortName(strWord, out clsName);
-
-                    if (clsName != null && clsName.Length > 0)
-                    {
-                        if (clsMaps.ContainsKey(clsName))
-                        {
-                            strResult.Append(clsMaps[clsName]);
-                        }
-                        else
-                        {
-                            strResult.Append(clsName);
-                        }
-                        strResult.Append('.');
-                        strResult.Append(methodName);
-                        int lineIndex = reader.CurrentLineIndex();
-                        TranslateMethodParameter(reader, strResult, clsMaps, shortClsMaps);
-                        if (lineIndex == reader.CurrentLineIndex())
-                        {
-                            strResult.Append(reader.ReadLineTrim());
-                        }
-                        strResult.AppendLine();
-                    }
                 }
             }//while
             var strResultStr = strResult.ToString();
@@ -1384,6 +1448,113 @@ namespace JIEJIE
         private int _SourceAssemblyFileSize = 0;
 
         /// <summary>
+        /// 从一个临时目录中加载IL文件
+        /// </summary>
+        /// <param name="rootPath">临时目录</param>
+        /// <returns>操作是否成功</returns>
+        public bool LoadILFromTempPath(string rootPath)
+        {
+            if (rootPath == null || rootPath.Length == 0)
+            {
+                throw new ArgumentNullException("rootPath");
+            }
+            if (Directory.Exists(rootPath) == false)
+            {
+                throw new DirectoryNotFoundException(rootPath);
+            }
+            this._SourceAssemblyFileSize = 0;
+            if (this.ContentEncoding == null)
+            {
+                this.ContentEncoding = Encoding.UTF8;
+            }
+            if (this.SDKDirectory == null
+                || this.SDKDirectory.Length == 0
+                || System.IO.Directory.Exists(this.SDKDirectory) == false)
+            {
+                this.SDKDirectory = DCUtils.GetSDKDir();
+            }
+            ConsoleWriteTask();
+            Console.Write(" Loading document in IL format from '" + rootPath + "'.");
+            var documents = new List<DCILDocument>();
+            foreach (var subDir in Directory.GetDirectories(rootPath))
+            {
+                var sn = Path.GetFileName(subDir);
+                var ilFileName = Path.Combine(subDir, sn + ".dll.il");
+                string asmFileName = sn + ".dll";
+                if(File.Exists( ilFileName ) == false )
+                {
+                    ilFileName = Path.Combine(subDir, sn + ".exe.il");
+                    asmFileName = sn + ".exe";
+                }
+                if (File.Exists(ilFileName))
+                {
+                    Console.Write(Environment.NewLine + "      Loading '" + ilFileName + "' ...");
+                    int tick = Environment.TickCount;
+                    var doc = new DCILDocument();
+                    doc.LoadByReader(ilFileName, this.ContentEncoding);
+                    doc.AssemblyFileName = asmFileName;
+                    documents.Add(doc);
+                    tick = Math.Abs(tick - Environment.TickCount);
+                    Console.Write(" span " + tick + " millisenconds , get " + doc.Classes.Count + " classes.");
+                }
+            }
+            if (documents.Count > 1)
+            {
+                // 根据程序集之间相互引用关系来获得主程序集对象
+                var mainDocs = new List<DCILDocument>(documents);
+                for (int iCount = mainDocs.Count - 1; iCount >= 0; iCount--)
+                {
+                    var mainDoc = mainDocs[iCount];
+                    bool beRef = false;
+                    foreach (var doc in documents)
+                    {
+                        if (doc != mainDoc)
+                        {
+                            foreach (var asm in doc.Assemblies)
+                            {
+                                if (asm.IsExtern && string.Compare(asm.Name, mainDoc.Name, true) == 0)
+                                {
+                                    beRef = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (beRef)
+                        {
+                            break;
+                        }
+                    }
+                    if (beRef)
+                    {
+                        mainDocs.RemoveAt(iCount);
+                    }
+                }
+                if (mainDocs.Count > 0)
+                {
+                    documents.Remove(mainDocs[0]);
+                    documents.Insert(0, mainDocs[0]);
+                }
+                Console.WriteLine();
+                ConsoleWriteTask();
+                Console.WriteLine("Merging assembly files ...");
+                // 进行文档合并
+                this.Document = DCILDocument.MergeDocuments(documents);
+            }
+            else
+            {
+                this.Document.UpdateCustomAttributeValues();
+            }
+            return true;
+        }
+        /// <summary>
+        /// 获得文档程序集文件名
+        /// </summary>
+        /// <returns>文件名</returns>
+        public string GetDocumentAssemblyFileName()
+        {
+            return this.Document?.AssemblyFileName;
+        }
+        /// <summary>
         /// 加载程序集文件
         /// </summary>
         /// <param name="asmFileName">程序集文件名</param>
@@ -1468,16 +1639,16 @@ namespace JIEJIE
                     Console.ResetColor();
                     return false;
                 }
-                this.Document = documents[0];
                 if (documents.Count > 1)
                 {
                     ConsoleWriteTask();
-                    Console.WriteLine("Merge other assembly files to " + Path.GetFileName(this.Document.AssemblyFileName));
+                    Console.WriteLine("Merging assembly files ...");
                     // 进行文档合并
                     this.Document = DCILDocument.MergeDocuments(documents);
                 }
                 else
                 {
+                    this.Document = documents[0];
                     this.Document.UpdateCustomAttributeValues();
                 }
                 var fileDepsJson = Path.ChangeExtension(asmFileName, "deps.json");
@@ -3698,7 +3869,7 @@ namespace JIEJIE
             return result;
         }
 
-        internal class NumberNameGen
+        internal class NumberNameGen :IDisposable
         {
             public NumberNameGen(string prefix, int num = 0)
             {
@@ -3728,6 +3899,15 @@ namespace JIEJIE
             }
             private string _Prefix = null;
             private List<string> _Values = new List<string>();
+            
+            public void Dispose()
+            {
+                if( this._Values != null )
+                {
+                    this._Values.Clear();
+                    this._Values = null;
+                }
+            }
         }
 
         private NumberNameGen _NewPNameGen = new NumberNameGen("p");
@@ -4162,7 +4342,7 @@ namespace JIEJIE
                 DCILMResource res = null;
                 if (this.Document.Resouces.TryGetValue(resName, out res))
                 {
-                    if (res.ResourceValues.Count == 0)
+                    if ( res.ResourceValues == null || res.ResourceValues.Count == 0)
                     {
                         continue;
                     }
@@ -4277,10 +4457,10 @@ namespace JIEJIE
                     this._ModifiedCount++;
                     this.Document.Resouces.Remove(resName);
                     var fn = Path.Combine(this.Document.RootPath, resName);
-                    if (File.Exists(fn))
-                    {
-                        File.Delete(fn);
-                    }
+                    //if (File.Exists(fn))
+                    //{
+                    //    File.Delete(fn);
+                    //}
                 }
             }//for
         }
@@ -8419,22 +8599,42 @@ namespace JIEJIE
 
         private int _LastLineIndex = 0;
         private int _LastLineIndex_Position = 0;
-        public int CurrentLineIndex()
+        public unsafe int CurrentLineIndex()
         {
             if (this._Position < this._LastLineIndex_Position)
             {
                 this._LastLineIndex = 0;
                 this._LastLineIndex_Position = 0;
             }
-            for (; this._LastLineIndex_Position < this._Position; this._LastLineIndex_Position++)
+            int result = this._LastLineIndex ;
+            fixed ( char * pFirst = this._Text)
             {
-                if (this._Text[this._LastLineIndex_Position] == '\r')
+                char* pStart = pFirst + this._LastLineIndex_Position ;
+                char* pEnd = pFirst + this._Position;
+                while( pStart < pEnd )
                 {
-                    this._LastLineIndex++;
+                    if( *pStart == '\r')
+                    {
+                        result++;
+                    }
+                    pStart++;
                 }
+                this._LastLineIndex = result;
+                this._LastLineIndex_Position = (int)(pStart - pFirst);
             }
+            return result;
+            //for (; this._LastLineIndex_Position < this._Position; this._LastLineIndex_Position++)
+            //{
+            //    if (this._Text[this._LastLineIndex_Position] == '\r')
+            //    {
+            //        this._LastLineIndex++;
+            //    }
+            //}
+            //if( result != this._LastLineIndex )
+            //{
 
-            return this._LastLineIndex;
+            //}
+            //return this._LastLineIndex;
         }
 
         public string PeekWord()
@@ -9381,6 +9581,7 @@ namespace JIEJIE
             var reader = new DCILReader(fileName, encoding, this);
             this.RootPath = Path.GetDirectoryName(fileName);
             this.FileName = fileName;
+            this._Name = Path.GetFileNameWithoutExtension(fileName);
             this.Load(reader);
             reader.Close();
         }
@@ -9906,10 +10107,17 @@ namespace JIEJIE
             }//foreach
             int clsesCount = 0;
             bool hasAddILDataItem = false;
-            for (int iCount = 1; iCount < documents.Count; iCount++)
+            int nameMaxLength = 0;
+            foreach( var doc in documents )
+            {
+                var n = Path.GetFileName(doc.AssemblyFileName);
+                nameMaxLength = Math.Max(nameMaxLength, System.Text.Encoding.UTF8.GetByteCount(n));
+            }
+            nameMaxLength += 2;
+            for (int iCount = 0 ; iCount < documents.Count; iCount++)
             {
                 var document = documents[iCount];
-                string msg = "       + " + Path.GetFileName( document.AssemblyFileName ) + "  (";
+                string msg = "";
                 if( document.FileSize > 0 )
                 {
                     msg = msg + DCUtils.FormatByteSize(document.FileSize);
@@ -9918,8 +10126,18 @@ namespace JIEJIE
                 {
                     msg = msg + " with '" + document.Name + ".XML'";
                 }
-                msg = msg + ")";
+                if(msg.Length > 0 )
+                {
+                    msg = "(" + msg +")";
+                    int len2 = Encoding.UTF8.GetByteCount(Path.GetFileName(document.AssemblyFileName));
+                    msg = new string(' ', nameMaxLength - len2) + msg ;
+                }
+                msg = "       + " + Path.GetFileName(document.AssemblyFileName) + msg ;
                 Console.WriteLine( msg );
+                if( iCount == 0 )
+                {
+                    continue;
+                }
                 if (document.Resouces != null)
                 {
                     foreach (var item in document.Resouces)
@@ -10279,6 +10497,56 @@ namespace JIEJIE
             }
             return this._AllCustomAttributes;
         }
+        /// <summary>
+        /// 根据名称获得类型对象
+        /// </summary>
+        /// <param name="typeName">类型名称</param>
+        /// <param name="nestedSplitChar">套嵌类型名称分隔字符</param>
+        /// <returns>获得的类型对象</returns>
+        public DCILClass GetClassByName(string typeName, char nestedSplitChar = '/')
+        {
+            if (typeName == null || typeName.Length == 0)
+            {
+                return null;
+            }
+            if ( nestedSplitChar == '/' || typeName.IndexOf(nestedSplitChar) < 0)
+            {
+                DCILClass result = null;
+                if (this.GetAllClassesUseCache().TryGetValue(typeName, out result))
+                {
+                    return result;
+                }
+            }
+            else
+            {
+                var tns = typeName.Split(nestedSplitChar);
+                DCILClass rootClass = null;
+                if (this.GetAllClassesUseCache().TryGetValue(tns[0], out rootClass))
+                {
+                    DCILClass curCls = rootClass;
+                    for (int iCount = 1; iCount < tns.Length; iCount++)
+                    {
+                        if (curCls.NestedClasses == null)
+                        {
+                            break;
+                        }
+                        foreach (var cls2 in curCls.NestedClasses)
+                        {
+                            if (cls2.Name == tns[iCount])
+                            {
+                                if (iCount == tns.Length - 1)
+                                {
+                                    return cls2;
+                                }
+                                curCls = cls2;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
 
         private Dictionary<string, DCILClass> _AllClasses = null;
         public Dictionary<string, DCILClass> GetAllClassesUseCache()
@@ -10290,16 +10558,16 @@ namespace JIEJIE
             }
             return this._AllClasses;
         }
-        public DCILClass GetClassByName( string clsName )
-        {
-            var clses = this.GetAllClassesUseCache();
-            DCILClass result = null;
-            if(clses.TryGetValue( clsName , out result ))
-            {
-                return result;
-            }
-            return null;
-        }
+        //public DCILClass GetClassByName( string clsName )
+        //{
+        //    var clses = this.GetAllClassesUseCache();
+        //    DCILClass result = null;
+        //    if(clses.TryGetValue( clsName , out result ))
+        //    {
+        //        return result;
+        //    }
+        //    return null;
+        //}
 
         public void ClearCacheForAllClasses()
         {
@@ -11111,11 +11379,11 @@ namespace JIEJIE
 
                 //}
             }
-            if (this.OwnerType != null)
+            if (this.OwnerType != null )
             {
                 this.OwnerType.UpdateLocalClass(clses);
                 var cls2 = this.OwnerType.LocalClass;
-                if (cls2 != null)
+                if (cls2 != null && this.LocalField == null )
                 {
                     foreach (var item in cls2.ChildNodes)
                     {
@@ -13384,6 +13652,7 @@ namespace JIEJIE
         public void LoadContent(DCILReader reader)
         {
             //reader.ReadAfterCharExcludeLastChar('{');
+            DCInterfaceimpl itimpl = null;
             while (reader.HasContentLeft())
             {
                 string strWord = reader.ReadWord();
@@ -13393,8 +13662,20 @@ namespace JIEJIE
                 }
                 switch (strWord)
                 {
+                    case DCInterfaceimpl.TagName:// ".interfaceimpl":
+                        {
+                            itimpl = new DCInterfaceimpl( reader );
+                        }
+                        break;
                     case DCILCustomAttribute.TagName_custom:
-                        base.ReadCustomAttribute(reader);
+                        {
+                            var item = base.ReadCustomAttribute(reader);
+                            if(itimpl != null )
+                            {
+                                item.PrefixObject = itimpl;
+                            }
+                            itimpl = null;
+                        }
                         break;
                     case DCILField.TagName:
                         {
@@ -14283,66 +14564,74 @@ namespace JIEJIE
             }
             private bool SetLocalClass( DCILDocument doc )
             {
-                if( this.TypeName.IndexOf('+') < 0 )
-                {
-                    return doc.GetAllClassesUseCache().TryGetValue(this.TypeName, out this.LocalClass);
-                }
-                else
-                {
-                    var tns = this.TypeName.Split('+');
-                    foreach( var cls in doc.Classes )
-                    {
-                        if( cls.Name == tns[0])
-                        {
-                            DCILClass curCls = cls;
-                            for(int iCount = 1; iCount < tns.Length; iCount ++)
-                            {
-                                if(curCls.NestedClasses == null )
-                                {
-                                    break;
-                                }
-                                foreach( var cls2 in curCls.NestedClasses)
-                                {
-                                    if( cls2.Name ==  tns[iCount])
-                                    {
-                                        if(iCount == tns.Length -1 )
-                                        {
-                                            this.LocalClass = cls2;
-                                            return true;
-                                        }
-                                        curCls = cls2;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                return false;
+                this.LocalClass = doc.GetClassByName(this.TypeName, '+');
+                return this.LocalClass != null;
+                //if( this.TypeName.IndexOf('+') < 0 )
+                //{
+                //    return doc.GetAllClassesUseCache().TryGetValue(this.TypeName, out this.LocalClass);
+                //}
+                //else
+                //{
+                //    var tns = this.TypeName.Split('+');
+                //    foreach( var cls in doc.Classes )
+                //    {
+                //        if( cls.Name == tns[0])
+                //        {
+                //            DCILClass curCls = cls;
+                //            for(int iCount = 1; iCount < tns.Length; iCount ++)
+                //            {
+                //                if(curCls.NestedClasses == null )
+                //                {
+                //                    break;
+                //                }
+                //                foreach( var cls2 in curCls.NestedClasses)
+                //                {
+                //                    if( cls2.Name ==  tns[iCount])
+                //                    {
+                //                        if(iCount == tns.Length -1 )
+                //                        {
+                //                            this.LocalClass = cls2;
+                //                            return true;
+                //                        }
+                //                        curCls = cls2;
+                //                        break;
+                //                    }
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
+                //return false;
             }
             protected void UpdateLocalInfo(ReadCustomAttributeValueArgs args)
             {
-                if (this.HasAssemblyName && args.Documents != null)
+                var doc = args.GetDocument(this.AssemblyName);
+                if (doc != null)
                 {
-                    foreach (var doc in args.Documents)
-                    {
-                        if (doc.Name == this.AssemblyName)
-                        {
-                            if(SetLocalClass( doc ))
-                            {
-                                return;
-                            }
-                            break;
-                        }
-                    }
+                    SetLocalClass(doc);
+                    return;
                 }
-                else if (args.MainDocument != null)
-                {
-                    if(SetLocalClass(args.MainDocument ))
-                    {
-                        return;
-                    }
-                }
+                //if (this.HasAssemblyName && args.Documents != null)
+                //{
+                //    foreach (var doc in args.Documents)
+                //    {
+                //        if (doc.Name == this.AssemblyName)
+                //        {
+                //            if(SetLocalClass( doc ))
+                //            {
+                //                return;
+                //            }
+                //            break;
+                //        }
+                //    }
+                //}
+                //else if (args.MainDocument != null)
+                //{
+                //    if(SetLocalClass(args.MainDocument ))
+                //    {
+                //        return;
+                //    }
+                //}
                 var t2 = new DCILTypeReference(this.TypeName, DCILTypeMode.Unsigned);
                 t2.LibraryName = this.AssemblyName;
                 this.NativeType = t2.SearchNativeType(args.AssemblySeachPath);
@@ -14353,10 +14642,10 @@ namespace JIEJIE
                 bool result = false;
                 if (this.HasAssemblyName)
                 {
-                    if (this.AssemblyName.StartsWith("System."))
-                    {
+                    //if (this.AssemblyName.StartsWith("System."))
+                    //{
 
-                    }
+                    //}
                     this.AssemblyName = null;
                     this.AssemblyCulture = null;
                     this.AssemblyPublicKeyToken = null;
@@ -14512,12 +14801,79 @@ namespace JIEJIE
         public string AssemblySeachPath = null;
         public List<DCILDocument> Documents = null;
         public DCILDocument MainDocument = null;
+
+        public DCILDocument GetDocument(string assemblyName)
+        {
+            if (this.Documents != null
+                && assemblyName != null
+                && assemblyName.Length > 0 )
+            {
+                foreach (var doc in this.Documents)
+                {
+                    if (string.Compare(doc.Name, assemblyName, true) == 0)
+                    {
+                        return doc;
+                    }
+                    if (doc.AssemblyFileName != null
+                        && string.Compare(Path.GetFileNameWithoutExtension(doc.AssemblyFileName), assemblyName, true) == 0)
+                    {
+                        return doc;
+                    }
+                }
+            }
+            return this.MainDocument;
+        }
+       
+
     }
+
+    internal class DCInterfaceimpl : DCILObject
+    {
+        public const string TagName = ".interfaceimpl";
+
+        public DCInterfaceimpl(DCILReader reader)
+        {
+            this.Type = reader.ReadWord();
+            //string tn = reader.ReadWord();
+            this.RefType = DCILTypeReference.Load(reader);
+            if( this.RefType.Mode == DCILTypeMode.Class)
+            {
+                this.HasHeaderType = true;
+            }
+        }
+
+        public void UpdateLocalInfo(ReadCustomAttributeValueArgs args)
+        {
+            //var doc = args.GetDocument(this.RefType.LibraryName);
+            //if (doc != null)
+            //{
+            //    this.RefType.UpdateLocalClass(doc.GetAllClassesUseCache());
+            //}
+        }
+        private bool HasHeaderType = false;
+
+        public string Type = null;
+
+        public DCILTypeReference RefType = null;
+        public override void WriteTo(DCILWriter writer)
+        {
+            writer.Write(TagName);
+            writer.Write(" " + this.Type + " ");
+            this.RefType.WriteTo(writer, this.HasHeaderType);
+            writer.WriteLine();
+        }
+    }
+
 
     internal class DCILCustomAttribute : DCILObject
     {
         public static DCILCustomAttribute Create(DCILObject parent, DCILReader reader)
         {
+            string preFix = null;
+            if (reader.PeekContentChar() == '(')
+            {
+                preFix = reader.ReadAfterChar(')');
+            }
             var invokeInfo = new DCILInvokeMethodInfo(reader);
             reader.MoveAfterChar('=');// reader.ReadAfterChar('=');
             var bsValue = reader.ReadBinaryFromHex();
@@ -14538,6 +14894,7 @@ namespace JIEJIE
                     result = new DCILCustomAttribute();
                     break;
             }
+            result.Prefix = preFix;
             result.Parent = parent;
             result.InvokeInfo = invokeInfo;
             result.BinaryValue = bsValue;
@@ -14551,6 +14908,11 @@ namespace JIEJIE
         {
 
         }
+
+        public DCInterfaceimpl PrefixObject = null;
+
+        public string Prefix = null;
+
         public override void Dispose()
         {
             this.AttributeTypeName = null;
@@ -14588,12 +14950,8 @@ namespace JIEJIE
         private DCILCustomAttributeValue[] _Values = null;
         public virtual void ParseValues(ReadCustomAttributeValueArgs args)
         {
-
             var list = DCILCustomAttributeValue.ParseValues(this.BinaryValue, this.InvokeInfo, args);
-            if (this.TypeName == "System.Diagnostics.DebuggerTypeProxyAttribute")
-            {
-
-            }
+            this.PrefixObject?.UpdateLocalInfo(args);
             if (list == null || list.Count == 0)
             {
                 this._Values = null;
@@ -14688,7 +15046,15 @@ namespace JIEJIE
         }
         public override void WriteTo(DCILWriter writer)
         {
+            if( this.PrefixObject != null )
+            {
+                this.PrefixObject.WriteTo(writer); 
+            }
             writer.Write(".custom ");
+            if( this.Prefix != null && this.Prefix.Length > 0 )
+            {
+                writer.Write(this.Prefix + " ");
+            }
             this.InvokeInfo.WriteTo(writer);
             writer.Write(" = (");
             writer.WriteHexs(this.BinaryValue);
@@ -14872,11 +15238,11 @@ namespace JIEJIE
             }
         }
     }
+    
     internal class DCILUnknowObject : DCILObject
     {
         public DCILUnknowObject()
         {
-
         }
         public DCILUnknowObject(string name, DCILReader reader)
         {
@@ -14955,6 +15321,8 @@ namespace JIEJIE
         /// <param name="ebattr"></param>
         public bool AddEditorBrowsableAttributeForRename(DCILCustomAttribute ebattr)
         {
+            //return false;
+
             if (this.RenameState == DCILRenameState.Renamed)
             {
                 if (this.CustomAttributes == null)
@@ -15111,6 +15479,10 @@ namespace JIEJIE
                 foreach (var item in this.CustomAttributes)
                 {
                     item.InvokeInfo = document.CacheDCILInvokeMethodInfo(item.InvokeInfo);
+                    if(item.PrefixObject?.RefType != null )
+                    {
+                        item.PrefixObject.RefType = document.CacheTypeReference(item.PrefixObject.RefType);
+                    }
                 }
             }
         }
@@ -15347,7 +15719,7 @@ namespace JIEJIE
                 }
             }
         }
-        internal void ReadCustomAttribute(DCILReader reader)
+        internal DCILCustomAttribute ReadCustomAttribute(DCILReader reader)
         {
             if (this.CustomAttributes == null)
             {
@@ -15359,6 +15731,7 @@ namespace JIEJIE
             {
                 this.ObfuscationSettings = (DCILObfuscationAttribute)item;
             }
+            return item;
         }
         internal void AddCustomAttributes(List<DCILCustomAttribute> attrs)
         {
@@ -15635,6 +16008,12 @@ namespace JIEJIE
             {
                 this.TypeName = name;
             }
+            this.TypeName = DCUtils.GetStringUseTable(this.TypeName);
+            this.AssemblyCulture = DCUtils.GetStringUseTable(this.AssemblyCulture);
+            this.AssemblyName = DCUtils.GetStringUseTable(this.AssemblyName);
+            this.AssemblyPublicKeyToken = DCUtils.GetStringUseTable(this.AssemblyPublicKeyToken);
+            this.AssemblyVersion = DCUtils.GetStringUseTable(this.AssemblyVersion);
+
         }
         public string TypeName = null;
         public string AssemblyName = null;
@@ -19426,6 +19805,16 @@ namespace JIEJIE
             if(fullName == null || fullName .Length == 0 )
             {
                 return string.Empty;
+            }
+            if( fullName.EndsWith("..cctor"))
+            {
+                preFix = fullName.Substring(0, fullName.Length - 7);
+                return ".cctor";
+            }
+            if( fullName.EndsWith("..ctor"))
+            {
+                preFix = fullName.Substring(0, fullName.Length - 6);
+                return "..ctor";
             }
             int index = fullName.LastIndexOf('.');
             if(index > 0 )
