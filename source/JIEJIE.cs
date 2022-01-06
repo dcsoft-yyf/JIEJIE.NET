@@ -45,7 +45,6 @@ namespace JIEJIE
         [STAThreadAttribute]
         static void Main(string[] args)
         {
-
              
 #endif
 
@@ -136,6 +135,9 @@ namespace JIEJIE
                             case "merge":
                                 mergeFileNames = argValue;
                                 break;
+                            case "resourcenameneedencrypt":
+                                eng.ResourceNameNeedEncrypt = argValue;
+                                break;
                         }
                     }
                     else
@@ -202,6 +204,7 @@ namespace JIEJIE
         prefixfortyperename=[optional, the prefix use to rename type name.]
         prefixformemberrename=[optional,the prefix use to rename type's member name.]
         deletetempfile=[optional,delete template file after job finshed.default is false.]
+        ResourceNameNeedEncrypt=[optional,specify resouce allow to encrypted.support regular expression.]
      Example 1, protect d:\a.dll ,this will modify dll file.
         >JIEJIE.NET.exe d:\a.dll  
      Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
@@ -432,7 +435,7 @@ namespace JIEJIE
     [Serializable]
     internal class DCJieJieNetEngine : System.MarshalByRefObject , IDisposable
     {
-        public const string ProductVersion = "1.5.0.1";
+        public const string ProductVersion = "1.2022.1.6";
 
 
         public DCJieJieNetEngine(DCILDocument doc)
@@ -469,6 +472,7 @@ namespace JIEJIE
             eng._UILanguageName = this._UILanguageName;
             eng.DeleteTempFile = this.DeleteTempFile;
             eng.OutpuptMapXml = this.OutpuptMapXml;
+            eng.ResourceNameNeedEncrypt = this.ResourceNameNeedEncrypt;
         }
         /// <summary>
         /// 关闭对象
@@ -1849,16 +1853,19 @@ namespace JIEJIE
 
             this._CallOperCodes = new List<DCILOperCode_HandleMethod>();
             this.SelectUILanguage();
-
+            var allMethods = this.Document.GetAllMethodHasOperCodes();
             this.AddClassJIEJIEHelper();
             if (this.Switchs.Resources)
             {
                 this.ApplyResouceContainerClass();
             }
+            this.EncryptEmbeddedResource(allMethods);
             if (this.Switchs.ControlFlow)
             {
-                this.EncryptCharValue();
+                this.EncryptCharValue( allMethods );
             }
+            this.Encrypt_ArrayDefine(allMethods);
+            this.Encrypt_Lock_Using_Structure(allMethods);
             var clses = new List<DCILClass>(this.Document.Classes);
             foreach (var cls in clses)
             {
@@ -1866,12 +1873,13 @@ namespace JIEJIE
             }
             if (this.Switchs.ControlFlow)
             {
-                this.EncryptTypeHandle();
+                this.EncryptTypeHandle( allMethods );
                 this.EncryptMethodParamterEnumValue();
             }
             if (this.Switchs.Strings)
             {
-                this.HandleCollectStringValue();
+                this.EncryptStringValues(allMethods);
+                //this.HandleCollectStringValue();
             }
             this.AddDatasClass();
             this._RFHContainer?.Commit();
@@ -2568,195 +2576,196 @@ namespace JIEJIE
             Console.ResetColor();
             Console.Write(" ");
         }
-        public void HandleCollectStringValue()
-        {
-            int tick = Environment.TickCount;
-            ConsoleWriteTask();
-            Console.Write("Encrypting string values ...");
-            var strNativeCodes = new List<DCILOperCode_LoadString>();
-            this.Document.EnumAllOperCodes(delegate (EnumOperCodeArgs args) {
-                if (args.Current is DCILOperCode_LoadString)
-                {
-                    strNativeCodes.Add((DCILOperCode_LoadString)args.Current);
-                }
-            });
-            //var allClasses = this.GetAllClasses();
-            //foreach (var cls in allClasses)
-            //{
-            //    if( cls.IsImport )
-            //    {
-            //        continue;
-            //    }
-            //    foreach (var item in cls.ChildNodes)
-            //    {
-            //        if (item is DCILMethod)
-            //        {
-            //            var method = (DCILMethod)item;
-            //            method.CollectOperCodes<DCILOperCode_LoadString>(strNativeCodes);
-            //        }
-            //    }
-            //}
-            if (strNativeCodes.Count == 0)
-            {
-                Console.WriteLine(" Can not find any string values in assembly.");
-                return;
-            }
-            var strLdstrOperCodeGroups = new Dictionary<string, List<DCILOperCode_LoadString>>();
-            var emptyILCode = new DCILOperCode(
-                null,
-                "ldsfld",
-                "string [" + this.Document.LibName_mscorlib + "]System.String::Empty");
-            foreach (var item in strNativeCodes)
-            {
-                if (item.FinalValue.Length == 0)
-                {
-                    item.ReplaceCode = emptyILCode;
-                }
-                else
-                {
-                    List<DCILOperCode_LoadString> list = null;
-                    if (strLdstrOperCodeGroups.TryGetValue(item.FinalValue, out list) == false)
-                    {
-                        list = new List<DCILOperCode_LoadString>();
-                        strLdstrOperCodeGroups[item.FinalValue] = list;
-                    }
-                    list.Add(item);
-                }
-            }
-            var allStrings = new List<string>(strLdstrOperCodeGroups.Count);
-            allStrings.AddRange(strLdstrOperCodeGroups.Keys);
-            DCUtils.ObfuseListOrder(allStrings);
+//        public void HandleCollectStringValue()
+//        {
+//            int tick = Environment.TickCount;
+//            ConsoleWriteTask();
+//            Console.Write("Encrypting string values ...");
+//            var strNativeCodes = new List<DCILOperCode_LoadString>();
+//            this.Document.EnumAllOperCodes(delegate (EnumOperCodeArgs args)
+//            {
+//                if (args.Current is DCILOperCode_LoadString)
+//                {
+//                    strNativeCodes.Add((DCILOperCode_LoadString)args.Current);
+//                }
+//            });
+//            //var allClasses = this.GetAllClasses();
+//            //foreach (var cls in allClasses)
+//            //{
+//            //    if( cls.IsImport )
+//            //    {
+//            //        continue;
+//            //    }
+//            //    foreach (var item in cls.ChildNodes)
+//            //    {
+//            //        if (item is DCILMethod)
+//            //        {
+//            //            var method = (DCILMethod)item;
+//            //            method.CollectOperCodes<DCILOperCode_LoadString>(strNativeCodes);
+//            //        }
+//            //    }
+//            //}
+//            if (strNativeCodes.Count == 0)
+//            {
+//                Console.WriteLine(" Can not find any string values in assembly.");
+//                return;
+//            }
+//            var strLdstrOperCodeGroups = new Dictionary<string, List<DCILOperCode_LoadString>>();
+//            var emptyILCode = new DCILOperCode(
+//                null,
+//                "ldsfld",
+//                "string [" + this.Document.LibName_mscorlib + "]System.String::Empty");
+//            foreach (var item in strNativeCodes)
+//            {
+//                if (item.FinalValue.Length == 0)
+//                {
+//                    item.ReplaceCode = emptyILCode;
+//                }
+//                else
+//                {
+//                    List<DCILOperCode_LoadString> list = null;
+//                    if (strLdstrOperCodeGroups.TryGetValue(item.FinalValue, out list) == false)
+//                    {
+//                        list = new List<DCILOperCode_LoadString>();
+//                        strLdstrOperCodeGroups[item.FinalValue] = list;
+//                    }
+//                    list.Add(item);
+//                }
+//            }
+//            var allStrings = new List<string>(strLdstrOperCodeGroups.Count);
+//            allStrings.AddRange(strLdstrOperCodeGroups.Keys);
+//            DCUtils.ObfuseListOrder(allStrings);
 
-            var strList = new List<string>(strLdstrOperCodeGroups.Keys);
+//            var strList = new List<string>(strLdstrOperCodeGroups.Keys);
 
-            // 混淆字符串次序
-            DCUtils.ObfuseListOrder(strList);
-            // 字符串分组最大长度
-            const int maxGroupSize = 100;
+//            // 混淆字符串次序
+//            DCUtils.ObfuseListOrder(strList);
+//            // 字符串分组最大长度
+//            const int maxGroupSize = 100;
 
-            int strListCount = strList.Count;
-            var lstItems = new StringValueContainer();
-            lstItems.LibName_mscorlib = this.Document.LibName_mscorlib;
-            for (int pos = 0; pos < strListCount; pos += maxGroupSize)
-            {
-                int groupIndex = pos / maxGroupSize;
-                int groupLength = Math.Min(strListCount - pos, maxGroupSize);
-                if (groupLength == 0)
-                {
-                    break;
-                }
-                var clsName = _ClassNamePrefix + groupIndex;
+//            int strListCount = strList.Count;
+//            var lstItems = new StringValueContainer();
+//            lstItems.LibName_mscorlib = this.Document.LibName_mscorlib;
+//            for (int pos = 0; pos < strListCount; pos += maxGroupSize)
+//            {
+//                int groupIndex = pos / maxGroupSize;
+//                int groupLength = Math.Min(strListCount - pos, maxGroupSize);
+//                if (groupLength == 0)
+//                {
+//                    break;
+//                }
+//                var clsName = _ClassNamePrefix + groupIndex;
 
-                var strNewClassCode = new StringBuilder();
-                strNewClassCode.AppendLine(".class private auto ansi abstract sealed beforefieldinit " + clsName + " extends [" + this.Document.LibName_mscorlib + "]System.Object");
-                strNewClassCode.AppendLine("{");
-                lstItems.LibName_mscorlib = this.Document.LibName_mscorlib;
-                lstItems.Clear();
-                var newILCodes = new List<DCILOperCode_HandleField>();
-                for (int iCount = 0; iCount < groupLength; iCount++)
-                {
-                    string strValue = strList[pos + iCount];
-                    lstItems.AddItem(iCount, strValue);
-                    var fr = new DCILFieldReference();
-                    fr.ValueType = DCILTypeReference.Type_String;
-                    fr.FieldName = "_" + iCount;
-                    var newILCode = new DCILOperCode_HandleField(
-                        null,
-                        "ldsfld",
-                        fr);// new DCILReader("string " + clsName + "::_" + iCount.ToString(), this.Document));
-                    newILCodes.Add(newILCode);
-                    foreach (var item in strLdstrOperCodeGroups[strValue])
-                    {
-                        item.ReplaceCode = newILCode;
-                        //if (item.OwnerMethod != null)
-                        //{
-                        //    item.OwnerMethod.ILCodesModified = true;
-                        //}
-                    }
-                    strNewClassCode.AppendLine("    .field public static initonly string _" + iCount.ToString());
-                }
-                lstItems.RefreshState();
-                strNewClassCode.AppendLine(@"
-.method private hidebysig specialname rtspecialname static void .cctor () cil managed 
-{
-	.maxstack 3
-	.locals init (
-		[0] uint8[] datas
-	)
-	// (no C# code)
-	IL_0000: nop
-	IL_0001: call uint8[] " + this._ByteDataContainer.GetMethodName(lstItems.Datas) + @"()
-	IL_0003: stloc.0");
-                int lableIDCount = 0x30;
-                foreach (var item in lstItems.Items)
-                {
-                    /*
-    // _1 = GetStringByLong(data, 9223372036854775806L);
-    IL_0007: ldloc.0
-    IL_0008: ldc.i8 9223372036854775806
-    IL_0011: call string WindowsFormsApp1.Class3::GetStringByLong(uint8[], int64)
-    IL_0016: stsfld string WindowsFormsApp1.Class3::_1
-                     */
-                    //var valueIndex = item.Item1;
-                    //strNewClassCode.AppendLine();
-                    //long key = item.Item2;
-                    //key = (key << 24) + item.Item3;
-                    //key = (key << 16) + (ushort)(item.Item4 ^ keyOffset);
+//                var strNewClassCode = new StringBuilder();
+//                strNewClassCode.AppendLine(".class private auto ansi abstract sealed beforefieldinit " + clsName + " extends [" + this.Document.LibName_mscorlib + "]System.Object");
+//                strNewClassCode.AppendLine("{");
+//                lstItems.LibName_mscorlib = this.Document.LibName_mscorlib;
+//                lstItems.Clear();
+//                var newILCodes = new List<DCILOperCode_HandleField>();
+//                for (int iCount = 0; iCount < groupLength; iCount++)
+//                {
+//                    string strValue = strList[pos + iCount];
+//                    lstItems.AddItem(iCount, strValue);
+//                    var fr = new DCILFieldReference();
+//                    fr.ValueType = DCILTypeReference.Type_String;
+//                    fr.FieldName = "_" + iCount;
+//                    var newILCode = new DCILOperCode_HandleField(
+//                        null,
+//                        "ldsfld",
+//                        fr);// new DCILReader("string " + clsName + "::_" + iCount.ToString(), this.Document));
+//                    newILCodes.Add(newILCode);
+//                    foreach (var item in strLdstrOperCodeGroups[strValue])
+//                    {
+//                        item.ReplaceCode = newILCode;
+//                        //if (item.OwnerMethod != null)
+//                        //{
+//                        //    item.OwnerMethod.ILCodesModified = true;
+//                        //}
+//                    }
+//                    strNewClassCode.AppendLine("    .field public static initonly string _" + iCount.ToString());
+//                }
+//                lstItems.RefreshState();
+//                strNewClassCode.AppendLine(@"
+//.method private hidebysig specialname rtspecialname static void .cctor () cil managed 
+//{
+//	.maxstack 3
+//	.locals init (
+//		[0] uint8[] datas
+//	)
+//	// (no C# code)
+//	IL_0000: nop
+//	IL_0001: call uint8[] " + this._ByteDataContainer.GetMethodName(lstItems.Datas) + @"()
+//	IL_0003: stloc.0");
+//                int lableIDCount = 0x30;
+//                foreach (var item in lstItems.Items)
+//                {
+//                    /*
+//    // _1 = GetStringByLong(data, 9223372036854775806L);
+//    IL_0007: ldloc.0
+//    IL_0008: ldc.i8 9223372036854775806
+//    IL_0011: call string WindowsFormsApp1.Class3::GetStringByLong(uint8[], int64)
+//    IL_0016: stsfld string WindowsFormsApp1.Class3::_1
+//                     */
+//                    //var valueIndex = item.Item1;
+//                    //strNewClassCode.AppendLine();
+//                    //long key = item.Item2;
+//                    //key = (key << 24) + item.Item3;
+//                    //key = (key << 16) + (ushort)(item.Item4 ^ keyOffset);
 
-                    //var v2 = GetStringByLong(lstDatas.ToArray(), key);
-                    //int key2 = (int)(key & 0xffff);
-                    //key >>= 16;
-                    //int length = (int)(key & 0xfffff);
-                    //key >>= 24;
-                    //int startIndex = (int)key;
+//                    //var v2 = GetStringByLong(lstDatas.ToArray(), key);
+//                    //int key2 = (int)(key & 0xffff);
+//                    //key >>= 16;
+//                    //int length = (int)(key & 0xfffff);
+//                    //key >>= 24;
+//                    //int startIndex = (int)key;
 
-                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": ldloc.0");
-                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": ldc.i8 " + item.LongParamter);
-                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": call string " + clsName + "::dcsoft(uint8[], int64)");
-                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": stsfld string " + clsName + "::_" + item.ValueIndex);
+//                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": ldloc.0");
+//                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": ldc.i8 " + item.LongParamter);
+//                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": call string " + clsName + "::dcsoft(uint8[], int64)");
+//                    lableIDCount += 10; strNewClassCode.AppendLine("        IL_" + Convert.ToString(lableIDCount) + ": stsfld string " + clsName + "::_" + item.ValueIndex);
 
-                }//foreach
-                strNewClassCode.AppendLine(@"
-    IL_FFF03: ret
-}// end of method");
-                strNewClassCode.AppendLine(lstItems.IL_GetStringLong);
-                strNewClassCode.AppendLine("}// end of class");
-                strNewClassCode.Replace("[mscorlib]", '[' + this.Document.LibName_mscorlib + ']');
-                //strNewClassCode.AppendLine("}// end of class " + clsName);
-                var txtNewClassCodeText = strNewClassCode.ToString();
+//                }//foreach
+//                strNewClassCode.AppendLine(@"
+//    IL_FFF03: ret
+//}// end of method");
+//                strNewClassCode.AppendLine(lstItems.IL_GetStringLong);
+//                strNewClassCode.AppendLine("}// end of class");
+//                strNewClassCode.Replace("[mscorlib]", '[' + this.Document.LibName_mscorlib + ']');
+//                //strNewClassCode.AppendLine("}// end of class " + clsName);
+//                var txtNewClassCodeText = strNewClassCode.ToString();
 
-                var newCls = new DCILClass(txtNewClassCodeText, this.Document);
-                //newCls.CacheInfo(this.Document, null);
-                this.Document.Classes.Add(newCls);
-                foreach (var item in newILCodes)
-                {
-                    var fr = item.Value;
-                    fr.ValueType = DCILTypeReference.Type_String;
-                    fr.OwnerType = new DCILTypeReference(newCls);
-                    fr.LocalField = (DCILField)newCls.ChildNodes.GetByName( fr.FieldName );
-                    fr.FieldName = fr.LocalField.Name;
-                }
-                if (this.Switchs.ControlFlow)
-                {
-                    foreach (var item in newCls.ChildNodes)
-                    {
-                        if (item is DCILMethod)
-                        {
-                            ObfuscateOperCodeList((DCILMethod)item);
-                        }
-                    }
-                }
-                foreach (var item in newILCodes)
-                {
-                    item.Value.UpdateLocalField(newCls);
-                }
-            }
-            this.Document.ClearCacheForAllClasses();
-            this._AllClasses = null;
-            tick = Math.Abs(Environment.TickCount - tick);
-            Console.WriteLine(" Handle " + strNativeCodes.Count + " string defines , "
-                + strList.Count + " string values, span " + tick + " milliseconds.");
-        }
+//                var newCls = new DCILClass(txtNewClassCodeText, this.Document);
+//                //newCls.CacheInfo(this.Document, null);
+//                this.Document.Classes.Add(newCls);
+//                foreach (var item in newILCodes)
+//                {
+//                    var fr = item.Value;
+//                    fr.ValueType = DCILTypeReference.Type_String;
+//                    fr.OwnerType = new DCILTypeReference(newCls);
+//                    fr.LocalField = (DCILField)newCls.ChildNodes.GetByName(fr.FieldName);
+//                    fr.FieldName = fr.LocalField.Name;
+//                }
+//                if (this.Switchs.ControlFlow)
+//                {
+//                    foreach (var item in newCls.ChildNodes)
+//                    {
+//                        if (item is DCILMethod)
+//                        {
+//                            ObfuscateOperCodeList((DCILMethod)item);
+//                        }
+//                    }
+//                }
+//                foreach (var item in newILCodes)
+//                {
+//                    item.Value.UpdateLocalField(newCls);
+//                }
+//            }
+//            this.Document.ClearCacheForAllClasses();
+//            this._AllClasses = null;
+//            tick = Math.Abs(Environment.TickCount - tick);
+//            Console.WriteLine(" Handle " + strNativeCodes.Count + " string defines , "
+//                + strList.Count + " string values, span " + tick + " milliseconds.");
+//        }
 
         private void GetAllBaseType(object rootType, System.Collections.ArrayList list)
         {
@@ -3768,14 +3777,22 @@ namespace JIEJIE
                     }
                 }
                 cls.RemoveObfuscationAttribute();
-                var clsAddEBA = cls.AddEditorBrowsableAttributeForRename(eba);
+                bool memberAddEBA = true ;
+                if(cls.AddEditorBrowsableAttributeForRename(eba))
+                {
+                    memberAddEBA = false ;
+                }
+                else if( cls.HasStyle("public") == false )
+                {
+                    memberAddEBA = false ;
+                }
                 foreach (var item in cls.ChildNodes)
                 {
                     if (item is DCILMemberInfo)
                     {
                         var itemMember = (DCILMemberInfo)item;
                         itemMember.RemoveObfuscationAttribute();
-                        if (clsAddEBA == false && (itemMember.HasStyle("family") || itemMember.HasStyle("public")))
+                        if (memberAddEBA && (itemMember.HasStyle("family") || itemMember.HasStyle("public")))
                         {
                             itemMember.AddEditorBrowsableAttributeForRename(eba);
                         }
@@ -3807,6 +3824,7 @@ namespace JIEJIE
                         }
                     }
                 }
+
                 if (childNeedRemove.Count > 0)
                 {
                     removeCount_PropertyEvent += childNeedRemove.Count;
@@ -4150,6 +4168,22 @@ namespace JIEJIE
                 }
                 return FullClassName + "::_" + index;
             }
+            public DCILOperCode_HandleMethod GetOperCode(string labelID , byte[] data )
+            {
+                int index = IndexOf(data);
+                var code = new DCILOperCode_HandleMethod();
+                code.LabelID = labelID;
+                code.OperCode = "call";
+                code.InvokeInfo = new DCILInvokeMethodInfo();
+                code.InvokeInfo.IsInstance = false;
+                code.InvokeInfo.ReturnType = DCILTypeReference.Type_Boolean.Clone();
+                code.InvokeInfo.ReturnType.ArrayAndPointerSettings = "[]";
+                code.InvokeInfo.OwnerType = new DCILTypeReference(FullClassName, DCILTypeMode.Class);
+                code.InvokeInfo.MethodName = "_" + index;
+                _MyCodes.Add(code);
+                return code;
+            }
+            private List<DCILOperCode_HandleMethod> _MyCodes = new List<DCILOperCode_HandleMethod>();
             public string GetMethodName(byte[] data)
             {
                 return GetMethodName(IndexOf(data));
@@ -4317,6 +4351,15 @@ namespace JIEJIE
                                 datas.TryGetValue(field.DataLabel, out field.ReferenceData);
                             }
                         }
+                    }
+                }
+                if( _MyCodes .Count > 0 )
+                {
+                    var t2 = new DCILTypeReference(cls);
+                    foreach( var code in this._MyCodes)
+                    {
+                        code.InvokeInfo.LocalMethod = (DCILMethod) cls.ChildNodes.GetByName(code.InvokeInfo.MethodName);
+                        code.InvokeInfo.OwnerType = t2;
                     }
                 }
                 return cls;
@@ -4636,7 +4679,7 @@ namespace JIEJIE
             this.Document.ClearCacheForAllClasses();
             this._Type_JIEJIEHelper = new DCILTypeReference(_ClassName_JIEJIEHelper, DCILTypeMode.Class);
             this._Type_JIEJIEHelper.LocalClass = cls;
-            cls.RuntimeSwitchs = this.Switchs;
+            UpdateRuntimeSwitchs_Class(cls, this.Switchs);
         }
         private static SortedDictionary<string, string> _NetCore_Type_LibName = null;
         internal string FixTypeLibNameForNetCore(string strCode)
@@ -4776,40 +4819,812 @@ namespace JIEJIE
         //}
         private DCILTypeReference _Type_JIEJIEHelper = null;
         private static readonly string _ClassName_JIEJIEHelper = "__DC20211119.JIEJIEHelper";
+
+        //******************************************************************************************
+        //******************************************************************************************
+        //******************************************************************************************
+
         private static readonly string _Code_Template_JIEJIEHelper = @"
 .class private auto ansi abstract sealed beforefieldinit __DC20211119.JIEJIEHelper
 	extends [mscorlib]System.Object
 {
+	// Nested Types
+	.class nested private auto ansi sealed beforefieldinit SMF_ResStream
+		extends [mscorlib]System.IO.Stream
+	{
+		// Fields
+		.field private uint8[] _Content
+		.field private int64 _Position
+
+		// Methods
+		.method public hidebysig specialname rtspecialname 
+			instance void .ctor (
+				uint8[] bs
+			) cil managed 
+		{
+			// Method begins at RVA 0x26234
+			// Code size 150 (0x96)
+			.maxstack 5
+			.locals init (
+				[0] int32 gzipLen,
+				[1] bool,
+				[2] class [mscorlib]System.IO.MemoryStream msSource,
+				[3] class [System]System.IO.Compression.GZipStream gm
+			)
+
+			IL_0000: ldarg.0
+			IL_0001: ldnull
+			IL_0002: stfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0007: ldarg.0
+			IL_0008: ldc.i4.0
+			IL_0009: conv.i8
+			IL_000a: stfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_000f: ldarg.0
+			IL_0010: call instance void [mscorlib]System.IO.Stream::.ctor()
+			IL_0015: nop
+			IL_0016: nop
+			IL_0017: ldarg.1
+			IL_0018: ldc.i4.0
+			IL_0019: call int32 [mscorlib]System.BitConverter::ToInt32(uint8[], int32)
+			IL_001e: stloc.0
+			IL_001f: ldloc.0
+			IL_0020: ldc.i4.0
+			IL_0021: ceq
+			IL_0023: stloc.1
+			IL_0024: ldloc.1
+			IL_0025: brfalse.s IL_0052
+
+			IL_0027: nop
+			IL_0028: ldarg.0
+			IL_0029: ldarg.1
+			IL_002a: ldlen
+			IL_002b: conv.i4
+			IL_002c: ldc.i4.4
+			IL_002d: sub
+			IL_002e: newarr [mscorlib]System.Byte
+			IL_0033: stfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0038: ldarg.1
+			IL_0039: ldc.i4.4
+			IL_003a: ldarg.0
+			IL_003b: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0040: ldc.i4.0
+			IL_0041: ldarg.0
+			IL_0042: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0047: ldlen
+			IL_0048: conv.i4
+			IL_0049: call void [mscorlib]System.Array::Copy(class [mscorlib]System.Array, int32, class [mscorlib]System.Array, int32, int32)
+			IL_004e: nop
+			IL_004f: nop
+			IL_0050: br.s IL_0095
+
+			IL_0052: nop
+			IL_0053: ldarg.1
+			IL_0054: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
+			IL_0059: stloc.2
+			IL_005a: ldloc.2
+			IL_005b: ldc.i4.4
+			IL_005c: conv.i8
+			IL_005d: callvirt instance void [mscorlib]System.IO.Stream::set_Position(int64)
+			IL_0062: nop
+			IL_0063: ldloc.2
+			IL_0064: ldc.i4.0
+			IL_0065: newobj instance void [System]System.IO.Compression.GZipStream::.ctor(class [mscorlib]System.IO.Stream, valuetype [System]System.IO.Compression.CompressionMode)
+			IL_006a: stloc.3
+			IL_006b: ldarg.0
+			IL_006c: ldloc.0
+			IL_006d: newarr [mscorlib]System.Byte
+			IL_0072: stfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0077: ldloc.3
+			IL_0078: ldarg.0
+			IL_0079: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_007e: ldc.i4.0
+			IL_007f: ldloc.0
+			IL_0080: callvirt instance int32 [mscorlib]System.IO.Stream::Read(uint8[], int32, int32)
+			IL_0085: pop
+			IL_0086: ldloc.3
+			IL_0087: callvirt instance void [mscorlib]System.IO.Stream::Close()
+			IL_008c: nop
+			IL_008d: ldloc.2
+			IL_008e: callvirt instance void [mscorlib]System.IO.Stream::Close()
+			IL_0093: nop
+			IL_0094: nop
+
+			IL_0095: ret
+		} // end of method SMF_ResStream::.ctor
+
+		.method public hidebysig specialname virtual 
+			instance bool get_CanRead () cil managed 
+		{
+			// Method begins at RVA 0x262d8
+			// Code size 7 (0x7)
+			.maxstack 1
+			.locals init (
+				[0] bool
+			)
+
+			IL_0000: nop
+			IL_0001: ldc.i4.1
+			IL_0002: stloc.0
+			IL_0003: br.s IL_0005
+
+			IL_0005: ldloc.0
+			IL_0006: ret
+		} // end of method SMF_ResStream::get_CanRead
+
+		.method public hidebysig specialname virtual 
+			instance bool get_CanSeek () cil managed 
+		{
+			// Method begins at RVA 0x262ec
+			// Code size 7 (0x7)
+			.maxstack 1
+			.locals init (
+				[0] bool
+			)
+
+			IL_0000: nop
+			IL_0001: ldc.i4.1
+			IL_0002: stloc.0
+			IL_0003: br.s IL_0005
+
+			IL_0005: ldloc.0
+			IL_0006: ret
+		} // end of method SMF_ResStream::get_CanSeek
+
+		.method public hidebysig specialname virtual 
+			instance bool get_CanWrite () cil managed 
+		{
+			// Method begins at RVA 0x26300
+			// Code size 7 (0x7)
+			.maxstack 1
+			.locals init (
+				[0] bool
+			)
+
+			IL_0000: nop
+			IL_0001: ldc.i4.0
+			IL_0002: stloc.0
+			IL_0003: br.s IL_0005
+
+			IL_0005: ldloc.0
+			IL_0006: ret
+		} // end of method SMF_ResStream::get_CanWrite
+
+		.method public hidebysig specialname virtual 
+			instance int64 get_Length () cil managed 
+		{
+			// Method begins at RVA 0x26314
+			// Code size 15 (0xf)
+			.maxstack 1
+			.locals init (
+				[0] int64
+			)
+
+			IL_0000: nop
+			IL_0001: ldarg.0
+			IL_0002: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0007: ldlen
+			IL_0008: conv.i4
+			IL_0009: conv.i8
+			IL_000a: stloc.0
+			IL_000b: br.s IL_000d
+
+			IL_000d: ldloc.0
+			IL_000e: ret
+		} // end of method SMF_ResStream::get_Length
+
+		.method public hidebysig specialname virtual 
+			instance int64 get_Position () cil managed 
+		{
+			// Method begins at RVA 0x26330
+			// Code size 12 (0xc)
+			.maxstack 1
+			.locals init (
+				[0] int64
+			)
+
+			IL_0000: nop
+			IL_0001: ldarg.0
+			IL_0002: ldfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0007: stloc.0
+			IL_0008: br.s IL_000a
+
+			IL_000a: ldloc.0
+			IL_000b: ret
+		} // end of method SMF_ResStream::get_Position
+
+		.method public hidebysig specialname virtual 
+			instance void set_Position (
+				int64 'value'
+			) cil managed 
+		{
+			// Method begins at RVA 0x26348
+			// Code size 9 (0x9)
+			.maxstack 8
+
+			IL_0000: nop
+			IL_0001: ldarg.0
+			IL_0002: ldarg.1
+			IL_0003: stfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0008: ret
+		} // end of method SMF_ResStream::set_Position
+
+		.method public hidebysig virtual 
+			instance void Flush () cil managed 
+		{
+			// Method begins at RVA 0x26352
+			// Code size 2 (0x2)
+			.maxstack 8
+
+			IL_0000: nop
+			IL_0001: ret
+		} // end of method SMF_ResStream::Flush
+
+		.method public hidebysig virtual 
+			instance int32 Read (
+				uint8[] buffer,
+				int32 offset,
+				int32 count
+			) cil managed 
+		{
+			// Method begins at RVA 0x26358
+			// Code size 127 (0x7f)
+			.maxstack 5
+			.locals init (
+				[0] int32 len,
+				[1] bool,
+				[2] bool,
+				[3] int32 endIndex,
+				[4] int32 iCount,
+				[5] bool,
+				[6] int32
+			)
+
+			IL_0000: nop
+			IL_0001: ldarg.0
+			IL_0002: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0007: ldlen
+			IL_0008: conv.i4
+			IL_0009: conv.i8
+			IL_000a: ldarg.0
+			IL_000b: ldfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0010: sub
+			IL_0011: conv.i4
+			IL_0012: stloc.0
+			IL_0013: ldloc.0
+			IL_0014: ldarg.3
+			IL_0015: cgt
+			IL_0017: stloc.1
+			IL_0018: ldloc.1
+			IL_0019: brfalse.s IL_001f
+
+			IL_001b: nop
+			IL_001c: ldarg.3
+			IL_001d: stloc.0
+			IL_001e: nop
+
+			IL_001f: ldloc.0
+			IL_0020: ldc.i4.0
+			IL_0021: cgt
+			IL_0023: stloc.2
+			IL_0024: ldloc.2
+			IL_0025: brfalse.s IL_0077
+
+			IL_0027: nop
+			IL_0028: ldarg.0
+			IL_0029: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_002e: ldarg.0
+			IL_002f: ldfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0034: ldarg.1
+			IL_0035: ldarg.2
+			IL_0036: conv.i8
+			IL_0037: ldloc.0
+			IL_0038: conv.i8
+			IL_0039: call void [mscorlib]System.Array::Copy(class [mscorlib]System.Array, int64, class [mscorlib]System.Array, int64, int64)
+			IL_003e: nop
+			IL_003f: ldarg.2
+			IL_0040: ldloc.0
+			IL_0041: add
+			IL_0042: stloc.3
+			IL_0043: ldarg.2
+			IL_0044: stloc.s 4
+			IL_0046: br.s IL_005c
+			// loop start (head: IL_005c)
+				IL_0048: nop
+				IL_0049: ldarg.1
+				IL_004a: ldloc.s 4
+				IL_004c: ldarg.1
+				IL_004d: ldloc.s 4
+				IL_004f: ldelem.u1
+				IL_0050: ldc.i4.s 123
+				IL_0052: xor
+				IL_0053: conv.u1
+				IL_0054: stelem.i1
+				IL_0055: nop
+				IL_0056: ldloc.s 4
+				IL_0058: ldc.i4.1
+				IL_0059: add
+				IL_005a: stloc.s 4
+
+				IL_005c: ldloc.s 4
+				IL_005e: ldloc.3
+				IL_005f: clt
+				IL_0061: stloc.s 5
+				IL_0063: ldloc.s 5
+				IL_0065: brtrue.s IL_0048
+			// end loop
+
+			IL_0067: ldarg.0
+			IL_0068: ldarg.0
+			IL_0069: ldfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_006e: ldloc.0
+			IL_006f: conv.i8
+			IL_0070: add
+			IL_0071: stfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0076: nop
+
+			IL_0077: ldloc.0
+			IL_0078: stloc.s 6
+			IL_007a: br.s IL_007c
+
+			IL_007c: ldloc.s 6
+			IL_007e: ret
+		} // end of method SMF_ResStream::Read
+
+		.method public hidebysig virtual 
+			instance int64 Seek (
+				int64 offset,
+				valuetype [mscorlib]System.IO.SeekOrigin origin
+			) cil managed 
+		{
+			// Method begins at RVA 0x263e4
+			// Code size 78 (0x4e)
+			.maxstack 3
+			.locals init (
+				[0] valuetype [mscorlib]System.IO.SeekOrigin,
+				[1] int64
+			)
+
+			IL_0000: nop
+			IL_0001: ldarg.2
+			IL_0002: stloc.0
+			IL_0003: ldloc.0
+			IL_0004: switch (IL_0017, IL_0020, IL_0030)
+
+			IL_0015: br.s IL_0043
+
+			IL_0017: ldarg.0
+			IL_0018: ldarg.1
+			IL_0019: stfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_001e: br.s IL_0043
+
+			IL_0020: ldarg.0
+			IL_0021: ldarg.0
+			IL_0022: ldfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0027: ldarg.1
+			IL_0028: add
+			IL_0029: stfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_002e: br.s IL_0043
+
+			IL_0030: ldarg.0
+			IL_0031: ldarg.0
+			IL_0032: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+			IL_0037: ldlen
+			IL_0038: conv.i4
+			IL_0039: conv.i8
+			IL_003a: ldarg.1
+			IL_003b: sub
+			IL_003c: stfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0041: br.s IL_0043
+
+			IL_0043: ldarg.0
+			IL_0044: ldfld int64 __DC20211119.JIEJIEHelper/SMF_ResStream::_Position
+			IL_0049: stloc.1
+			IL_004a: br.s IL_004c
+
+			IL_004c: ldloc.1
+			IL_004d: ret
+		} // end of method SMF_ResStream::Seek
+
+		.method public hidebysig virtual 
+			instance void SetLength (
+				int64 'value'
+			) cil managed 
+		{
+			// Method begins at RVA 0x2643e
+			// Code size 7 (0x7)
+			.maxstack 8
+
+			IL_0000: nop
+			IL_0001: newobj instance void [mscorlib]System.NotImplementedException::.ctor()
+			IL_0006: throw
+		} // end of method SMF_ResStream::SetLength
+
+		.method public hidebysig virtual 
+			instance void Write (
+				uint8[] buffer,
+				int32 offset,
+				int32 count
+			) cil managed 
+		{
+			// Method begins at RVA 0x26446
+			// Code size 7 (0x7)
+			.maxstack 8
+
+			IL_0000: nop
+			IL_0001: newobj instance void [mscorlib]System.NotImplementedException::.ctor()
+			IL_0006: throw
+		} // end of method SMF_ResStream::Write
+
+		// Properties
+		.property instance bool CanRead()
+		{
+			.get instance bool __DC20211119.JIEJIEHelper/SMF_ResStream::get_CanRead()
+		}
+		.property instance bool CanSeek()
+		{
+			.get instance bool __DC20211119.JIEJIEHelper/SMF_ResStream::get_CanSeek()
+		}
+		.property instance bool CanWrite()
+		{
+			.get instance bool __DC20211119.JIEJIEHelper/SMF_ResStream::get_CanWrite()
+		}
+		.property instance int64 Length()
+		{
+			.get instance int64 __DC20211119.JIEJIEHelper/SMF_ResStream::get_Length()
+		}
+		.property instance int64 Position()
+		{
+			.get instance int64 __DC20211119.JIEJIEHelper/SMF_ResStream::get_Position()
+			.set instance void __DC20211119.JIEJIEHelper/SMF_ResStream::set_Position(int64)
+		}
+
+	} // end of class SMF_ResStream
+
+
 	// Fields
+	.field private static class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __SMF_Contents
+	.field private static initonly class [mscorlib]System.Reflection.Assembly ThisAssembly
 	.field private static class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_Thread
 	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event
 	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
 	.field private static string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_CurrentValue
 
 	// Methods
-    .method public hidebysig static 
-	    string String_Trim (
-		    string v
-	    ) cil managed 
-    {
-	    .maxstack 2
-	    IL_0001: ldarg.0
-	    IL_0002: callvirt instance string [mscorlib]System.String::Trim()
-	    IL_000b: ret
-    } 
+	.method private hidebysig static 
+		class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> SMF_GetContents () cil managed 
+	{
+		// Method begins at RVA 0x2050
+		// Code size 42 (0x2a)
+		.maxstack 2
+		.locals init (
+			[0] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> result,
+			[1] bool,
+			[2] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>
+		)
+
+		IL_0000: nop
+		IL_0001: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+		IL_0006: stloc.0
+		IL_0007: ldloc.0
+		IL_0008: ldnull
+		IL_0009: ceq
+		IL_000b: stloc.1
+		IL_000c: ldloc.1
+		IL_000d: brfalse.s IL_0024
+
+		IL_000f: nop
+		IL_0010: newobj instance void class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::.ctor()
+		IL_0015: stloc.0
+		IL_0016: ldloc.0
+		IL_0017: call void __DC20211119.JIEJIEHelper::SMF_InitContent(class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>)
+		IL_001c: nop
+		IL_001d: ldloc.0
+		IL_001e: stsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+		IL_0023: nop
+
+		IL_0024: ldloc.0
+		IL_0025: stloc.2
+		IL_0026: br.s IL_0028
+
+		IL_0028: ldloc.2
+		IL_0029: ret
+	} // end of method JIEJIEHelper::SMF_GetContents
+
+	.method private hidebysig static 
+		void SMF_InitContent (
+			class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> contents
+		) cil managed 
+	{
+		// Method begins at RVA 0x2086
+		// Code size 2 (0x2)
+		.maxstack 8
+
+		IL_0000: nop
+		IL_0001: ret
+	} // end of method JIEJIEHelper::SMF_InitContent
+
+	.method public hidebysig static 
+		class [mscorlib]System.Reflection.ManifestResourceInfo SMF_GetManifestResourceInfo (
+			class [mscorlib]System.Reflection.Assembly asm,
+			string resourceName
+		) cil managed 
+	{
+		// Method begins at RVA 0x208c
+		// Code size 59 (0x3b)
+		.maxstack 3
+		.locals init (
+			[0] bool,
+			[1] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> dic,
+			[2] bool,
+			[3] class [mscorlib]System.Reflection.ManifestResourceInfo
+		)
+
+		IL_0000: nop
+		IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+		IL_0006: ldarg.0
+		IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
+		IL_000c: stloc.0
+		IL_000d: ldloc.0
+		IL_000e: brfalse.s IL_002f
+
+		IL_0010: nop
+		IL_0011: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_GetContents()
+		IL_0016: stloc.1
+		IL_0017: ldloc.1
+		IL_0018: ldarg.1
+		IL_0019: callvirt instance bool class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::ContainsKey(!0)
+		IL_001e: stloc.2
+		IL_001f: ldloc.2
+		IL_0020: brfalse.s IL_002e
+
+		IL_0022: nop
+		IL_0023: ldarg.0
+		IL_0024: ldarg.1
+		IL_0025: ldc.i4.1
+		IL_0026: newobj instance void [mscorlib]System.Reflection.ManifestResourceInfo::.ctor(class [mscorlib]System.Reflection.Assembly, string, valuetype [mscorlib]System.Reflection.ResourceLocation)
+		IL_002b: stloc.3
+		IL_002c: br.s IL_0039
+
+		IL_002e: nop
+
+		IL_002f: ldarg.0
+		IL_0030: ldarg.1
+		IL_0031: callvirt instance class [mscorlib]System.Reflection.ManifestResourceInfo [mscorlib]System.Reflection.Assembly::GetManifestResourceInfo(string)
+		IL_0036: stloc.3
+		IL_0037: br.s IL_0039
+
+		IL_0039: ldloc.3
+		IL_003a: ret
+	} // end of method JIEJIEHelper::SMF_GetManifestResourceInfo
+
+	.method public hidebysig static 
+		string[] SMF_GetManifestResourceNames (
+			class [mscorlib]System.Reflection.Assembly asm
+		) cil managed 
+	{
+		// Method begins at RVA 0x20d4
+		// Code size 53 (0x35)
+		.maxstack 2
+		.locals init (
+			[0] bool,
+			[1] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> dic,
+			[2] string[]
+		)
+
+		IL_0000: nop
+		IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+		IL_0006: ldarg.0
+		IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
+		IL_000c: stloc.0
+		IL_000d: ldloc.0
+		IL_000e: brfalse.s IL_002a
+
+		IL_0010: nop
+		IL_0011: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_GetContents()
+		IL_0016: stloc.1
+		IL_0017: ldloc.1
+		IL_0018: callvirt instance class [mscorlib]System.Collections.Generic.Dictionary`2/KeyCollection<!0, !1> class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::get_Keys()
+		IL_001d: newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor(class [mscorlib]System.Collections.Generic.IEnumerable`1<!0>)
+		IL_0022: call instance !0[] class [mscorlib]System.Collections.Generic.List`1<string>::ToArray()
+		IL_0027: stloc.2
+		IL_0028: br.s IL_0033
+
+		IL_002a: ldarg.0
+		IL_002b: callvirt instance string[] [mscorlib]System.Reflection.Assembly::GetManifestResourceNames()
+		IL_0030: stloc.2
+		IL_0031: br.s IL_0033
+
+		IL_0033: ldloc.2
+		IL_0034: ret
+	} // end of method JIEJIEHelper::SMF_GetManifestResourceNames
+
+	.method public hidebysig static 
+		class [mscorlib]System.IO.Stream SMF_GetManifestResourceStream (
+			class [mscorlib]System.Reflection.Assembly asm,
+			string resourceName
+		) cil managed 
+	{
+		// Method begins at RVA 0x2118
+		// Code size 64 (0x40)
+		.maxstack 3
+		.locals init (
+			[0] bool,
+			[1] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> dic,
+			[2] uint8[] bsContent,
+			[3] bool,
+			[4] class [mscorlib]System.IO.Stream
+		)
+
+		IL_0000: nop
+		IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+		IL_0006: ldarg.0
+		IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
+		IL_000c: stloc.0
+		IL_000d: ldloc.0
+		IL_000e: brfalse.s IL_0032
+
+		IL_0010: nop
+		IL_0011: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_GetContents()
+		IL_0016: stloc.1
+		IL_0017: ldnull
+		IL_0018: stloc.2
+		IL_0019: ldloc.1
+		IL_001a: ldarg.1
+		IL_001b: ldloca.s 2
+		IL_001d: callvirt instance bool class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::TryGetValue(!0, !1&)
+		IL_0022: stloc.3
+		IL_0023: ldloc.3
+		IL_0024: brfalse.s IL_0031
+
+		IL_0026: nop
+		IL_0027: ldloc.2
+		IL_0028: newobj instance void __DC20211119.JIEJIEHelper/SMF_ResStream::.ctor(uint8[])
+		IL_002d: stloc.s 4
+		IL_002f: br.s IL_003d
+
+		IL_0031: nop
+
+		IL_0032: ldarg.0
+		IL_0033: ldarg.1
+		IL_0034: callvirt instance class [mscorlib]System.IO.Stream [mscorlib]System.Reflection.Assembly::GetManifestResourceStream(string)
+		IL_0039: stloc.s 4
+		IL_003b: br.s IL_003d
+
+		IL_003d: ldloc.s 4
+		IL_003f: ret
+	} // end of method JIEJIEHelper::SMF_GetManifestResourceStream
+
+	.method public hidebysig static 
+		class [mscorlib]System.IO.Stream SMF_GetManifestResourceStream2 (
+			class [mscorlib]System.Reflection.Assembly asm,
+			class [mscorlib]System.Type t,
+			string resourceName
+		) cil managed 
+	{
+		// Method begins at RVA 0x2164
+		// Code size 125 (0x7d)
+		.maxstack 4
+		.locals init (
+			[0] bool,
+			[1] char,
+			[2] bool,
+			[3] bool,
+			[4] class [mscorlib]System.IO.Stream
+		)
+
+		IL_0000: nop
+		IL_0001: ldarg.2
+		IL_0002: brfalse.s IL_000f
+
+		IL_0004: ldarg.2
+		IL_0005: callvirt instance int32 [mscorlib]System.String::get_Length()
+		IL_000a: ldc.i4.0
+		IL_000b: ceq
+		IL_000d: br.s IL_0010
+
+		IL_000f: ldc.i4.1
+
+		IL_0010: stloc.0
+		IL_0011: ldloc.0
+		IL_0012: brfalse.s IL_0025
+
+		IL_0014: nop
+		IL_0015: ldc.i4.s 114
+		IL_0017: stloc.1
+		IL_0018: ldloca.s 1
+		IL_001a: call instance string [mscorlib]System.Char::ToString()
+		IL_001f: newobj instance void [mscorlib]System.ArgumentNullException::.ctor(string)
+		IL_0024: throw
+
+		IL_0025: ldarg.1
+		IL_0026: ldnull
+		IL_0027: ceq
+		IL_0029: stloc.2
+		IL_002a: ldloc.2
+		IL_002b: brfalse.s IL_003e
+
+		IL_002d: nop
+		IL_002e: ldc.i4.s 116
+		IL_0030: stloc.1
+		IL_0031: ldloca.s 1
+		IL_0033: call instance string [mscorlib]System.Char::ToString()
+		IL_0038: newobj instance void [mscorlib]System.ArgumentNullException::.ctor(string)
+		IL_003d: throw
+
+		IL_003e: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+		IL_0043: ldarg.0
+		IL_0044: callvirt instance bool [mscorlib]System.Object::Equals(object)
+		IL_0049: stloc.3
+		IL_004a: ldloc.3
+		IL_004b: brfalse.s IL_006e
+
+		IL_004d: nop
+		IL_004e: ldarg.0
+		IL_004f: ldarg.1
+		IL_0050: callvirt instance string [mscorlib]System.Type::get_FullName()
+		IL_0055: ldc.i4.s 46
+		IL_0057: stloc.1
+		IL_0058: ldloca.s 1
+		IL_005a: call instance string [mscorlib]System.Char::ToString()
+		IL_005f: ldarg.2
+		IL_0060: call string [mscorlib]System.String::Concat(string, string, string)
+		IL_0065: call class [mscorlib]System.IO.Stream __DC20211119.JIEJIEHelper::SMF_GetManifestResourceStream(class [mscorlib]System.Reflection.Assembly, string)
+		IL_006a: stloc.s 4
+		IL_006c: br.s IL_007a
+
+		IL_006e: ldarg.0
+		IL_006f: ldarg.1
+		IL_0070: ldarg.2
+		IL_0071: callvirt instance class [mscorlib]System.IO.Stream [mscorlib]System.Reflection.Assembly::GetManifestResourceStream(class [mscorlib]System.Type, string)
+		IL_0076: stloc.s 4
+		IL_0078: br.s IL_007a
+
+		IL_007a: ldloc.s 4
+		IL_007c: ret
+	} // end of method JIEJIEHelper::SMF_GetManifestResourceStream2
+
+	.method public hidebysig static 
+		string String_Trim (
+			string v
+		) cil managed 
+	{
+		// Method begins at RVA 0x21f0
+		// Code size 12 (0xc)
+		.maxstack 1
+		.locals init (
+			[0] string
+		)
+
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: callvirt instance string [mscorlib]System.String::Trim()
+		IL_0007: stloc.0
+		IL_0008: br.s IL_000a
+
+		IL_000a: ldloc.0
+		IL_000b: ret
+	} // end of method JIEJIEHelper::String_Trim
 
 	.method public hidebysig static 
 		class [mscorlib]System.Type Object_GetType (
 			object a
 		) cil managed 
 	{
-		// Method begins at RVA 0x2050
-		// Code size 7 (0x7)
-		.maxstack 8
+		// Method begins at RVA 0x2208
+		// Code size 12 (0xc)
+		.maxstack 1
+		.locals init (
+			[0] class [mscorlib]System.Type
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: callvirt instance class [mscorlib]System.Type [mscorlib]System.Object::GetType()
-		IL_0006: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: callvirt instance class [mscorlib]System.Type [mscorlib]System.Object::GetType()
+		IL_0007: stloc.0
+		IL_0008: br.s IL_000a
+
+		IL_000a: ldloc.0
+		IL_000b: ret
 	} // end of method JIEJIEHelper::Object_GetType
 
 	.method public hidebysig static 
@@ -4819,93 +5634,116 @@ namespace JIEJIE
 			int32 encKey
 		) cil managed 
 	{
-		// Method begins at RVA 0x2058
-		// Code size 107 (0x6b)
+		// Method begins at RVA 0x2220
+		// Code size 137 (0x89)
 		.maxstack 3
 		.locals init (
-			[0] uint8* ptr,
-			[1] uint8[] pinned,
-			[2] int32* ptr2,
-			[3] int32* ptr3
+			[0] bool,
+			[1] uint8* ptr,
+			[2] uint8[] pinned,
+			[3] int32* ptr2,
+			[4] int32* ptr3,
+			[5] bool
 		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: call void [mscorlib]System.Runtime.CompilerServices.RuntimeHelpers::InitializeArray(class [mscorlib]System.Array, valuetype [mscorlib]System.RuntimeFieldHandle)
-		IL_0007: ldarg.0
-		IL_0008: callvirt instance int32 [mscorlib]System.Array::get_Length()
-		IL_000d: ldc.i4.4
-		IL_000e: blt.s IL_0013
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: call void [mscorlib]System.Runtime.CompilerServices.RuntimeHelpers::InitializeArray(class [mscorlib]System.Array, valuetype [mscorlib]System.RuntimeFieldHandle)
+		IL_0008: nop
+		IL_0009: ldarg.0
+		IL_000a: callvirt instance int32 [mscorlib]System.Array::get_Length()
+		IL_000f: ldc.i4.4
+		IL_0010: blt.s IL_0018
 
-		IL_0010: ldarg.2
-		IL_0011: brtrue.s IL_0014
+		IL_0012: ldarg.2
+		IL_0013: ldc.i4.0
+		IL_0014: ceq
+		IL_0016: br.s IL_0019
 
-		IL_0013: ret
+		IL_0018: ldc.i4.1
 
-		IL_0014: ldarg.0
-		IL_0015: castclass uint8[]
-		IL_001a: dup
-		IL_001b: stloc.1
-		IL_001c: brfalse.s IL_0023
+		IL_0019: stloc.0
+		IL_001a: ldloc.0
+		IL_001b: brfalse.s IL_0020
 
-		IL_001e: ldloc.1
-		IL_001f: ldlen
-		IL_0020: conv.i4
-		IL_0021: brtrue.s IL_0028
+		IL_001d: nop
+		IL_001e: br.s IL_0088
 
-		IL_0023: ldc.i4.0
-		IL_0024: conv.u
-		IL_0025: stloc.0
-		IL_0026: br.s IL_0031
+		IL_0020: ldarg.0
+		IL_0021: castclass uint8[]
+		IL_0026: dup
+		IL_0027: stloc.2
+		IL_0028: brfalse.s IL_002f
 
-		IL_0028: ldloc.1
-		IL_0029: ldc.i4.0
-		IL_002a: ldelema [mscorlib]System.Byte
-		IL_002f: conv.u
-		IL_0030: stloc.0
+		IL_002a: ldloc.2
+		IL_002b: ldlen
+		IL_002c: conv.i4
+		IL_002d: brtrue.s IL_0034
 
-		IL_0031: ldloc.0
-		IL_0032: stloc.2
-		IL_0033: ldloc.2
-		IL_0034: ldarg.0
-		IL_0035: callvirt instance int32 [mscorlib]System.Array::get_Length()
-		IL_003a: conv.r8
-		IL_003b: ldc.r8 4
-		IL_0044: div
-		IL_0045: call float64 [mscorlib]System.Math::Floor(float64)
-		IL_004a: conv.i4
-		IL_004b: conv.i
-		IL_004c: ldc.i4.4
-		IL_004d: mul
-		IL_004e: add
-		IL_004f: ldc.i4.4
-		IL_0050: sub
-		IL_0051: stloc.3
-		IL_0052: br.s IL_0064
-		// loop start (head: IL_0064)
-			IL_0054: ldloc.3
-			IL_0055: dup
-			IL_0056: ldind.i4
-			IL_0057: ldarg.2
-			IL_0058: xor
-			IL_0059: stind.i4
-			IL_005a: ldarg.2
-			IL_005b: ldc.i4.s 13
-			IL_005d: add
-			IL_005e: starg.s encKey
-			IL_0060: ldloc.3
-			IL_0061: ldc.i4.4
-			IL_0062: sub
-			IL_0063: stloc.3
+		IL_002f: ldc.i4.0
+		IL_0030: conv.u
+		IL_0031: stloc.1
+		IL_0032: br.s IL_003d
 
-			IL_0064: ldloc.3
-			IL_0065: ldloc.2
-			IL_0066: bge.un.s IL_0054
+		IL_0034: ldloc.2
+		IL_0035: ldc.i4.0
+		IL_0036: ldelema [mscorlib]System.Byte
+		IL_003b: conv.u
+		IL_003c: stloc.1
+
+		IL_003d: nop
+		IL_003e: ldloc.1
+		IL_003f: stloc.3
+		IL_0040: ldloc.3
+		IL_0041: ldarg.0
+		IL_0042: callvirt instance int32 [mscorlib]System.Array::get_Length()
+		IL_0047: conv.r8
+		IL_0048: ldc.r8 4
+		IL_0051: div
+		IL_0052: call float64 [mscorlib]System.Math::Floor(float64)
+		IL_0057: conv.i4
+		IL_0058: conv.i
+		IL_0059: ldc.i4.4
+		IL_005a: mul
+		IL_005b: add
+		IL_005c: ldc.i4.4
+		IL_005d: sub
+		IL_005e: stloc.s 4
+		IL_0060: br.s IL_0077
+		// loop start (head: IL_0077)
+			IL_0062: nop
+			IL_0063: ldloc.s 4
+			IL_0065: dup
+			IL_0066: ldind.i4
+			IL_0067: ldarg.2
+			IL_0068: xor
+			IL_0069: stind.i4
+			IL_006a: ldarg.2
+			IL_006b: ldc.i4.s 13
+			IL_006d: add
+			IL_006e: starg.s encKey
+			IL_0070: nop
+			IL_0071: ldloc.s 4
+			IL_0073: ldc.i4.4
+			IL_0074: sub
+			IL_0075: stloc.s 4
+
+			IL_0077: ldloc.s 4
+			IL_0079: ldloc.3
+			IL_007a: clt.un
+			IL_007c: ldc.i4.0
+			IL_007d: ceq
+			IL_007f: stloc.s 5
+			IL_0081: ldloc.s 5
+			IL_0083: brtrue.s IL_0062
 		// end loop
 
-		IL_0068: ldnull
-		IL_0069: stloc.1
-		IL_006a: ret
+		IL_0085: nop
+		IL_0086: ldnull
+		IL_0087: stloc.2
+
+		IL_0088: ret
 	} // end of method JIEJIEHelper::MyInitializeArray
 
 	.method public hidebysig static 
@@ -4913,13 +5751,21 @@ namespace JIEJIE
 			int32& v
 		) cil managed 
 	{
-		// Method begins at RVA 0x20cf
-		// Code size 8 (0x8)
-		.maxstack 8
+		// Method begins at RVA 0x22b8
+		// Code size 12 (0xc)
+		.maxstack 1
+		.locals init (
+			[0] string
+		)
 
-		IL_0000: ldarg.s v
+		IL_0000: nop
+		IL_0001: ldarg.0
 		IL_0002: call instance string [mscorlib]System.Int32::ToString()
-		IL_0007: ret
+		IL_0007: stloc.0
+		IL_0008: br.s IL_000a
+
+		IL_000a: ldloc.0
+		IL_000b: ret
 	} // end of method JIEJIEHelper::Int32_ToString
 
 	.method public hidebysig static 
@@ -4928,14 +5774,22 @@ namespace JIEJIE
 			string b
 		) cil managed 
 	{
-		// Method begins at RVA 0x20d8
-		// Code size 8 (0x8)
-		.maxstack 8
+		// Method begins at RVA 0x22d0
+		// Code size 13 (0xd)
+		.maxstack 2
+		.locals init (
+			[0] bool
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: call bool [mscorlib]System.String::Equals(string, string)
-		IL_0007: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: call bool [mscorlib]System.String::Equals(string, string)
+		IL_0008: stloc.0
+		IL_0009: br.s IL_000b
+
+		IL_000b: ldloc.0
+		IL_000c: ret
 	} // end of method JIEJIEHelper::String_Equality
 
 	.method public hidebysig static 
@@ -4944,14 +5798,22 @@ namespace JIEJIE
 			object b
 		) cil managed 
 	{
-		// Method begins at RVA 0x20e1
-		// Code size 8 (0x8)
-		.maxstack 8
+		// Method begins at RVA 0x22ec
+		// Code size 13 (0xd)
+		.maxstack 2
+		.locals init (
+			[0] string
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: call string [mscorlib]System.String::Concat(object, object)
-		IL_0007: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: call string [mscorlib]System.String::Concat(object, object)
+		IL_0008: stloc.0
+		IL_0009: br.s IL_000b
+
+		IL_000b: ldloc.0
+		IL_000c: ret
 	} // end of method JIEJIEHelper::String_ConcatObject
 
 	.method public hidebysig static 
@@ -4961,15 +5823,23 @@ namespace JIEJIE
 			object c
 		) cil managed 
 	{
-		// Method begins at RVA 0x20ea
-		// Code size 9 (0x9)
-		.maxstack 8
+		// Method begins at RVA 0x2308
+		// Code size 14 (0xe)
+		.maxstack 3
+		.locals init (
+			[0] string
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: ldarg.2
-		IL_0003: call string [mscorlib]System.String::Concat(object, object, object)
-		IL_0008: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: ldarg.2
+		IL_0004: call string [mscorlib]System.String::Concat(object, object, object)
+		IL_0009: stloc.0
+		IL_000a: br.s IL_000c
+
+		IL_000c: ldloc.0
+		IL_000d: ret
 	} // end of method JIEJIEHelper::String_Concat3Object
 
 	.method public hidebysig static 
@@ -4979,15 +5849,23 @@ namespace JIEJIE
 			string c
 		) cil managed 
 	{
-		// Method begins at RVA 0x20f4
-		// Code size 9 (0x9)
-		.maxstack 8
+		// Method begins at RVA 0x2324
+		// Code size 14 (0xe)
+		.maxstack 3
+		.locals init (
+			[0] string
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: ldarg.2
-		IL_0003: call string [mscorlib]System.String::Concat(string, string, string)
-		IL_0008: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: ldarg.2
+		IL_0004: call string [mscorlib]System.String::Concat(string, string, string)
+		IL_0009: stloc.0
+		IL_000a: br.s IL_000c
+
+		IL_000c: ldloc.0
+		IL_000d: ret
 	} // end of method JIEJIEHelper::String_Concat3String
 
 	.method public hidebysig static 
@@ -4995,13 +5873,21 @@ namespace JIEJIE
 			object v
 		) cil managed 
 	{
-		// Method begins at RVA 0x20fe
-		// Code size 7 (0x7)
-		.maxstack 8
+		// Method begins at RVA 0x2340
+		// Code size 12 (0xc)
+		.maxstack 1
+		.locals init (
+			[0] string
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: callvirt instance string [mscorlib]System.Object::ToString()
-		IL_0006: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: callvirt instance string [mscorlib]System.Object::ToString()
+		IL_0007: stloc.0
+		IL_0008: br.s IL_000a
+
+		IL_000a: ldloc.0
+		IL_000b: ret
 	} // end of method JIEJIEHelper::Object_ToString
 
 	.method public hidebysig static 
@@ -5009,21 +5895,36 @@ namespace JIEJIE
 			string v
 		) cil managed 
 	{
-		// Method begins at RVA 0x2106
-		// Code size 15 (0xf)
-		.maxstack 8
+		// Method begins at RVA 0x2358
+		// Code size 28 (0x1c)
+		.maxstack 2
+		.locals init (
+			[0] bool,
+			[1] bool
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: brfalse.s IL_000d
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldnull
+		IL_0003: cgt.un
+		IL_0005: stloc.0
+		IL_0006: ldloc.0
+		IL_0007: brfalse.s IL_0016
 
-		IL_0003: ldarg.0
-		IL_0004: callvirt instance int32 [mscorlib]System.String::get_Length()
-		IL_0009: ldc.i4.0
-		IL_000a: ceq
-		IL_000c: ret
+		IL_0009: nop
+		IL_000a: ldarg.0
+		IL_000b: callvirt instance int32 [mscorlib]System.String::get_Length()
+		IL_0010: ldc.i4.0
+		IL_0011: ceq
+		IL_0013: stloc.1
+		IL_0014: br.s IL_001a
 
-		IL_000d: ldc.i4.1
-		IL_000e: ret
+		IL_0016: ldc.i4.1
+		IL_0017: stloc.1
+		IL_0018: br.s IL_001a
+
+		IL_001a: ldloc.1
+		IL_001b: ret
 	} // end of method JIEJIEHelper::String_IsNullOrEmpty
 
 	.method public hidebysig static 
@@ -5031,27 +5932,49 @@ namespace JIEJIE
 			object a
 		) cil managed 
 	{
-		// Method begins at RVA 0x2116
-		// Code size 7 (0x7)
+		// Method begins at RVA 0x2380
+		// Code size 9 (0x9)
 		.maxstack 8
 
-		IL_0000: ldarg.0
-		IL_0001: call void [mscorlib]System.Threading.Monitor::Enter(object)
-		IL_0006: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: call void [mscorlib]System.Threading.Monitor::Enter(object)
+		IL_0007: nop
+		IL_0008: ret
 	} // end of method JIEJIEHelper::Monitor_Enter
+
+	.method public hidebysig static 
+		void Monitor_Enter2 (
+			object a,
+			bool& lockTaken
+		) cil managed 
+	{
+		// Method begins at RVA 0x238a
+		// Code size 10 (0xa)
+		.maxstack 8
+
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: call void [mscorlib]System.Threading.Monitor::Enter(object, bool&)
+		IL_0008: nop
+		IL_0009: ret
+	} // end of method JIEJIEHelper::Monitor_Enter2
 
 	.method public hidebysig static 
 		void Monitor_Exit (
 			object a
 		) cil managed 
 	{
-		// Method begins at RVA 0x211e
-		// Code size 7 (0x7)
+		// Method begins at RVA 0x2395
+		// Code size 9 (0x9)
 		.maxstack 8
 
-		IL_0000: ldarg.0
-		IL_0001: call void [mscorlib]System.Threading.Monitor::Exit(object)
-		IL_0006: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: call void [mscorlib]System.Threading.Monitor::Exit(object)
+		IL_0007: nop
+		IL_0008: ret
 	} // end of method JIEJIEHelper::Monitor_Exit
 
 	.method public hidebysig static 
@@ -5060,14 +5983,22 @@ namespace JIEJIE
 			string b
 		) cil managed 
 	{
-		// Method begins at RVA 0x2126
-		// Code size 8 (0x8)
-		.maxstack 8
+		// Method begins at RVA 0x23a0
+		// Code size 13 (0xd)
+		.maxstack 2
+		.locals init (
+			[0] string
+		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: call string [mscorlib]System.String::Concat(string, string)
-		IL_0007: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: call string [mscorlib]System.String::Concat(string, string)
+		IL_0008: stloc.0
+		IL_0009: br.s IL_000b
+
+		IL_000b: ldloc.0
+		IL_000c: ret
 	} // end of method JIEJIEHelper::String_Concat
 
 	.method public hidebysig static 
@@ -5075,170 +6006,193 @@ namespace JIEJIE
 			class [mscorlib]System.IDisposable obj
 		) cil managed 
 	{
-		// Method begins at RVA 0x212f
-		// Code size 7 (0x7)
+		// Method begins at RVA 0x23b9
+		// Code size 9 (0x9)
 		.maxstack 8
 
-		IL_0000: ldarg.0
-		IL_0001: callvirt instance void [mscorlib]System.IDisposable::Dispose()
-		IL_0006: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: callvirt instance void [mscorlib]System.IDisposable::Dispose()
+		IL_0007: nop
+		IL_0008: ret
 	} // end of method JIEJIEHelper::MyDispose
 
-.method public hidebysig static 
-	string CloneStringCrossThead (
-		string txt
-	) cil managed 
-{
-	// Method begins at RVA 0x2218
-	// Code size 167 (0xa7)
-	.maxstack 2
-	.locals init (
-		[0] bool,
-		[1] string,
-		[2] class [mscorlib]System.Threading.AutoResetEvent,
-		[3] bool,
-		[4] bool
-	)
-
-	IL_0000: nop
-	IL_0001: ldarg.0
-	IL_0002: brfalse.s IL_000f
-
-	IL_0004: ldarg.0
-	IL_0005: callvirt instance int32 [mscorlib]System.String::get_Length()
-	IL_000a: ldc.i4.0
-	IL_000b: ceq
-	IL_000d: br.s IL_0010
-
-	IL_000f: ldc.i4.1
-
-	IL_0010: stloc.0
-	IL_0011: ldloc.0
-	IL_0012: brfalse.s IL_001c
-
-	IL_0014: nop
-	IL_0015: ldarg.0
-	IL_0016: stloc.1
-	IL_0017: br IL_00a5
-
-	IL_001c: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-	IL_0021: stloc.2
-	IL_0022: ldc.i4.0
-	IL_0023: stloc.3
-	.try
+	.method public hidebysig static 
+		string CloneStringCrossThead (
+			string txt
+		) cil managed 
 	{
-		IL_0024: ldloc.2
-		IL_0027: call void [mscorlib]System.Threading.Monitor::Enter(object)
-		IL_002c: nop
-		IL_002d: nop
-		IL_002e: ldarg.0
-		IL_002f: volatile.
-		IL_0031: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-		IL_0036: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-		IL_003b: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
-		IL_0040: pop
-		IL_0041: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-		IL_0046: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-		IL_004b: pop
-		IL_004c: volatile.
-		IL_004e: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-		IL_0053: ldnull
-		IL_0054: ceq
-		IL_0056: stloc.s 4
-		IL_0058: ldloc.s 4
-		IL_005a: brfalse.s IL_0083
+		// Method begins at RVA 0x23c4
+		// Code size 163 (0xa3)
+		.maxstack 2
+		.locals init (
+			[0] bool,
+			[1] string,
+			[2] bool
+		)
 
-		IL_005c: nop
-		IL_005d: ldnull
-		IL_005e: ldftn void __DC20211119.JIEJIEHelper::CloneStringCrossThead_Thread()
-		IL_0064: newobj instance void [mscorlib]System.Threading.ThreadStart::.ctor(object, native int)
-		IL_0069: newobj instance void [mscorlib]System.Threading.Thread::.ctor(class [mscorlib]System.Threading.ThreadStart)
-		IL_006e: volatile.
-		IL_0070: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-		IL_0075: volatile.
-		IL_0077: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-		IL_007c: callvirt instance void [mscorlib]System.Threading.Thread::Start()
-		IL_0081: nop
-		IL_0082: nop
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: brfalse.s IL_000f
 
-		IL_0083: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-		IL_0088: ldc.i4.s 100
-		IL_008a: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
-		IL_008f: pop
-		IL_0090: volatile.
-		IL_0092: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-		IL_0097: stloc.1
-		IL_0098: leave.s IL_00a5
-	} // end .try
-	finally
-	{
-		IL_009a: ldloc.3
-		IL_009b: brfalse.s IL_00a4
+		IL_0004: ldarg.0
+		IL_0005: callvirt instance int32 [mscorlib]System.String::get_Length()
+		IL_000a: ldc.i4.0
+		IL_000b: ceq
+		IL_000d: br.s IL_0010
 
-		IL_009d: ldloc.2
-		IL_009e: call void [mscorlib]System.Threading.Monitor::Exit(object)
-		IL_00a3: nop
+		IL_000f: ldc.i4.1
 
-		IL_00a4: endfinally
-	} // end handler
+		IL_0010: stloc.0
+		IL_0011: ldloc.0
+		IL_0012: brfalse.s IL_001c
 
-	IL_00a5: ldloc.1
-	IL_00a6: ret
-} // end of method JIEJIEHelper::CloneStringCrossThead
+		IL_0014: nop
+		IL_0015: ldarg.0
+		IL_0016: stloc.1
+		IL_0017: br IL_00a1
 
+		IL_001c: nop
+		.try
+		{
+			IL_001d: nop
+			IL_001e: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+			IL_0023: call void [mscorlib]System.Threading.Monitor::Enter(object)
+			IL_0028: nop
+			IL_0029: ldarg.0
+			IL_002a: volatile.
+			IL_002c: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+			IL_0031: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+			IL_0036: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
+			IL_003b: pop
+			IL_003c: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+			IL_0041: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
+			IL_0046: pop
+			IL_0047: volatile.
+			IL_0049: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+			IL_004e: ldnull
+			IL_004f: ceq
+			IL_0051: stloc.2
+			IL_0052: ldloc.2
+			IL_0053: brfalse.s IL_007c
+
+			IL_0055: nop
+			IL_0056: ldnull
+			IL_0057: ldftn void __DC20211119.JIEJIEHelper::CloneStringCrossThead_Thread()
+			IL_005d: newobj instance void [mscorlib]System.Threading.ThreadStart::.ctor(object, native int)
+			IL_0062: newobj instance void [mscorlib]System.Threading.Thread::.ctor(class [mscorlib]System.Threading.ThreadStart)
+			IL_0067: volatile.
+			IL_0069: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+			IL_006e: volatile.
+			IL_0070: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+			IL_0075: callvirt instance void [mscorlib]System.Threading.Thread::Start()
+			IL_007a: nop
+			IL_007b: nop
+
+			IL_007c: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+			IL_0081: ldc.i4.s 100
+			IL_0083: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
+			IL_0088: pop
+			IL_0089: volatile.
+			IL_008b: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+			IL_0090: stloc.1
+			IL_0091: leave.s IL_00a1
+		} // end .try
+		finally
+		{
+			IL_0093: nop
+			IL_0094: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+			IL_0099: call void [mscorlib]System.Threading.Monitor::Exit(object)
+			IL_009e: nop
+			IL_009f: nop
+			IL_00a0: endfinally
+		} // end handler
+
+		IL_00a1: ldloc.1
+		IL_00a2: ret
+	} // end of method JIEJIEHelper::CloneStringCrossThead
 
 	.method private hidebysig static 
 		void CloneStringCrossThead_Thread () cil managed 
 	{
-		// Method begins at RVA 0x21e0
-		// Code size 108 (0x6c)
+		// Method begins at RVA 0x2484
+		// Code size 134 (0x86)
 		.maxstack 2
+		.locals init (
+			[0] bool,
+			[1] bool,
+			[2] bool
+		)
 
+		IL_0000: nop
 		.try
 		{
-			// loop start
-				IL_0000: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-				IL_0005: ldc.i4 1000
-				IL_000a: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
-				IL_000f: brtrue.s IL_0013
+			IL_0001: nop
+			IL_0002: br.s IL_005d
+			// loop start (head: IL_005d)
+				IL_0004: nop
+				IL_0005: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+				IL_000a: ldc.i4 1000
+				IL_000f: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
+				IL_0014: ldc.i4.0
+				IL_0015: ceq
+				IL_0017: stloc.0
+				IL_0018: ldloc.0
+				IL_0019: brfalse.s IL_001e
 
-				IL_0011: leave.s IL_006b
+				IL_001b: nop
+				IL_001c: br.s IL_0061
 
-				IL_0013: volatile.
-				IL_0015: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-				IL_001a: brfalse.s IL_0034
+				IL_001e: volatile.
+				IL_0020: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+				IL_0025: ldnull
+				IL_0026: cgt.un
+				IL_0028: stloc.1
+				IL_0029: ldloc.1
+				IL_002a: brfalse.s IL_0046
 
-				IL_001c: volatile.
-				IL_001e: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-				IL_0023: callvirt instance char[] [mscorlib]System.String::ToCharArray()
-				IL_0028: newobj instance void [mscorlib]System.String::.ctor(char[])
+				IL_002c: nop
 				IL_002d: volatile.
-				IL_002f: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+				IL_002f: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+				IL_0034: callvirt instance char[] [mscorlib]System.String::ToCharArray()
+				IL_0039: newobj instance void [mscorlib]System.String::.ctor(char[])
+				IL_003e: volatile.
+				IL_0040: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+				IL_0045: nop
 
-				IL_0034: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-				IL_0039: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
-				IL_003e: pop
-				IL_003f: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-				IL_0044: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-				IL_0049: pop
-				IL_004a: br.s IL_0000
+				IL_0046: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+				IL_004b: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
+				IL_0050: pop
+				IL_0051: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+				IL_0056: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
+				IL_005b: pop
+				IL_005c: nop
+
+				IL_005d: ldc.i4.1
+				IL_005e: stloc.2
+				IL_005f: br.s IL_0004
 			// end loop
+
+			IL_0061: nop
+			IL_0062: leave.s IL_0085
 		} // end .try
 		finally
 		{
-			IL_004c: ldnull
-			IL_004d: volatile.
-			IL_004f: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-			IL_0054: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-			IL_0059: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-			IL_005e: pop
-			IL_005f: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-			IL_0064: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-			IL_0069: pop
-			IL_006a: endfinally
+			IL_0064: nop
+			IL_0065: ldnull
+			IL_0066: volatile.
+			IL_0068: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+			IL_006d: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+			IL_0072: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
+			IL_0077: pop
+			IL_0078: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+			IL_007d: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
+			IL_0082: pop
+			IL_0083: nop
+			IL_0084: endfinally
 		} // end handler
 
-		IL_006b: ret
+		IL_0085: ret
 	} // end of method JIEJIEHelper::CloneStringCrossThead_Thread
 
 	.method public hidebysig static 
@@ -5249,72 +6203,84 @@ namespace JIEJIE
 			int32 key
 		) cil managed 
 	{
-		// Method begins at RVA 0x2268
-		// Code size 66 (0x42)
+		// Method begins at RVA 0x2528
+		// Code size 81 (0x51)
 		.maxstack 4
 		.locals init (
 			[0] int32 chrsLength,
 			[1] char[] chrs,
 			[2] int32 iCount,
 			[3] int32 bi,
-			[4] int32 v
+			[4] int32 v,
+			[5] bool,
+			[6] string
 		)
 
-		IL_0000: ldarg.2
-		IL_0001: ldc.i4.2
-		IL_0002: div
-		IL_0003: stloc.0
-		IL_0004: ldloc.0
-		IL_0005: newarr [mscorlib]System.Char
-		IL_000a: stloc.1
-		IL_000b: ldc.i4.0
-		IL_000c: stloc.2
-		IL_000d: br.s IL_0037
-		// loop start (head: IL_0037)
-			IL_000f: ldarg.1
-			IL_0010: ldloc.2
-			IL_0011: ldc.i4.2
-			IL_0012: mul
-			IL_0013: add
-			IL_0014: stloc.3
-			IL_0015: ldarg.0
-			IL_0016: ldloc.3
-			IL_0017: ldelem.u1
-			IL_0018: ldc.i4.8
-			IL_0019: shl
-			IL_001a: ldarg.0
-			IL_001b: ldloc.3
-			IL_001c: ldc.i4.1
-			IL_001d: add
-			IL_001e: ldelem.u1
+		IL_0000: nop
+		IL_0001: ldarg.2
+		IL_0002: ldc.i4.2
+		IL_0003: div
+		IL_0004: stloc.0
+		IL_0005: ldloc.0
+		IL_0006: newarr [mscorlib]System.Char
+		IL_000b: stloc.1
+		IL_000c: ldc.i4.0
+		IL_000d: stloc.2
+		IL_000e: br.s IL_003a
+		// loop start (head: IL_003a)
+			IL_0010: nop
+			IL_0011: ldarg.1
+			IL_0012: ldloc.2
+			IL_0013: ldc.i4.2
+			IL_0014: mul
+			IL_0015: add
+			IL_0016: stloc.3
+			IL_0017: ldarg.0
+			IL_0018: ldloc.3
+			IL_0019: ldelem.u1
+			IL_001a: ldc.i4.8
+			IL_001b: shl
+			IL_001c: ldarg.0
+			IL_001d: ldloc.3
+			IL_001e: ldc.i4.1
 			IL_001f: add
-			IL_0020: stloc.s 4
-			IL_0022: ldloc.s 4
-			IL_0024: ldarg.3
-			IL_0025: xor
-			IL_0026: stloc.s 4
-			IL_0028: ldloc.1
-			IL_0029: ldloc.2
-			IL_002a: ldloc.s 4
-			IL_002c: conv.u2
-			IL_002d: stelem.i2
-			IL_002e: ldloc.2
-			IL_002f: ldc.i4.1
-			IL_0030: add
-			IL_0031: stloc.2
-			IL_0032: ldarg.3
-			IL_0033: ldc.i4.1
-			IL_0034: add
-			IL_0035: starg.s key
+			IL_0020: ldelem.u1
+			IL_0021: add
+			IL_0022: stloc.s 4
+			IL_0024: ldloc.s 4
+			IL_0026: ldarg.3
+			IL_0027: xor
+			IL_0028: stloc.s 4
+			IL_002a: ldloc.1
+			IL_002b: ldloc.2
+			IL_002c: ldloc.s 4
+			IL_002e: conv.u2
+			IL_002f: stelem.i2
+			IL_0030: nop
+			IL_0031: ldloc.2
+			IL_0032: ldc.i4.1
+			IL_0033: add
+			IL_0034: stloc.2
+			IL_0035: ldarg.3
+			IL_0036: ldc.i4.1
+			IL_0037: add
+			IL_0038: starg.s key
 
-			IL_0037: ldloc.2
-			IL_0038: ldloc.0
-			IL_0039: blt.s IL_000f
+			IL_003a: ldloc.2
+			IL_003b: ldloc.0
+			IL_003c: clt
+			IL_003e: stloc.s 5
+			IL_0040: ldloc.s 5
+			IL_0042: brtrue.s IL_0010
 		// end loop
 
-		IL_003b: ldloc.1
-		IL_003c: newobj instance void [mscorlib]System.String::.ctor(char[])
-		IL_0041: ret
+		IL_0044: ldloc.1
+		IL_0045: newobj instance void [mscorlib]System.String::.ctor(char[])
+		IL_004a: stloc.s 6
+		IL_004c: br.s IL_004e
+
+		IL_004e: ldloc.s 6
+		IL_0050: ret
 	} // end of method JIEJIEHelper::GetString
 
 	.method public hidebysig static 
@@ -5325,50 +6291,68 @@ namespace JIEJIE
 			int32 key
 		) cil managed 
 	{
-		// Method begins at RVA 0x22b8
-		// Code size 47 (0x2f)
+		// Method begins at RVA 0x2588
+		// Code size 66 (0x42)
 		.maxstack 5
 		.locals init (
 			[0] uint8[] bs,
-			[1] int32 iCount
+			[1] class [mscorlib]System.IO.MemoryStream ms,
+			[2] class [System.Drawing]System.Drawing.Bitmap bmp,
+			[3] int32 iCount,
+			[4] bool,
+			[5] class [System.Drawing]System.Drawing.Bitmap
 		)
 
-		IL_0000: ldarg.2
-		IL_0001: newarr [mscorlib]System.Byte
-		IL_0006: stloc.0
-		IL_0007: ldc.i4.0
-		IL_0008: stloc.1
-		IL_0009: br.s IL_001f
-		// loop start (head: IL_001f)
-			IL_000b: ldloc.0
-			IL_000c: ldloc.1
-			IL_000d: ldarg.0
-			IL_000e: ldarg.1
-			IL_000f: ldloc.1
-			IL_0010: add
-			IL_0011: ldelem.u1
-			IL_0012: ldarg.3
-			IL_0013: xor
-			IL_0014: conv.u1
-			IL_0015: stelem.i1
-			IL_0016: ldloc.1
-			IL_0017: ldc.i4.1
-			IL_0018: add
-			IL_0019: stloc.1
-			IL_001a: ldarg.3
-			IL_001b: ldc.i4.1
-			IL_001c: add
-			IL_001d: starg.s key
+		IL_0000: nop
+		IL_0001: ldarg.2
+		IL_0002: newarr [mscorlib]System.Byte
+		IL_0007: stloc.0
+		IL_0008: ldc.i4.0
+		IL_0009: stloc.3
+		IL_000a: br.s IL_0022
+		// loop start (head: IL_0022)
+			IL_000c: nop
+			IL_000d: ldloc.0
+			IL_000e: ldloc.3
+			IL_000f: ldarg.0
+			IL_0010: ldarg.1
+			IL_0011: ldloc.3
+			IL_0012: add
+			IL_0013: ldelem.u1
+			IL_0014: ldarg.3
+			IL_0015: xor
+			IL_0016: conv.u1
+			IL_0017: stelem.i1
+			IL_0018: nop
+			IL_0019: ldloc.3
+			IL_001a: ldc.i4.1
+			IL_001b: add
+			IL_001c: stloc.3
+			IL_001d: ldarg.3
+			IL_001e: ldc.i4.1
+			IL_001f: add
+			IL_0020: starg.s key
 
-			IL_001f: ldloc.1
-			IL_0020: ldarg.2
-			IL_0021: blt.s IL_000b
+			IL_0022: ldloc.3
+			IL_0023: ldarg.2
+			IL_0024: clt
+			IL_0026: stloc.s 4
+			IL_0028: ldloc.s 4
+			IL_002a: brtrue.s IL_000c
 		// end loop
 
-		IL_0023: ldloc.0
-		IL_0024: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
-		IL_0029: newobj instance void [System.Drawing]System.Drawing.Bitmap::.ctor(class [mscorlib]System.IO.Stream)
-		IL_002e: ret
+		IL_002c: ldloc.0
+		IL_002d: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
+		IL_0032: stloc.1
+		IL_0033: ldloc.1
+		IL_0034: newobj instance void [System.Drawing]System.Drawing.Bitmap::.ctor(class [mscorlib]System.IO.Stream)
+		IL_0039: stloc.2
+		IL_003a: ldloc.2
+		IL_003b: stloc.s 5
+		IL_003d: br.s IL_003f
+
+		IL_003f: ldloc.s 5
+		IL_0041: ret
 	} // end of method JIEJIEHelper::GetBitmap
 
 	.method public hidebysig static 
@@ -5378,23 +6362,33 @@ namespace JIEJIE
 			bool gzip
 		) cil managed 
 	{
-		// Method begins at RVA 0x22f4
-		// Code size 22 (0x16)
+		// Method begins at RVA 0x25d8
+		// Code size 30 (0x1e)
 		.maxstack 3
 		.locals init (
-			[0] class [mscorlib]System.Resources.ResourceSet result
+			[0] class [mscorlib]System.IO.Stream 'stream',
+			[1] class [mscorlib]System.Resources.ResourceSet result,
+			[2] class [mscorlib]System.Resources.ResourceSet
 		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldarg.1
-		IL_0002: ldarg.2
-		IL_0003: call class [mscorlib]System.IO.Stream __DC20211119.JIEJIEHelper::GetStream(uint8[], uint8, bool)
-		IL_0008: dup
-		IL_0009: newobj instance void [mscorlib]System.Resources.ResourceSet::.ctor(class [mscorlib]System.IO.Stream)
-		IL_000e: stloc.0
-		IL_000f: callvirt instance void [mscorlib]System.IO.Stream::Close()
-		IL_0014: ldloc.0
-		IL_0015: ret
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldarg.1
+		IL_0003: ldarg.2
+		IL_0004: call class [mscorlib]System.IO.Stream __DC20211119.JIEJIEHelper::GetStream(uint8[], uint8, bool)
+		IL_0009: stloc.0
+		IL_000a: ldloc.0
+		IL_000b: newobj instance void [mscorlib]System.Resources.ResourceSet::.ctor(class [mscorlib]System.IO.Stream)
+		IL_0010: stloc.1
+		IL_0011: ldloc.0
+		IL_0012: callvirt instance void [mscorlib]System.IO.Stream::Close()
+		IL_0017: nop
+		IL_0018: ldloc.1
+		IL_0019: stloc.2
+		IL_001a: br.s IL_001c
+
+		IL_001c: ldloc.2
+		IL_001d: ret
 	} // end of method JIEJIEHelper::LoadResourceSet
 
 	.method private hidebysig static 
@@ -5404,125 +6398,178 @@ namespace JIEJIE
 			bool gzip
 		) cil managed 
 	{
-		// Method begins at RVA 0x2318
-		// Code size 122 (0x7a)
+		// Method begins at RVA 0x2604
+		// Code size 169 (0xa9)
 		.maxstack 4
 		.locals init (
 			[0] int32 len,
 			[1] class [mscorlib]System.IO.MemoryStream ms,
 			[2] int32 iCount,
-			[3] class [System]System.IO.Compression.GZipStream 'stream',
-			[4] uint8[] bsTemp
+			[3] bool,
+			[4] bool,
+			[5] class [System]System.IO.Compression.GZipStream 'stream',
+			[6] uint8[] bsTemp,
+			[7] bool,
+			[8] bool,
+			[9] class [mscorlib]System.IO.Stream
 		)
 
-		IL_0000: ldarg.0
-		IL_0001: ldlen
-		IL_0002: conv.i4
-		IL_0003: stloc.0
-		IL_0004: ldc.i4.0
-		IL_0005: stloc.2
-		IL_0006: br.s IL_001b
-		// loop start (head: IL_001b)
-			IL_0008: ldarg.0
-			IL_0009: ldloc.2
+		IL_0000: nop
+		IL_0001: ldarg.0
+		IL_0002: ldlen
+		IL_0003: conv.i4
+		IL_0004: stloc.0
+		IL_0005: ldc.i4.0
+		IL_0006: stloc.2
+		IL_0007: br.s IL_001e
+		// loop start (head: IL_001e)
+			IL_0009: nop
 			IL_000a: ldarg.0
 			IL_000b: ldloc.2
-			IL_000c: ldelem.u1
-			IL_000d: ldarg.1
-			IL_000e: xor
-			IL_000f: conv.u1
-			IL_0010: stelem.i1
-			IL_0011: ldloc.2
-			IL_0012: ldc.i4.1
-			IL_0013: add
-			IL_0014: stloc.2
-			IL_0015: ldarg.1
-			IL_0016: ldc.i4.1
-			IL_0017: add
-			IL_0018: conv.u1
-			IL_0019: starg.s key
+			IL_000c: ldarg.0
+			IL_000d: ldloc.2
+			IL_000e: ldelem.u1
+			IL_000f: ldarg.1
+			IL_0010: xor
+			IL_0011: conv.u1
+			IL_0012: stelem.i1
+			IL_0013: nop
+			IL_0014: ldloc.2
+			IL_0015: ldc.i4.1
+			IL_0016: add
+			IL_0017: stloc.2
+			IL_0018: ldarg.1
+			IL_0019: ldc.i4.1
+			IL_001a: add
+			IL_001b: conv.u1
+			IL_001c: starg.s key
 
-			IL_001b: ldloc.2
-			IL_001c: ldloc.0
-			IL_001d: blt.s IL_0008
+			IL_001e: ldloc.2
+			IL_001f: ldloc.0
+			IL_0020: clt
+			IL_0022: stloc.3
+			IL_0023: ldloc.3
+			IL_0024: brtrue.s IL_0009
 		// end loop
 
-		IL_001f: ldnull
-		IL_0020: stloc.1
-		IL_0021: ldarg.2
-		IL_0022: brfalse.s IL_0071
+		IL_0026: ldnull
+		IL_0027: stloc.1
+		IL_0028: ldarg.2
+		IL_0029: stloc.s 4
+		IL_002b: ldloc.s 4
+		IL_002d: brfalse.s IL_0098
 
-		IL_0024: ldarg.0
-		IL_0025: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
-		IL_002a: ldc.i4.0
-		IL_002b: newobj instance void [System]System.IO.Compression.GZipStream::.ctor(class [mscorlib]System.IO.Stream, valuetype [System]System.IO.Compression.CompressionMode)
-		IL_0030: stloc.3
-		IL_0031: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor()
-		IL_0036: stloc.1
-		IL_0037: ldc.i4 1024
-		IL_003c: newarr [mscorlib]System.Byte
-		IL_0041: stloc.s 4
-		// loop start (head: IL_0043)
-			IL_0043: ldloc.3
-			IL_0044: ldloc.s 4
-			IL_0046: ldc.i4.0
-			IL_0047: ldloc.s 4
-			IL_0049: ldlen
-			IL_004a: conv.i4
-			IL_004b: callvirt instance int32 [mscorlib]System.IO.Stream::Read(uint8[], int32, int32)
-			IL_0050: stloc.0
-			IL_0051: ldloc.0
-			IL_0052: ldc.i4.0
-			IL_0053: ble.s IL_0061
+		IL_002f: nop
+		IL_0030: ldarg.0
+		IL_0031: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
+		IL_0036: ldc.i4.0
+		IL_0037: newobj instance void [System]System.IO.Compression.GZipStream::.ctor(class [mscorlib]System.IO.Stream, valuetype [System]System.IO.Compression.CompressionMode)
+		IL_003c: stloc.s 5
+		IL_003e: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor()
+		IL_0043: stloc.1
+		IL_0044: ldc.i4 1024
+		IL_0049: newarr [mscorlib]System.Byte
+		IL_004e: stloc.s 6
+		IL_0050: br.s IL_007f
+		// loop start (head: IL_007f)
+			IL_0052: nop
+			IL_0053: ldloc.s 5
+			IL_0055: ldloc.s 6
+			IL_0057: ldc.i4.0
+			IL_0058: ldloc.s 6
+			IL_005a: ldlen
+			IL_005b: conv.i4
+			IL_005c: callvirt instance int32 [mscorlib]System.IO.Stream::Read(uint8[], int32, int32)
+			IL_0061: stloc.0
+			IL_0062: ldloc.0
+			IL_0063: ldc.i4.0
+			IL_0064: cgt
+			IL_0066: stloc.s 7
+			IL_0068: ldloc.s 7
+			IL_006a: brfalse.s IL_007b
 
-			IL_0055: ldloc.1
-			IL_0056: ldloc.s 4
-			IL_0058: ldc.i4.0
-			IL_0059: ldloc.0
-			IL_005a: callvirt instance void [mscorlib]System.IO.Stream::Write(uint8[], int32, int32)
-			IL_005f: br.s IL_0043
+			IL_006c: nop
+			IL_006d: ldloc.1
+			IL_006e: ldloc.s 6
+			IL_0070: ldc.i4.0
+			IL_0071: ldloc.0
+			IL_0072: callvirt instance void [mscorlib]System.IO.Stream::Write(uint8[], int32, int32)
+			IL_0077: nop
+			IL_0078: nop
+			IL_0079: br.s IL_007e
+
+			IL_007b: nop
+			IL_007c: br.s IL_0084
+
+			IL_007e: nop
+
+			IL_007f: ldc.i4.1
+			IL_0080: stloc.s 8
+			IL_0082: br.s IL_0052
 		// end loop
 
-		IL_0061: ldloc.3
-		IL_0062: callvirt instance void [mscorlib]System.IO.Stream::Close()
-		IL_0067: ldloc.1
-		IL_0068: ldc.i4.0
-		IL_0069: conv.i8
-		IL_006a: callvirt instance void [mscorlib]System.IO.Stream::set_Position(int64)
-		IL_006f: br.s IL_0078
+		IL_0084: ldloc.s 5
+		IL_0086: callvirt instance void [mscorlib]System.IO.Stream::Close()
+		IL_008b: nop
+		IL_008c: ldloc.1
+		IL_008d: ldc.i4.0
+		IL_008e: conv.i8
+		IL_008f: callvirt instance void [mscorlib]System.IO.Stream::set_Position(int64)
+		IL_0094: nop
+		IL_0095: nop
+		IL_0096: br.s IL_00a1
 
-		IL_0071: ldarg.0
-		IL_0072: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
-		IL_0077: stloc.1
+		IL_0098: nop
+		IL_0099: ldarg.0
+		IL_009a: newobj instance void [mscorlib]System.IO.MemoryStream::.ctor(uint8[])
+		IL_009f: stloc.1
+		IL_00a0: nop
 
-		IL_0078: ldloc.1
-		IL_0079: ret
+		IL_00a1: ldloc.1
+		IL_00a2: stloc.s 9
+		IL_00a4: br.s IL_00a6
+
+		IL_00a6: ldloc.s 9
+		IL_00a8: ret
 	} // end of method JIEJIEHelper::GetStream
 
 	.method private hidebysig specialname rtspecialname static 
 		void .cctor () cil managed 
 	{
-		// Method begins at RVA 0x239e
-		// Code size 39 (0x27)
-		.maxstack 8
+		// Method begins at RVA 0x26bc
+		// Code size 65 (0x41)
+		.maxstack 1
 
 		IL_0000: ldnull
-		IL_0001: volatile.
-		IL_0003: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-		IL_0008: ldc.i4.0
-		IL_0009: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
-		IL_000e: stsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-		IL_0013: ldc.i4.0
-		IL_0014: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
-		IL_0019: stsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-		IL_001e: ldnull
-		IL_001f: volatile.
-		IL_0021: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-		IL_0026: ret
+		IL_0001: stsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+		IL_0006: ldtoken __DC20211119.JIEJIEHelper
+		IL_000b: call class [mscorlib]System.Type [mscorlib]System.Type::GetTypeFromHandle(valuetype [mscorlib]System.RuntimeTypeHandle)
+		IL_0010: callvirt instance class [mscorlib]System.Reflection.Assembly [mscorlib]System.Type::get_Assembly()
+		IL_0015: stsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+		IL_001a: ldnull
+		IL_001b: volatile.
+		IL_001d: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+		IL_0022: ldc.i4.0
+		IL_0023: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
+		IL_0028: stsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+		IL_002d: ldc.i4.0
+		IL_002e: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
+		IL_0033: stsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+		IL_0038: ldnull
+		IL_0039: volatile.
+		IL_003b: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+		IL_0040: ret
 	} // end of method JIEJIEHelper::.cctor
 
 } // end of class __DC20211119.JIEJIEHelper
-"; 
+
+";
+
+        //******************************************************************************************
+        //******************************************************************************************
+        //******************************************************************************************
+        //******************************************************************************************
+
         private static readonly string _Code_Template_ComponentResourceManager = @"
 .class private auto ansi #CLASSNAME# extends [System]System.ComponentModel.ComponentResourceManager implements [mscorlib]System.IDisposable
 {
@@ -5880,7 +6927,811 @@ namespace JIEJIE
                 }
             }
         }
-        internal void EncryptCharValue()
+
+        private void Encrypt_SomeCall(List<DCILMethod> allMethods)
+        {
+            ConsoleWriteTask();
+            Console.Write("Encrypting some call ...");
+            int startTick = Environment.TickCount;
+            int totalCount = 0;
+            foreach (var method in allMethods)
+            {
+                if (method.RuntimeSwitchs.ControlFlow == false)
+                {
+                    continue;
+                }
+                method.EnumOperCodes(delegate (EnumOperCodeArgs args)
+                {
+                    var callCode = args.Current as DCILOperCode_HandleMethod;
+                    if (callCode == null)
+                    {
+                        return;
+                    }
+                    if (callCode.OperCode == "callvirt")
+                    {
+                        if (callCode.MatchTypeAndMethod("System.Object", "ToString", 0))
+                        {
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "Object_ToString");
+                            callCode.InvokeInfo.IsInstance = false;
+                            callCode.OperCode = "call";
+                            totalCount++;
+                        }
+                        else if (callCode.MatchTypeAndMethod("System.String", "Trim", 0))
+                        {
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_Trim");
+                            callCode.InvokeInfo.IsInstance = false;
+                            callCode.OperCode = "call";
+                            totalCount++;
+                        }
+                    }
+                    else if (callCode.OperCode == "call")
+                    {
+                        var preCode = args.GetPreCode();
+                        if (preCode != null && preCode.IsPrefixOperCode())
+                        {
+                            return;
+                        }
+                        if (callCode.InvokeInfo.MethodName == ".ctor")
+                        {
+                            return;
+                        }
+                        if (callCode.MatchTypeAndMethod("System.String", "op_Equality", 2))
+                        {
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_Equality");
+                            totalCount++;
+                        }
+                        else if (callCode.MatchTypeAndMethod("System.String", "Concat", 2))
+                        {
+                            if (callCode.InvokeInfo.Paramters[0].ValueType.Name == "object")
+                            {
+                                callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_ConcatObject");
+                            }
+                            else
+                            {
+                                callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_Concat");
+                            }
+                            totalCount++;
+                        }
+                        else if (callCode.MatchTypeAndMethod("System.String", "Concat", 3))
+                        {
+                            if (callCode.InvokeInfo.Paramters[0].ValueType.Name == "object")
+                            {
+                                callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_Concat3Object");
+                            }
+                            else
+                            {
+                                callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_Concat3String");
+                            }
+                            totalCount++;
+                        }
+                        else if (callCode.MatchTypeAndMethod("System.Int32", "ToString", 0))
+                        {
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "Int32_ToString");
+                            callCode.InvokeInfo.IsInstance = false;
+                            totalCount++;
+                        }
+                        else if (callCode.MatchTypeAndMethod("System.Object", "GetType", 0))
+                        {
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "Object_GetType");
+                            callCode.InvokeInfo.IsInstance = false;
+                            totalCount++;
+                        }
+                        else if (callCode.MatchTypeAndMethod("System.String", "IsNullOrEmpty", 1))
+                        {
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "String_IsNullOrEmpty");
+                            totalCount++;
+                        }
+                    }
+                });
+            }
+            if (totalCount == 0)
+            {
+                Console.WriteLine(" do nothing.");
+            }
+            else
+            {
+                Console.WriteLine(" change " + totalCount + " call/callvirt instructions, span " + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
+            }
+        }
+         
+
+        private int Encrypt_ArrayDefine_Items(DCILMethod method, DCILOperCodeList items)
+        {
+            int result = 0;
+            int itemsCount = items.Count;
+            for (int codeIndex = 0; codeIndex < itemsCount; codeIndex++)
+            {
+                if (items[codeIndex] is DCILOperCode_Try_Catch_Finally)
+                {
+                    var tcf = (DCILOperCode_Try_Catch_Finally)items[codeIndex];
+                    if (tcf._Try != null && tcf._Try.OperCodes != null)
+                    {
+                        result += Encrypt_ArrayDefine_Items(method, tcf._Try.OperCodes);
+                    }
+                    if (tcf._Catchs != null)
+                    {
+                        foreach (var item2 in tcf._Catchs)
+                        {
+                            if (item2.OperCodes != null)
+                            {
+                                result += Encrypt_ArrayDefine_Items(method, item2.OperCodes);
+                            }
+                        }
+                    }
+                    if (tcf._Finally != null && tcf._Finally.OperCodes != null)
+                    {
+                        result += Encrypt_ArrayDefine_Items(method, tcf._Finally.OperCodes);
+                    }
+                    if (tcf._fault != null && tcf._fault.OperCodes != null)
+                    {
+                        result += Encrypt_ArrayDefine_Items(method, tcf._fault.OperCodes);
+                    }
+                    continue;
+                }
+                var callCode = items[codeIndex] as DCILOperCode_HandleMethod;
+                if (callCode != null
+                    && callCode.MatchTypeAndMethod("System.Runtime.CompilerServices.RuntimeHelpers", "InitializeArray", 2))
+                {
+                    method.MaxstackFix = 1;
+                    var ldTokenCode = items[codeIndex - 1] as DCILOperCode_LdToken;
+                    if (ldTokenCode != null && ldTokenCode.FieldReference.LocalField != null)
+                    {
+                        var fieldIndex = this.RFHContainer.GetFieldIndex(ldTokenCode.FieldReference.LocalField);
+                        if (fieldIndex >= 0)
+                        {
+                            //var code10 = this.Int32ValueContainer.GetOperCode(ldTokenCode.LabelID, fieldIndex);
+                            items[codeIndex - 1] = this.Int32ValueContainer.GetOperCode(ldTokenCode.LabelID, fieldIndex); ;
+                            items.Insert(
+                                codeIndex,
+                                new DCILOperCode_HandleMethod(
+                                    _LabelGen_MyInitializeArray.Gen(),
+                                    "call",
+                                    this.RFHContainer._Method_GetHandle));
+                            codeIndex++;
+                        }
+                    }
+                    int encKey = 0;
+                    for (int iCount = 0; iCount < 8; iCount++)
+                    {
+                        var index2 = codeIndex - iCount;
+                        if (index2 >= 0)
+                        {
+                            var code10 = items[index2];
+                            if (code10.OperCode == "newarr")
+                            {
+                                var clst = ((DCILOperCode_HandleClass)code10).ClassType;
+                                if (clst != null && clst.Name == "System.Byte")
+                                {
+                                    // 定义字节数组
+                                    var data = ldTokenCode.FieldReference.LocalField?.ReferenceData;
+                                    if (data != null)
+                                    {
+                                        if (data.XORKey == 0)
+                                        {
+                                            data.XORKey = _Random.Next();
+                                        }
+                                        encKey = data.XORKey;
+                                    }
+                                }
+                            }
+                            else if ((code10.OperCode == "ldc.i4" || code10.OperCode == "ldc.i4.s"))
+                            {
+                                var intValue = DCUtils.ConvertToInt32(code10.OperData);
+                                this.Int32ValueContainer.ChangeOperCode(items, index2, intValue);
+                                //items[index2] = this.Int32ValueContainer.GetOperCode(code10.LabelID, intValue);
+                                break;
+                            }
+                        }
+                    }//for
+                    items.Insert(codeIndex, this.Int32ValueContainer.GetOperCode(_LabelGen_MyInitializeArray.Gen(), encKey));
+                    callCode.ChangeTarget(this._Type_JIEJIEHelper, "MyInitializeArray");
+                    codeIndex++;
+                    result++;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 加密数组定义
+        /// </summary>
+        /// <param name="allMethods"></param>
+        private void Encrypt_ArrayDefine(List<DCILMethod> allMethods)
+        {
+            if( this.Switchs.ControlFlow == false )
+            {
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("MyInitializeArray");
+                return;
+            }
+            ConsoleWriteTask();
+            Console.Write("Encrypting array defines ...");
+            int startTick = Environment.TickCount;
+            int totalCount = 0;
+            foreach (var method in allMethods)
+            {
+                if (method.RuntimeSwitchs.ControlFlow && method.OperCodes != null)
+                {
+                    totalCount += Encrypt_ArrayDefine_Items(method, method.OperCodes);
+                }
+            }
+            if (totalCount == 0)
+            {
+                Console.WriteLine(" do noting.");
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("MyInitializeArray");
+            }
+            else
+            {
+                Console.WriteLine(" change " + totalCount + " array defines,span " + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
+            }
+        }
+        /// <summary>
+        /// 加密 lock/using 语法结构。
+        /// </summary>
+        /// <param name="allMethods"></param>
+        private void Encrypt_Lock_Using_Structure(List<DCILMethod> allMethods)
+        {
+            if (this.Switchs.ControlFlow == false)
+            {
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("Monitor_Enter");
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("Monitor_Enter2");
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("MyDispose");
+                return;
+            }
+            ConsoleWriteTask();
+            Console.Write("Encrypting lock()/using() structure...");
+            int startTick = Environment.TickCount;
+            bool hasOneP = false;
+            bool hasTwoP = false;
+            bool hasMyDispose = false;
+            int totalCount = 0;
+            foreach (var method in allMethods)
+            {
+                if (method.RuntimeSwitchs.ControlFlow == false)
+                {
+                    continue;
+                }
+                if(method.Name == "RemoveTaskByTaskID")
+                {
+
+                }
+                method.EnumOperCodes(delegate (EnumOperCodeArgs args)
+                {
+                    if (args.Current is DCILOperCode_HandleMethod)
+                    {
+                        var callCode = (DCILOperCode_HandleMethod)args.Current;
+                        var targetMethod = callCode.InvokeInfo;
+                        if (callCode.OperCode == "callvirt"
+                            && callCode.MatchTypeAndMethod("System.IDisposable", "Dispose", 0))
+                        {
+                            var preCode = args.OwnerList.SafeGet(args.CurrentCodeIndex - 1);
+                            if (preCode != null && preCode.IsPrefixOperCode())
+                            {
+                                return;
+                            }
+                            callCode.ChangeTarget(this._Type_JIEJIEHelper, "MyDispose");
+                            callCode.InvokeInfo.IsInstance = false;
+                            callCode.OperCode = "call";
+                            hasMyDispose = true;
+                            totalCount++;
+                        }
+                        else if (callCode.OperCode == "call"
+                            && targetMethod.OwnerType.Name == "System.Threading.Monitor"
+                            && targetMethod.MethodName == "Enter")
+                        {
+                            if (targetMethod.ParametersCount == 1)
+                            {
+                                hasOneP = true;
+                                callCode.ChangeTarget(this._Type_JIEJIEHelper, "Monitor_Enter");
+                                totalCount++;
+                            }
+                            else if (targetMethod.ParametersCount == 2)
+                            {
+                                hasTwoP = true;
+                                callCode.ChangeTarget(this._Type_JIEJIEHelper, "Monitor_Enter2");
+                                totalCount++;
+                            }
+                        }
+                    }
+                });
+            }
+            if (hasOneP == false)
+            {
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("Monitor_Enter");
+            }
+            if (hasTwoP == false)
+            {
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("Monitor_Enter2");
+            }
+            if (hasMyDispose == false)
+            {
+                this._Type_JIEJIEHelper.LocalClass.ChildNodes.RemoveByName("MyDispose");
+            }
+            if (totalCount == 0)
+            {
+                Console.WriteLine(" do nothings.");
+            }
+            else
+            {
+                Console.WriteLine(" change " + totalCount + " call/callvirt instructions.span " + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
+            }
+        }
+        /// <summary>
+        /// 加密字符串操作
+        /// </summary>
+        /// <param name="allMethods"></param>
+        internal void EncryptStringValues(List<DCILMethod> allMethods)
+        {
+            ConsoleWriteTask();
+            Console.Write("Encrypting strings ...");
+            var emptyILCode = new DCILOperCode(
+                null,
+                "ldsfld",
+                "string [" + this.Document.LibName_mscorlib + "]System.String::Empty");
+            var codeFields = new Dictionary<string, DCILOperCode_HandleField>();
+            int totalCount = 0;
+            int startTick = Environment.TickCount;
+
+            var listTemp = new List<DCILMethod>(allMethods);
+            foreach( var item in this._Type_JIEJIEHelper.LocalClass.ChildNodes )
+            {
+                if(item is DCILMethod )
+                {
+                    listTemp.Add((DCILMethod)item);
+                }
+            }
+            allMethods = listTemp;
+           
+            foreach (var method in allMethods)
+            {
+                if(method.RuntimeSwitchs.Strings == false )
+                {
+                    continue;
+                }
+                method.OperCodes.EnumDeeply(method, delegate (EnumOperCodeArgs args)
+                {
+                    if (args.Current is DCILOperCode_LoadString)
+                    {
+                        totalCount++;
+                        var ldCode = (DCILOperCode_LoadString)args.Current;
+                        if (ldCode.FinalValue.Length == 0)
+                        {
+                            ldCode.ReplaceCode = emptyILCode;
+                        }
+                        else
+                        {
+                            DCILOperCode_HandleField codeField = null;
+                            if (codeFields.TryGetValue(ldCode.FinalValue, out codeField) == false)
+                            {
+                                var field = new DCILField();
+                                field.AddStyles("public", "static", "initonly");
+                                field.ValueType = DCILTypeReference.Type_String;
+                                field._Name = null;
+                                codeField = new DCILOperCode_HandleField(null, "ldsfld", new DCILFieldReference(field));
+                                codeFields[ldCode.FinalValue] = codeField;
+                            }
+                            ldCode.ReplaceCode = codeField;
+                        }
+                    }
+                });
+            }
+            if (totalCount == 0)
+            {
+                Console.WriteLine("Do nothings.");
+            }
+            else if (codeFields.Count == 0)
+            {
+                Console.WriteLine(" Handle " + totalCount + " empty string values.");
+            }
+            else
+            {
+                var fields = new List<DCILField>();
+                var strValues = new Dictionary<DCILField, string>();
+                foreach (var item in codeFields)
+                {
+                    fields.Add(item.Value.Value.LocalField);
+                    strValues[item.Value.Value.LocalField] = item.Key;
+                }
+                DCUtils.ObfuseListOrder(fields);
+                int classCount = 0;
+                var rnd = new System.Random();
+                while (fields.Count > 0)
+                {
+                    var clsName = _ClassNamePrefix + "Strings" + Convert.ToString(classCount++);
+                    var keyOffset = rnd.Next(10000, 99999);
+                    var strNewClassILCode = @"
+.class private auto ansi abstract sealed beforefieldinit MyClass extends [mscorlib]System.Object
+{
+.method private hidebysig specialname rtspecialname static void .cctor () cil managed 
+{
+	.maxstack 3
+	.locals init (
+		[0] uint8[] datas
+	)
+}// end of method
+
+.method private hidebysig static string dcsoft (
+		uint8[] datas,
+		int64 key
+	) cil managed 
+{
+	// Method begins at RVA 0x2bf4
+	// Code size 118 (0x76)
+	.maxstack 6
+	.locals init (
+		[0] int32 key2,
+		[1] int32 length,
+		[2] int32 startIndex,
+		[3] char[] 'array',
+		[4] int32 i,
+		[5] int32 index2,
+		[6] bool,
+		[7] string
+	)
+
+	// (no C# code)
+	IL_0000: nop
+	// int num = (int)(key & 0xFFFF) ^ 0x270F;
+	IL_0001: ldarg.1
+	IL_0002: ldc.i4 65535
+	IL_0007: conv.i8
+	IL_0008: and
+	IL_0009: conv.i4
+	IL_000a: ldc.i4 " + keyOffset + @"
+	IL_000f: xor
+	IL_0010: stloc.0
+	// key >>= 16;
+	IL_0011: ldarg.1
+	IL_0012: ldc.i4.s 16
+	IL_0014: shr
+	IL_0015: starg.s key
+	// int num2 = (int)(key & 0xFFFFF);
+	IL_0017: ldarg.1
+	IL_0018: ldc.i4 1048575
+	IL_001d: conv.i8
+	IL_001e: and
+	IL_001f: conv.i4
+	IL_0020: stloc.1
+	// key >>= 24;
+	IL_0021: ldarg.1
+	IL_0022: ldc.i4.s 24
+	IL_0024: shr
+	IL_0025: starg.s key
+	// int num3 = (int)key;
+	IL_0027: ldarg.1
+	IL_0028: conv.i4
+	IL_0029: stloc.2
+	// char[] array = new char[num2];
+	IL_002a: ldloc.1
+	IL_002b: newarr [mscorlib]System.Char
+	IL_0030: stloc.3
+	// int num4 = 0;
+	IL_0031: ldc.i4.0
+	IL_0032: stloc.s 4
+	// (no C# code)
+	IL_0034: br.s IL_005e
+	// loop start (head: IL_005e)
+		IL_0036: nop
+		// int num5 = num4 + num3 << 2;
+		IL_0037: ldloc.s 4
+		IL_0039: ldloc.2
+		IL_003a: add
+		IL_003b: ldc.i4.1
+		IL_003c: shl
+		IL_003d: stloc.s 5
+		// array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
+		IL_003f: ldloc.3
+		IL_0040: ldloc.s 4
+		IL_0042: ldarg.0
+		IL_0043: ldloc.s 5
+		IL_0045: ldelem.u1
+		IL_0046: ldc.i4.8
+		IL_0047: shl
+		IL_0048: ldarg.0
+		IL_0049: ldloc.s 5
+		IL_004b: ldc.i4.1
+		IL_004c: add
+		IL_004d: ldelem.u1
+		IL_004e: add
+		IL_004f: ldloc.0
+		IL_0050: xor
+		IL_0051: conv.u2
+		IL_0052: stelem.i2
+		// (no C# code)
+		IL_0053: nop
+		// num4++;
+		IL_0054: ldloc.s 4
+		IL_0056: ldc.i4.1
+		IL_0057: add
+		IL_0058: stloc.s 4
+		// num++;
+		IL_005a: ldloc.0
+		IL_005b: ldc.i4.1
+		IL_005c: add
+		IL_005d: stloc.0
+
+		// while (num4 < num2)
+		IL_005e: ldloc.s 4
+		IL_0060: ldloc.1
+		IL_0061: clt
+		IL_0063: stloc.s 6
+		IL_0065: ldloc.s 6
+		IL_0067: brtrue.s IL_0036
+	// end loop
+
+	// return new string(array);
+	IL_0069: ldloc.3
+	IL_006a: newobj instance void [mscorlib]System.String::.ctor(char[])
+	IL_006f: stloc.s 7
+	// (no C# code)
+	IL_0071: br.s IL_0073
+
+	IL_0073: ldloc.s 7
+	IL_0075: ret
+}
+}// end of class";
+                    strNewClassILCode = strNewClassILCode.Replace("[mscorlib]", "[" + this.Document.LibName_mscorlib + "]");
+                    var newClass = new DCILClass(strNewClassILCode, this.Document);
+                    newClass._Name = _ClassNamePrefix + "Strings" + Convert.ToString( fields.Count );
+                    var cctorMethod = newClass.Method_Cctor;
+                    var operCodes = new DCILOperCodeList();
+                    newClass.Method_Cctor.OperCodes = operCodes;
+                    var methodDecrypt = this.Document.CacheDCILInvokeMethodInfo(new DCILInvokeMethodInfo((DCILMethod)newClass.ChildNodes.GetByName("dcsoft")));
+
+                    this.Document.Classes.Add(newClass);
+                    newClass.RuntimeSwitchs = this.Switchs;
+
+                    int itemNum = Math.Min(rnd.Next(50, 100), fields.Count);
+                    var lstDatas = new List<byte>();
+                    var lbGen = new ILLabelIDGen();
+                    for (int iCount = 0; iCount < itemNum; iCount++)
+                    {
+                        var field = fields[iCount];
+                        field._Name = "_" + iCount.ToString();
+                        field.Parent = newClass;
+                        newClass.ChildNodes.Add(field);
+                        var strValue = strValues[field];
+                        var bsContent = System.Text.Encoding.UTF8.GetBytes(strValue);
+                        var itemEncryptKey = rnd.Next(10000, ushort.MaxValue - 10000);
+                        long longKey = lstDatas.Count / 2;
+                        longKey = (longKey << 24) + strValue.Length;
+                        longKey = (longKey << 16) + (ushort)(itemEncryptKey ^ keyOffset);
+                        var key = itemEncryptKey;
+                        foreach (var c in strValue)
+                        {
+                            ushort v3 = (ushort)(c ^ key);
+                            lstDatas.Add((byte)(v3 >> 8));
+                            lstDatas.Add((byte)(v3 & 0xff));
+                            key++;
+                        }
+                        operCodes.AddItem(lbGen.Gen(), "ldloc.0");
+                        operCodes.AddItem(lbGen.Gen(), "ldc.i8", longKey.ToString());
+                        operCodes.Add(new DCILOperCode_HandleMethod(lbGen.Gen(), "call", methodDecrypt));
+                        operCodes.Add(new DCILOperCode_HandleField(lbGen.Gen(), "stsfld", new DCILFieldReference(field)));
+                    }
+                    operCodes.Insert(0, new DCILOperCode(lbGen.Gen(), "nop", null));
+                    operCodes.Insert(1, this._ByteDataContainer.GetOperCode(lbGen.Gen(), lstDatas.ToArray()));
+                    operCodes.Insert(2, new DCILOperCode(lbGen.Gen(), "stloc.0", null));
+                    operCodes.AddItem(lbGen.Gen(), "ret");
+                    fields.RemoveRange(0, itemNum);
+                }//while
+                Console.WriteLine(" Handle " + totalCount + " ldstr instructions, " + strValues.Count + " string values , span " + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
+            }
+        }
+        /// <summary>
+        /// 需要进行加密的资源名称，支持正则表达式
+        /// </summary>
+        public string ResourceNameNeedEncrypt = null;
+
+        internal void EncryptEmbeddedResource( List<DCILMethod> allMethod)
+        {
+            var rootCls = this._Type_JIEJIEHelper.LocalClass;
+            bool isCancel = false;
+            if( this.Document.RuntimeVersion != null )
+            {
+                if(this.Document.RuntimeVersion.StartsWith("v2.", StringComparison.OrdinalIgnoreCase) 
+                    || this.Document.RuntimeVersion.StartsWith("2."))
+                {
+                    // 遇到.NET2.0,则考虑是否取消加密内嵌资源，因为对于.NET2.0,类型System.Reflection.ManifestResourceInfo的构造函数是内部的，无法外部调用。
+                    isCancel = true;
+                    if (this.Document._CachedInvokeMethods != null)
+                    {
+                        bool hasMethod = false;
+                        foreach (var item in this.Document._CachedInvokeMethods.Values)
+                        {
+                            if( item.MethodName == "GetManifestResourceInfo" )
+                            {
+                                hasMethod = true;
+                                break;
+                            }
+                        }
+                        if(hasMethod == false )
+                        {
+                            // 所有的代码都没有调用GetManifestResourceInfo(),可以认为不会创建ManifestResourceInfo，可以加密内嵌资源。
+                            isCancel = false;
+                            rootCls.ChildNodes.RemoveByName("SMF_GetManifestResourceInfo");
+                        }
+                    }
+                }
+            }
+            if ( isCancel || this.Switchs.ControlFlow == false )
+            {
+                // 不需要处理任何数据,删除无用的功能模块
+                for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                {
+                    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_"))
+                    {
+                        rootCls.ChildNodes.RemoveAt(iCount);
+                    }
+                }
+                var cls2 = rootCls.GetNestedClass("SMF_ResStream");
+                if (cls2 != null)
+                {
+                    rootCls.NestedClasses.Remove(cls2);
+                }
+                return;
+            }
+            // 收集要处理的数据
+            var datas = new Dictionary<string, DCILMResource>();
+            System.Text.RegularExpressions.Regex nameRegex = null;
+            if (this.ResourceNameNeedEncrypt != null && this.ResourceNameNeedEncrypt.Length > 0)
+            {
+                nameRegex = new System.Text.RegularExpressions.Regex(this.ResourceNameNeedEncrypt);
+            }
+            foreach (var item in this.Document.Resouces)
+            {
+                if (nameRegex.IsMatch(item.Key))
+                {
+                    // 匹配正则表达式
+                    datas[item.Key] = item.Value;
+                }
+                else if (item.Key.EndsWith(".resources", StringComparison.OrdinalIgnoreCase) == false
+                    && item.Key.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) == false
+                    && item.Key.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) == false
+                    && item.Value.Data != null
+                    && item.Value.Data.Length > 0)
+                {
+                    datas[item.Key] = item.Value;
+                }
+            }//foreach
+            if( datas.Count == 0 )
+            {
+                // 没有任何要处理的数据
+                return;
+            }
+            ConsoleWriteTask();
+            Console.Write("Encrypting embedded resoruces ...");
+            int startTick = Environment.TickCount;
+
+            int changeCount = 0;
+            foreach (var method in allMethod)
+            {
+                method.EnumOperCodes(delegate (EnumOperCodeArgs args)
+                {
+                    if (args.Current.OperCode == "callvirt" && args.Current is DCILOperCode_HandleMethod)
+                    {
+                        var hmcode = (DCILOperCode_HandleMethod)args.Current;
+                        var targetMethod = hmcode.InvokeInfo;
+                        string newMethodName = null;
+                        if (targetMethod.OwnerType.Name == "System.Reflection.Assembly")
+                        {
+                            if (targetMethod.MethodName == "GetManifestResourceStream")
+                            {
+                                if (targetMethod.ParametersCount == 1)
+                                {
+                                    newMethodName = "SMF_GetManifestResourceStream";
+                                }
+                                else if (targetMethod.ParametersCount == 2)
+                                {
+                                    newMethodName = "SMF_GetManifestResourceStream2";
+                                }
+                            }
+                            else if (targetMethod.MethodName == "GetManifestResourceNames")
+                            {
+                                newMethodName = "SMF_GetManifestResourceNames";
+                            }
+                            else if (targetMethod.MethodName == "GetManifestResourceInfo")
+                            {
+                                newMethodName = "SMF_GetManifestResourceInfo";
+                            }
+                        }
+                        if (newMethodName != null)
+                        {
+                            targetMethod = targetMethod.Clone();
+                            targetMethod.LocalMethod = (DCILMethod)this._Type_JIEJIEHelper.LocalClass.ChildNodes.GetByName(newMethodName);
+                            targetMethod.OwnerType = this._Type_JIEJIEHelper;
+                            targetMethod.IsInstance = false;
+                            hmcode.OperCode = "call";
+                            hmcode.InvokeInfo = targetMethod;
+                            changeCount++;
+                        }
+                    }
+                });
+            }
+            if (changeCount == 0)
+            {
+                // 不需要处理任何数据,删除无用的功能模块
+                for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                {
+                    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_"))
+                    {
+                        rootCls.ChildNodes.RemoveAt(iCount);
+                    }
+                }
+                var cls2 = rootCls.GetNestedClass("SMF_ResStream");
+                if (cls2 != null)
+                {
+                    rootCls.NestedClasses.Remove(cls2);
+                }
+                Console.WriteLine(" Do nothing.");
+            }
+            else
+            {
+                byte xorKey = (byte)(new System.Random().Next(100, 233));
+                var methodRead = rootCls.GetNestedClass("SMF_ResStream")?.ChildNodes.GetByName("Read") as DCILMethod;
+                if (methodRead != null)
+                {
+                    foreach (var item in methodRead.OperCodes)
+                    {
+                        if (item.OperCode.StartsWith("ldc.i4") && item.OperData == "123")
+                        {
+                            item.OperData = xorKey.ToString();
+                            break;
+                        }
+                    }
+                }
+                var codesInit = (( DCILMethod) rootCls.ChildNodes.GetByName("SMF_InitContent")).OperCodes;
+                codesInit.Clear();
+                var lbGen = new ILLabelIDGen();
+                codesInit.AddItem(lbGen.Gen(), "nop");
+                foreach( var item in datas )
+                {
+                    codesInit.AddItem(lbGen.Gen(), "ldarg.0");
+                    var resName = item.Key;
+                    if( resName.StartsWith("'"))
+                    {
+                        resName = resName.Substring(1, resName.Length - 2);
+                    }
+                    codesInit.Add(new DCILOperCode_LoadString(lbGen.Gen(), resName));
+                    var data = item.Value.Data;
+                    for (int iCount = 0; iCount < data.Length; iCount++)
+                    {
+                        // 首先是加密
+                        data[iCount] = (byte)(data[iCount] ^ xorKey);
+                    }
+                    int gzipLen = 0;
+                    if ( data.Length > 50 * 1024 )
+                    {
+                        var ms2 = new System.IO.MemoryStream();
+                        var gm2 = new System.IO.Compression.GZipStream(ms2, System.IO.Compression.CompressionMode.Compress);
+                        gm2.Write(data, 0, data.Length);
+                        gm2.Flush();
+                        gm2.Close();
+                        var data2 = ms2.ToArray();
+                        ms2.Close();
+                        float rate = (float)data2.Length / (float)data.Length;
+                        if( rate < 0.6 )
+                        {
+                            // 压缩比率比较大，则采用GZIP压缩
+                            gzipLen = data.Length;
+                            data = data2;
+                        }
+                    }
+                    var dataWrite = new byte[data.Length + 4];
+                    var bsLen = BitConverter.GetBytes(gzipLen);
+                    Array.Copy(bsLen, dataWrite, 4);
+                    Array.Copy(data, 0, dataWrite, 4, data.Length);
+                    codesInit.Add(this._ByteDataContainer.GetOperCode(lbGen.Gen(), dataWrite));
+                    codesInit.AddItem(lbGen.Gen(), "callvirt", "instance void class [" + this.Document.LibName_mscorlib + "]System.Collections.Generic.Dictionary`2<string, uint8[]>::set_Item(!0, !1)");
+                    codesInit.AddItem(lbGen.Gen(), "nop");
+                    item.Value.Dispose();
+                    this.Document.Resouces.Remove(item.Key);
+                }
+                codesInit.AddItem(lbGen.Gen(), "ret");
+                Console.WriteLine(" encrypt " + datas.Count + " resources ,span " + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
+            }
+        }
+
+        internal void EncryptCharValue(List<DCILMethod> methods )
         {
             ConsoleWriteTask();
             Console.Write("Encrypting char values ...");
@@ -5888,42 +7739,49 @@ namespace JIEJIE
             int tick = Environment.TickCount;
             var strCodes = new HashSet<string>(new string[] {
                 "add","and","beq","beq.s","bgt","bgt.s","ble","ble.s","blt","blt.s","bne","bne.s","ceq","cgt","clt" });
-            this.Document.EnumAllOperCodes(delegate (EnumOperCodeArgs args)
+            foreach (var method in methods)
             {
-                if (args.Current.OperCode == "ldc.i4" || args.Current.OperCode == "ldc.i4.s")
+                if(method.RuntimeSwitchs.Strings == false )
                 {
-                    var intv = DCUtils.ConvertToInt32(args.Current.OperData);
-                    if (intv > 0 && intv <= char.MaxValue)
+                    continue;
+                }
+                method.EnumOperCodes(delegate (EnumOperCodeArgs args)
+                {
+                    if (args.Current.OperCode == "ldc.i4" || args.Current.OperCode == "ldc.i4.s")
                     {
-                        var preCode = args.OwnerList.SafeGet(args.CurrentCodeIndex - 1);
-                        var nextCode = args.OwnerList.SafeGet(args.CurrentCodeIndex + 1);
-                        var vt = args.Method.GetResultValueTypeForLoad(preCode);
-                        if (preCode != null && vt == DCILTypeReference.Type_Char)
+                        var intv = DCUtils.ConvertToInt32(args.Current.OperData);
+                        if (intv > 0 && intv <= char.MaxValue)
                         {
-                            if (nextCode != null && strCodes.Contains(nextCode.OperCode))
+                            var preCode = args.OwnerList.SafeGet(args.CurrentCodeIndex - 1);
+                            var nextCode = args.OwnerList.SafeGet(args.CurrentCodeIndex + 1);
+                            var vt = args.Method.GetResultValueTypeForLoad(preCode);
+                            if (preCode != null && vt == DCILTypeReference.Type_Char)
                             {
+                                if (nextCode != null && strCodes.Contains(nextCode.OperCode))
+                                {
                                 //args.OwnerList[args.CurrentCodeIndex] = this.Int32ValueContainer.GetOperCode(args.Current.LabelID, intv);
                                 if (this.Int32ValueContainer.ChangeOperCode(args.OwnerList, args.CurrentCodeIndex, intv))
-                                {
-                                    codeCount++;
+                                    {
+                                        codeCount++;
+                                    }
                                 }
                             }
-                        }
-                        else if (nextCode != null && nextCode.OperCode != null)
-                        {
-                            vt = args.Method.GetTargetValueTypeForSet(nextCode);
-                            if (vt == DCILTypeReference.Type_Char)
+                            else if (nextCode != null && nextCode.OperCode != null)
                             {
+                                vt = args.Method.GetTargetValueTypeForSet(nextCode);
+                                if (vt == DCILTypeReference.Type_Char)
+                                {
                                 //args.OwnerList[args.CurrentCodeIndex] = this.Int32ValueContainer.GetOperCode(args.Current.LabelID, intv);
                                 if (this.Int32ValueContainer.ChangeOperCode(args.OwnerList, args.CurrentCodeIndex, intv))
-                                {
-                                    codeCount++;
+                                    {
+                                        codeCount++;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
             tick = Math.Abs(Environment.TickCount - tick);
             Console.WriteLine(" change " + codeCount + " ldc.i4 instructions, span " + tick + " milliseconds.");
         }
@@ -5974,45 +7832,52 @@ namespace JIEJIE
             public DCILOperCodeList OwnerList = null;
             public int Index = 0;
         }
-        public void EncryptTypeHandle()
+        public void EncryptTypeHandle( List<DCILMethod> allMethods )
         {
             ConsoleWriteTask();
             Console.Write("Encrypting typeof() instructions ...");
             int tick = Environment.TickCount;
 
             var strNativeCodes = new Dictionary<DCILTypeReference, List<OperCodeReference>>();
-            this.Document.EnumAllOperCodes(delegate (EnumOperCodeArgs args)
+            foreach (var method in allMethods)
             {
-                var code = args.Current;
-                if (code is DCILOperCode_LdToken && args.CurrentCodeIndex < args.OwnerList.Count - 1)
+                if( method.RuntimeSwitchs.ControlFlow == false )
                 {
-                    var nextCode = args.OwnerList[args.CurrentCodeIndex + 1];
-                    if (nextCode.OperCode == "call")
+                    continue;
+                }
+                method.EnumOperCodes(delegate (EnumOperCodeArgs args)
+                {
+                    var code = args.Current;
+                    if (code is DCILOperCode_LdToken && args.CurrentCodeIndex < args.OwnerList.Count - 1)
                     {
-                        var mInfo = ((DCILOperCode_HandleMethod)nextCode).InvokeInfo;
-                        if (mInfo.OwnerType.Name == "System.Type" && mInfo.MethodName == "GetTypeFromHandle")
+                        var nextCode = args.OwnerList[args.CurrentCodeIndex + 1];
+                        if (nextCode.OperCode == "call" && nextCode is DCILOperCode_HandleMethod)
                         {
-                            var ldtoken = (DCILOperCode_LdToken)code;
-                            if (ldtoken.ClassType != null)
+                            var mInfo = ((DCILOperCode_HandleMethod)nextCode).InvokeInfo;
+                            if (mInfo.OwnerType.Name == "System.Type" && mInfo.MethodName == "GetTypeFromHandle")
                             {
-                                if(ldtoken.ClassType.IsGenericType 
-                                || ldtoken.ClassType.Mode == DCILTypeMode.GenericTypeInMethodDefine
-                                || ldtoken.ClassType.Mode == DCILTypeMode.GenericTypeInTypeDefine)
+                                var ldtoken = (DCILOperCode_LdToken)code;
+                                if (ldtoken.ClassType != null)
                                 {
-                                    return;
+                                    if (ldtoken.ClassType.IsGenericType
+                                    || ldtoken.ClassType.Mode == DCILTypeMode.GenericTypeInMethodDefine
+                                    || ldtoken.ClassType.Mode == DCILTypeMode.GenericTypeInTypeDefine)
+                                    {
+                                        return;
+                                    }
+                                    List<OperCodeReference> list4 = null;
+                                    if (strNativeCodes.TryGetValue(ldtoken.ClassType, out list4) == false)
+                                    {
+                                        list4 = new List<OperCodeReference>();
+                                        strNativeCodes[ldtoken.ClassType] = list4;
+                                    }
+                                    list4.Add(new OperCodeReference(code, args.OwnerList, args.CurrentCodeIndex));
                                 }
-                                List<OperCodeReference> list4 = null;
-                                if (strNativeCodes.TryGetValue(ldtoken.ClassType, out list4) == false)
-                                {
-                                    list4 = new List<OperCodeReference>();
-                                    strNativeCodes[ldtoken.ClassType] = list4;
-                                }
-                                list4.Add(new OperCodeReference(code, args.OwnerList, args.CurrentCodeIndex));
                             }
                         }
                     }
-                }
-            });
+                });
+            }
             if (strNativeCodes.Count > 0)
             {
                 var types = new List<DCILTypeReference>(strNativeCodes.Keys);
@@ -6612,6 +8477,8 @@ namespace JIEJIE
             DCILOperCode preCode = null;
             for (int codeIndex = 0; codeIndex < items.Count; codeIndex++)
             {
+                break;
+
                 var code = items[codeIndex];
                 if (code.OperCode == "callvirt")
                 {
@@ -9096,22 +10963,35 @@ namespace JIEJIE
                     char* p = pend - len;
                     int num = 5381;
                     int num2 = num;
-                    while (p < pend)
+                    if ((((int)p) & 2) == 0)
                     {
-                        if ((((int)p) & 2) == 0)
+                        while (p < pend)
                         {
-                            num = ((num << 5) + num) ^ *p;
+                            if ((((int)p) & 2) == 0)
+                            {
+                                num = ((num << 5) + num) ^ *p;
+                            }
+                            else
+                            {
+                                num2 = ((num2 << 5) + num2) ^ *p;
+                            }
+                            p++;
                         }
-                        else
+                    }
+                    else
+                    {
+                        while (p < pend)
                         {
-                            num2 = ((num2 << 5) + num2) ^ *p;
+                            if ((((int)p) & 2) != 0)
+                            {
+                                num = ((num << 5) + num) ^ *p;
+                            }
+                            else
+                            {
+                                num2 = ((num2 << 5) + num2) ^ *p;
+                            }
+                            p++;
                         }
-                        //if(p < pend - 1 )
-                        //{
-                        //    p++;
-                        //    num2 = ((num2 << 5 ) + num2) ^ *p;
-                        //}
-                        p++;
                     }
                     int result = num + num2 * 1566083941 + len;
                     return result;
@@ -9136,10 +11016,6 @@ namespace JIEJIE
                 }
             }
         }
-        //private readonly char[] _CurrentItem = new char[1024];
-        //private int _CurrentItem_Length = 0;
-        //private int _CurrentItem_EndPosition = -1;
-
 
         private string GetCurrentItemString(int _CurrentItem_Length , int _CurrentItem_EndPosition)
         {
@@ -9995,7 +11871,8 @@ namespace JIEJIE
                 System.Diagnostics.Debug.WriteLine(item.Item2 + " = " + item.Item1);
             }
         }
-        private Dictionary<DCILInvokeMethodInfo, DCILInvokeMethodInfo> _CachedInvokeMethods = null;
+
+        internal Dictionary<DCILInvokeMethodInfo, DCILInvokeMethodInfo> _CachedInvokeMethods = null;
 
         internal DCILInvokeMethodInfo CacheDCILInvokeMethodInfo(DCILInvokeMethodInfo info)
         {
@@ -10547,6 +12424,61 @@ namespace JIEJIE
             }
             return null;
         }
+        /// <summary>
+        /// 获得所有包含运行指令的方法对象
+        /// </summary>
+        /// <returns></returns>
+        public List<DCILMethod> GetAllMethodHasOperCodes()
+        {
+            var list = new List<DCILMethod>();
+            foreach( var cls in this.Classes )
+            {
+                InnerGetAllMethodHasOperCodes(cls, list);
+            }
+            return list;
+        }
+        private void InnerGetAllMethodHasOperCodes(DCILClass cls, List<DCILMethod> list)
+        {
+            if (cls.IsImport == false && cls.IsInterface == false)
+            {
+                foreach (var item in cls.ChildNodes)
+                {
+                    if (item is DCILMethod)
+                    {
+                        var m = (DCILMethod)item;
+                        if (m.OperCodes != null && m.OperCodes.Count > 0)
+                        {
+                            list.Add(m);
+                        }
+                    }
+                }
+            }
+        }
+        ///// <summary>
+        ///// 获得文档中所有的类型和内嵌类型。
+        ///// </summary>
+        ///// <returns></returns>
+        //public List<DCILClass> GetAllClassesList()
+        //{
+        //    var list = new List<DCILClass>();
+        //    list.AddRange(this.Classes);
+        //    foreach( var cls in this.Classes )
+        //    {
+        //        InnerGetNestedClasses(cls, list);
+        //    }
+        //    return list;
+        //}
+        //private void InnerGetNestedClasses( DCILClass cls , List<DCILClass> list )
+        //{
+        //    if(cls.NestedClasses != null && cls.NestedClasses.Count > 0 )
+        //    {
+        //        list.AddRange(cls.NestedClasses);
+        //        foreach( var item in cls.NestedClasses)
+        //        {
+        //            InnerGetNestedClasses(item, list);
+        //        }
+        //    }
+        //}
 
         private Dictionary<string, DCILClass> _AllClasses = null;
         public Dictionary<string, DCILClass> GetAllClassesUseCache()
@@ -10795,6 +12727,10 @@ namespace JIEJIE
                 //writer.WriteObjects2(this.UnknowObjects);
             }
             writer.WriteObjects2(this.CustomAttributes);
+            foreach( var cls in this.Classes)
+            {
+                cls.InnerWriteTo(writer, true);
+            }
             writer.WriteObjects2(this.Classes);
             writer.WriteObjects2(this.ILDatas);
         }
@@ -11249,6 +13185,10 @@ namespace JIEJIE
         public DCILOperCodeList OwnerList = null;
         public int CurrentCodeIndex = 0;
         public DCILOperCode Current = null;
+        public DCILOperCode GetPreCode()
+        {
+            return this.OwnerList.SafeGet(this.CurrentCodeIndex - 1);
+        }
     }
 
     internal delegate void EnumOperCodeHandler(EnumOperCodeArgs args );
@@ -11307,7 +13247,10 @@ namespace JIEJIE
                 throw new ArgumentNullException("field");
             }
             this.ValueType = field.ValueType;
-            this.OwnerType = new DCILTypeReference((DCILClass)field.Parent);
+            if (field.Parent is DCILClass)
+            {
+                this.OwnerType = ((DCILClass)field.Parent).GetLocalTypeReference();
+            }
             this.FieldName = field.Name;
             this.LocalField = field;
         }
@@ -11408,6 +13351,10 @@ namespace JIEJIE
                 writer.Write(") ");
             }
             writer.Write(" ");
+            if( this.OwnerType == null )
+            {
+                this.OwnerType = ((DCILClass)this.LocalField.Parent).GetLocalTypeReference();
+            }
             if (this.OwnerType.IsGenericType)
             {
                 this.OwnerType.WriteTo(writer, true );
@@ -11488,60 +13435,80 @@ namespace JIEJIE
     /// </summary>
     internal class DCILOperCode_HandleField : DCILOperCode
     {
-
         public DCILOperCode_HandleField(string labelID, string operCode, DCILReader reader)
         {
             this.LabelID = labelID;
             this.OperCode = operCode;
-            this.Value = new DCILFieldReference(reader);
+            this._Value = new DCILFieldReference(reader);
         }
         public DCILOperCode_HandleField(string labelID, string operCode, DCILFieldReference field )
         {
             this.LabelID = labelID;
             this.OperCode = operCode;
-            this.Value = field;
+            this._Value = field;
+            //this.LocalField = field.LocalField;
         }
         public override void Dispose()
         {
             base.Dispose();
-            this.Value = null;
-            this.LocalField = null;
+            this._Value = null;
+            //this.LocalField = null;
         }
         public override string ToString()
         {
-            return this.LabelID + " : " + this.OperCode + " " + this.Value.ToString();
+            return this.LabelID + " : " + this.OperCode + " " + this._Value.ToString();
         }
-        public DCILFieldReference Value = null;
-
-        public DCILField LocalField = null;
+        private DCILFieldReference _Value = null;
+        public DCILFieldReference Value
+        {
+            get
+            {
+                return this._Value;
+            }
+        }
+        //public DCILField LocalField = null;
+        //{
+        //    get
+        //    {
+        //        return this._Value.LocalField;
+        //    }
+        //}
         public void CacheInfo(DCILDocument document)
         {
-            this.Value = document.CacheFieldReference(this.Value);
+            this._Value = document.CacheFieldReference(this._Value);
         }
 
         public override void WriteOperData(DCILWriter writer)
         {
-            if (this.LocalField != null)
+            //var lf = this.LocalField;
+            //if (lf != null)
+            //{
+            //    writer.Write("  ");
+            //    if (this._Value.ValueType.Mode == DCILTypeMode.GenericTypeInMethodDefine ||
+            //        this._Value.ValueType.Mode == DCILTypeMode.GenericTypeInTypeDefine)
+            //    {
+            //        this._Value.ValueType.WriteTo(writer);
+            //    }
+            //    else
+            //    {
+            //        lf.ValueType.WriteTo(writer);
+            //    }
+            //    if (this._Value != null && this._Value.modreq != null && this._Value.modreq.Length > 0)
+            //    {
+            //        writer.Write(" modreq(");
+            //        writer.Write(this._Value.modreq);
+            //        writer.Write(") ");
+            //    }
+            //    writer.Write(' ');
+            //    writer.Write(((DCILClass)lf.Parent).NameWithNested);
+            //    writer.Write("::");
+            //    writer.Write(lf.Name);
+            //}
+            //else if (this._Value != null)
             {
-                writer.Write("  ");
-                this.LocalField.ValueType.WriteTo(writer);
-                if (this.Value != null && this.Value.modreq != null && this.Value.modreq.Length > 0)
-                {
-                    writer.Write(" modreq(");
-                    writer.Write(this.Value.modreq);
-                    writer.Write(") ");
-                }
-                writer.Write(' ');
-                writer.Write(((DCILClass)this.LocalField.Parent).NameWithNested);
-                writer.Write("::");
-                writer.Write(this.LocalField.Name);
-            }
-            else if (this.Value != null)
-            {
-                this.Value.WriteTo(writer);
+                this._Value.WriteTo(writer);
             }
         }
-
     }
     /// <summary>
     /// 处理成员方法的指令
@@ -11589,6 +13556,7 @@ namespace JIEJIE
                     info.LocalMethod = method;
                     info.Paramters = method.Parameters;
                     this.LocalMethod = method;
+                    info.IsInstance = method.IsInstance;
                     break;
                 }
             }
@@ -11596,6 +13564,7 @@ namespace JIEJIE
             {
                 throw new NotSupportedException(type.Name + "::" + methodName);
             }
+            //this.InvokeInfo.LocalMethod = this.LocalMethod;
             this.InvokeInfo = info;
         }
 
@@ -11605,6 +13574,12 @@ namespace JIEJIE
             this.LabelID = labelID;
             this.OperCode = code;
             this.InvokeInfo = new DCILInvokeMethodInfo( method );
+        }
+        public DCILOperCode_HandleMethod(string labelID, string code, DCILInvokeMethodInfo method)
+        {
+            this.LabelID = labelID;
+            this.OperCode = code;
+            this.InvokeInfo = method;
         }
         public DCILOperCode_HandleMethod(string code, DCILReader reader)
         {
@@ -11617,9 +13592,10 @@ namespace JIEJIE
             this.LocalMethod = null;
             this.InvokeInfo = null;
         }
-        public void CacheInfo(DCILDocument document)
+        public DCILOperCode_HandleMethod CacheInfo(DCILDocument document)
         {
             this.InvokeInfo = document.CacheDCILInvokeMethodInfo(this.InvokeInfo);
+            return null;
         }
         public override int StackOffset
         {
@@ -11669,10 +13645,10 @@ namespace JIEJIE
 
         public override void WriteTo(DCILWriter writer)
         {
-            //if(this.InvokeInfo.MethodName == "MyDispose")
-            //{
+            if (this.InvokeInfo.MethodName == "MyDispose" && this.OperCode == "callvirt")
+            {
 
-            //}
+            }
             writer.EnsureNewLine();
             writer.Write(this.LabelID);
             writer.Write(": ");
@@ -12651,6 +14627,36 @@ namespace JIEJIE
 
     internal class DCILStringValue
     {
+        public DCILStringValue( string text )
+        {
+            if(text == null )
+            {
+                throw new ArgumentNullException("text");
+            }
+            this.Value = text;
+            this.IsBinary = false;
+            foreach( var c in text )
+            {
+                if( c > 128)
+                {
+                    this.IsBinary = true;
+                    break;
+                }
+            }
+            if(this.IsBinary )
+            {
+                var bs = Encoding.Unicode.GetBytes(text);
+                var w = new DCILWriter(new StringBuilder());
+                w.Write("bytearray(");
+                w.WriteHexs(bs);
+                w.Write(")");
+                this.RawILText = w.ToString();
+            }
+            else
+            {
+                this.RawILText = ToRawILText(text);
+            }
+        }
         public DCILStringValue(DCILReader reader)
         {
             int posBack = reader.Position;
@@ -12710,6 +14716,38 @@ namespace JIEJIE
 
             }
         }
+        public static string ToRawILText(string text)
+        {
+            if (text == null)
+            {
+                throw new ArgumentNullException("text");
+            }
+            if (text.Length == 0)
+            {
+                return "\"\"";
+            }
+            var result = new System.Text.StringBuilder();
+            result.Append('"');
+            foreach (var c in text)
+            {
+                switch (c)
+                {
+                    case '\r': result.Append(@"\r"); break;
+                    case '\n': result.Append(@"\n"); break;
+                    case '\'': result.Append(@"\'"); break;
+                    case '\\': result.Append(@"\\"); break;
+                    case '"': result.Append("\\\""); break;
+                    case '\b': result.Append(@"\b"); break;
+                    case '\f': result.Append(@"\f"); break;
+                    case '\t': result.Append(@"\t"); break;
+                    default: result.Append(c); break;
+                }
+            }
+            result.Append('"');
+            return result.ToString();
+        }
+
+
         private void GetFinalValue(string line, StringBuilder result)
         {
             int index = line.IndexOf('"');
@@ -12759,7 +14797,15 @@ namespace JIEJIE
             this.IsBinary = v.IsBinary;
             this.FinalValue = v.Value;
             this.OperData = v.RawILText;
-
+        }
+        public DCILOperCode_LoadString( string labelID , string text )
+        {
+            this.LabelID = labelID;
+            this.OperCode = CodeName_ldstr;
+            var v = new DCILStringValue(text);
+            this.IsBinary = v.IsBinary;
+            this.FinalValue = v.Value;
+            this.OperData = v.RawILText;
         }
 
         public DCILOperCode_LoadString(DCILOperCode code)
@@ -13410,7 +15456,16 @@ namespace JIEJIE
         {
             base.ChildNodes = new DCILObjectList();
         }
-    
+
+        private DCILTypeReference _LocalTypeRef = null;
+        public DCILTypeReference GetLocalTypeReference()
+        {
+            if(this._LocalTypeRef == null )
+            {
+                this._LocalTypeRef = new DCILTypeReference(this);
+            }
+            return this._LocalTypeRef;
+        }
         /// <summary>
         /// 运行时使用的开关
         /// </summary>
@@ -13524,6 +15579,9 @@ namespace JIEJIE
             this.InnerGenerate = true;
         }
 
+        /// <summary>
+        /// 对象的静态构造函数 
+        /// </summary>
         public DCILMethod Method_Cctor = null;
 
         public override void Load(DCILReader reader)
@@ -13877,6 +15935,11 @@ namespace JIEJIE
         }
         public override void WriteTo(DCILWriter writer)
         {
+            InnerWriteTo(writer, false);
+        }
+
+        public void InnerWriteTo( DCILWriter writer , bool declearationOnly )
+        { 
             if(this.RenameState == DCILRenameState.Renamed )
             {
                 writer.WriteLine("// " + this.GetOldName());
@@ -13918,20 +15981,45 @@ namespace JIEJIE
                 }
             }
             writer.WriteStartGroup();
-            base.WriteCustomAttributes(writer);
+            if (declearationOnly == false)
+            {
+                base.WriteCustomAttributes(writer);
+            }
             if (this.NestedClasses != null && this.NestedClasses.Count > 0)
             {
                 foreach (var item in this.NestedClasses)
                 {
                     writer.WriteLine();
-                    item.WriteTo(writer);
+                    item.InnerWriteTo(writer , declearationOnly);
                 }
             }
-            writer.WriteObjects(this.ChildNodes);
+            if (declearationOnly == false)
+            {
+                writer.WriteObjects(this.ChildNodes);
+            }
             writer.WriteEndGroup();
         }
 
         public List<DCILClass> NestedClasses = null;
+        /// <summary>
+        /// 获得指定名称的内嵌类型
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public DCILClass GetNestedClass(string name )
+        {
+            if(this.NestedClasses != null )
+            {
+                foreach( var item in this.NestedClasses )
+                {
+                    if(item.Name == name )
+                    {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
 
         public List<DCILTypeReference> ImplementsInterfaces = null;
         public List<int> FieldLineIndexs = new List<int>();
@@ -14833,7 +16921,7 @@ namespace JIEJIE
 
         public DCInterfaceimpl(DCILReader reader)
         {
-            this.Type = reader.ReadWord();
+            this.InterfaceType = reader.ReadWord();
             //string tn = reader.ReadWord();
             this.RefType = DCILTypeReference.Load(reader);
             if( this.RefType.Mode == DCILTypeMode.Class)
@@ -14852,13 +16940,13 @@ namespace JIEJIE
         }
         private bool HasHeaderType = false;
 
-        public string Type = null;
+        public string InterfaceType = null;
 
         public DCILTypeReference RefType = null;
         public override void WriteTo(DCILWriter writer)
         {
             writer.Write(TagName);
-            writer.Write(" " + this.Type + " ");
+            writer.Write(" " + this.InterfaceType + " ");
             this.RefType.WriteTo(writer, this.HasHeaderType);
             writer.WriteLine();
         }
@@ -15322,8 +17410,9 @@ namespace JIEJIE
         public bool AddEditorBrowsableAttributeForRename(DCILCustomAttribute ebattr)
         {
             //return false;
-
-            if (this.RenameState == DCILRenameState.Renamed)
+            if (this.RenameState == DCILRenameState.Renamed
+                && this.Styles != null
+                && this.Styles.Contains("public"))
             {
                 if (this.CustomAttributes == null)
                 {
@@ -15507,6 +17596,19 @@ namespace JIEJIE
             list.AddRange(this);
             return list;
         }
+        public bool RemoveByName(string name)
+        {
+            for (int iCount = this.Count - 1; iCount >= 0; iCount--)
+            {
+                if (this[iCount].Name == name)
+                {
+                    this.RemoveAt(iCount);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public DCILObject GetByName( string name )
         {
             foreach( var item in this )
@@ -16117,6 +18219,7 @@ namespace JIEJIE
         public static readonly DCILTypeReference Type_Int32 = null;
         public static readonly DCILTypeReference Type_Boolean = null;
         public static readonly DCILTypeReference Type_Char = null;
+        public static readonly DCILTypeReference Type_Byte = null;
         static DCILTypeReference()
         {
             PrimitiveTypeNames = new HashSet<string>();
@@ -16166,7 +18269,7 @@ namespace JIEJIE
             Type_Int32 = _PrimitiveTypes["int32"];
             Type_Boolean = _PrimitiveTypes["bool"];
             Type_Char = _PrimitiveTypes["char"];
-
+            Type_Byte = _PrimitiveTypes["uint8"];
             _Cache_CreateByNativeType[typeof(string)] = Type_String;
 
         }
@@ -16947,7 +19050,11 @@ namespace JIEJIE
             return false;
         }
 
+        /// <summary>
+        /// 类型名称
+        /// </summary>
         public string Name = null;
+
         public List<DCILTypeReference> GenericParamters = null;
         public string LibraryName = null;
         public bool HasLibraryName
@@ -17154,6 +19261,10 @@ namespace JIEJIE
             }
             else if (this.Mode == DCILTypeMode.GenericTypeInTypeDefine)
             {
+                if( this.Name == "TKey2")
+                {
+
+                }
                 writer.Write("!" + this.Name);
             }
             else
@@ -17555,6 +19666,15 @@ namespace JIEJIE
             this.HasGenericStyle = GetHasGenericStyle();
 
         }
+
+        public void EnumOperCodes(EnumOperCodeHandler handler )
+        {
+            if( this.OperCodes != null &&this.OperCodes.Count > 0 )
+            {
+                this.OperCodes.EnumDeeply(this, handler);
+            }
+        }
+
         public override void Dispose()
         {
             base.Dispose();
@@ -19018,6 +21138,7 @@ namespace JIEJIE
         public override void Dispose()
         {
             base.Dispose();
+            this.Data = null;
             if (this.LocalDatas != null)
             {
                 this.LocalDatas.Clear();
@@ -19672,7 +21793,7 @@ namespace JIEJIE
             {
                 id = this._MemberNamePrefix + id;
             }
-            if (_rnd.Next(0, 100) < 5)
+            if (_rnd.Next(0, 100) < 2)
             {
                 // 有较小的概率添加当前时间
                 if (_CreateTime == null)
@@ -20447,232 +22568,232 @@ namespace JIEJIE
     }
 
 
-    internal class StringValueContainer
-    {
-        public string LibName_mscorlib = "mscorlib";
+//    internal class StringValueContainer
+//    {
+//        public string LibName_mscorlib = "mscorlib";
 
-        private static readonly Random _Random = new Random();
+//        private static readonly Random _Random = new Random();
 
-        private int KeyOffset = _Random.Next(10000, 99999);
-        public byte[] Datas = null;
+//        private int KeyOffset = _Random.Next(10000, 99999);
+//        public byte[] Datas = null;
 
-        public readonly List<StringValueItem> Items = new List<StringValueItem>();
-        public void Clear()
-        {
-            this.Items.Clear();
-            this.KeyOffset = _Random.Next(10000, 99999);
-            this.Datas = null;
-        }
-        internal class StringValueItem
-        {
-            public int ValueIndex = 0;
-            public int StartIndex = 0;
-            public int Length = 0;
-            public int EncryptKey = 0;
-            public long LongParamter = 0;
-            public string Value = null;
-        }
+//        public readonly List<StringValueItem> Items = new List<StringValueItem>();
+//        public void Clear()
+//        {
+//            this.Items.Clear();
+//            this.KeyOffset = _Random.Next(10000, 99999);
+//            this.Datas = null;
+//        }
+//        internal class StringValueItem
+//        {
+//            public int ValueIndex = 0;
+//            public int StartIndex = 0;
+//            public int Length = 0;
+//            public int EncryptKey = 0;
+//            public long LongParamter = 0;
+//            public string Value = null;
+//        }
 
-        public void AddItem(int valueIndex, string v)
-        {
-            if (v == null || v.Length == 0)
-            {
-                throw new ArgumentNullException("v");
-            }
-            var item = new StringValueItem();
-            item.ValueIndex = valueIndex;
-            item.Value = v;
-            this.Items.Add(item);
-        }
+//        public void AddItem(int valueIndex, string v)
+//        {
+//            if (v == null || v.Length == 0)
+//            {
+//                throw new ArgumentNullException("v");
+//            }
+//            var item = new StringValueItem();
+//            item.ValueIndex = valueIndex;
+//            item.Value = v;
+//            this.Items.Add(item);
+//        }
 
-        public void RefreshState()
-        {
-            var lstDatas = new List<byte>();
-            int startIndexCount = 0;
-            foreach (var item in this.Items)
-            {
-                item.StartIndex = startIndexCount;
-                item.Length = item.Value.Length;
-                startIndexCount += item.Length;
-                item.EncryptKey = _Random.Next(10000, ushort.MaxValue - 10000);
-                long longKey = item.StartIndex;
-                longKey = (longKey << 24) + item.Length;
-                longKey = (longKey << 16) + (ushort)(item.EncryptKey ^ this.KeyOffset);
-                item.LongParamter = longKey;
+//        public void RefreshState()
+//        {
+//            var lstDatas = new List<byte>();
+//            int startIndexCount = 0;
+//            foreach (var item in this.Items)
+//            {
+//                item.StartIndex = startIndexCount;
+//                item.Length = item.Value.Length;
+//                startIndexCount += item.Length;
+//                item.EncryptKey = _Random.Next(10000, ushort.MaxValue - 10000);
+//                long longKey = item.StartIndex;
+//                longKey = (longKey << 24) + item.Length;
+//                longKey = (longKey << 16) + (ushort)(item.EncryptKey ^ this.KeyOffset);
+//                item.LongParamter = longKey;
 
-                var key = item.EncryptKey;
-                foreach (var c in item.Value)
-                {
-                    ushort v3 = (ushort)(c ^ key);
-                    //lstData2.Add(v3);
-                    lstDatas.Add((byte)(v3 >> 8));
-                    lstDatas.Add((byte)(v3 & 0xff));
-                    //ushort v9 = BitConverter.ToUInt16(lstDatas.ToArray(), lstDatas.Count-2);
-                    key++;
-                }
-            }
-            this.Datas = lstDatas.ToArray();
-            DCUtils.ObfuseListOrder(this.Items);
-            /*
-       private static string GetStringByLong(byte[] datas, long key)
-       {
-           int key2 = (int)(key & 0xffff) ^ 9999;
-           key >>= 16;
-           int length = (int)(key & 0xfffff);
-           key >>= 24;
-           int startIndex = (int)key;
-           char[] array = new char[length];
-           for (int i = 0; i < length; i++, key2++)
-           {
-               int index2 = (i + startIndex) << 2;
-               array[i] = (char)(((datas[index2] << 8) + datas[index2 + 1]) ^ key2);
-           }
-           return new string(array);
-       }
+//                var key = item.EncryptKey;
+//                foreach (var c in item.Value)
+//                {
+//                    ushort v3 = (ushort)(c ^ key);
+//                    //lstData2.Add(v3);
+//                    lstDatas.Add((byte)(v3 >> 8));
+//                    lstDatas.Add((byte)(v3 & 0xff));
+//                    //ushort v9 = BitConverter.ToUInt16(lstDatas.ToArray(), lstDatas.Count-2);
+//                    key++;
+//                }
+//            }
+//            this.Datas = lstDatas.ToArray();
+//            DCUtils.ObfuseListOrder(this.Items);
+//            /*
+//       private static string GetStringByLong(byte[] datas, long key)
+//       {
+//           int key2 = (int)(key & 0xffff) ^ 9999;
+//           key >>= 16;
+//           int length = (int)(key & 0xfffff);
+//           key >>= 24;
+//           int startIndex = (int)key;
+//           char[] array = new char[length];
+//           for (int i = 0; i < length; i++, key2++)
+//           {
+//               int index2 = (i + startIndex) << 2;
+//               array[i] = (char)(((datas[index2] << 8) + datas[index2 + 1]) ^ key2);
+//           }
+//           return new string(array);
+//       }
 
-                */
-            this.IL_GetStringLong = @"
-.method private hidebysig static string dcsoft (
-		uint8[] datas,
-		int64 key
-	) cil managed 
-{
-	// Method begins at RVA 0x2bf4
-	// Code size 118 (0x76)
-	.maxstack 6
-	.locals init (
-		[0] int32 key2,
-		[1] int32 length,
-		[2] int32 startIndex,
-		[3] char[] 'array',
-		[4] int32 i,
-		[5] int32 index2,
-		[6] bool,
-		[7] string
-	)
+//                */
+//            this.IL_GetStringLong = @"
+//.method private hidebysig static string dcsoft (
+//		uint8[] datas,
+//		int64 key
+//	) cil managed 
+//{
+//	// Method begins at RVA 0x2bf4
+//	// Code size 118 (0x76)
+//	.maxstack 6
+//	.locals init (
+//		[0] int32 key2,
+//		[1] int32 length,
+//		[2] int32 startIndex,
+//		[3] char[] 'array',
+//		[4] int32 i,
+//		[5] int32 index2,
+//		[6] bool,
+//		[7] string
+//	)
 
-	// (no C# code)
-	IL_0000: nop
-	// int num = (int)(key & 0xFFFF) ^ 0x270F;
-	IL_0001: ldarg.1
-	IL_0002: ldc.i4 65535
-	IL_0007: conv.i8
-	IL_0008: and
-	IL_0009: conv.i4
-	IL_000a: ldc.i4 " + this.KeyOffset + @"
-	IL_000f: xor
-	IL_0010: stloc.0
-	// key >>= 16;
-	IL_0011: ldarg.1
-	IL_0012: ldc.i4.s 16
-	IL_0014: shr
-	IL_0015: starg.s key
-	// int num2 = (int)(key & 0xFFFFF);
-	IL_0017: ldarg.1
-	IL_0018: ldc.i4 1048575
-	IL_001d: conv.i8
-	IL_001e: and
-	IL_001f: conv.i4
-	IL_0020: stloc.1
-	// key >>= 24;
-	IL_0021: ldarg.1
-	IL_0022: ldc.i4.s 24
-	IL_0024: shr
-	IL_0025: starg.s key
-	// int num3 = (int)key;
-	IL_0027: ldarg.1
-	IL_0028: conv.i4
-	IL_0029: stloc.2
-	// char[] array = new char[num2];
-	IL_002a: ldloc.1
-	IL_002b: newarr [mscorlib]System.Char
-	IL_0030: stloc.3
-	// int num4 = 0;
-	IL_0031: ldc.i4.0
-	IL_0032: stloc.s 4
-	// (no C# code)
-	IL_0034: br.s IL_005e
-	// loop start (head: IL_005e)
-		IL_0036: nop
-		// int num5 = num4 + num3 << 2;
-		IL_0037: ldloc.s 4
-		IL_0039: ldloc.2
-		IL_003a: add
-		IL_003b: ldc.i4.1
-		IL_003c: shl
-		IL_003d: stloc.s 5
-		// array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
-		IL_003f: ldloc.3
-		IL_0040: ldloc.s 4
-		IL_0042: ldarg.0
-		IL_0043: ldloc.s 5
-		IL_0045: ldelem.u1
-		IL_0046: ldc.i4.8
-		IL_0047: shl
-		IL_0048: ldarg.0
-		IL_0049: ldloc.s 5
-		IL_004b: ldc.i4.1
-		IL_004c: add
-		IL_004d: ldelem.u1
-		IL_004e: add
-		IL_004f: ldloc.0
-		IL_0050: xor
-		IL_0051: conv.u2
-		IL_0052: stelem.i2
-		// (no C# code)
-		IL_0053: nop
-		// num4++;
-		IL_0054: ldloc.s 4
-		IL_0056: ldc.i4.1
-		IL_0057: add
-		IL_0058: stloc.s 4
-		// num++;
-		IL_005a: ldloc.0
-		IL_005b: ldc.i4.1
-		IL_005c: add
-		IL_005d: stloc.0
+//	// (no C# code)
+//	IL_0000: nop
+//	// int num = (int)(key & 0xFFFF) ^ 0x270F;
+//	IL_0001: ldarg.1
+//	IL_0002: ldc.i4 65535
+//	IL_0007: conv.i8
+//	IL_0008: and
+//	IL_0009: conv.i4
+//	IL_000a: ldc.i4 " + this.KeyOffset + @"
+//	IL_000f: xor
+//	IL_0010: stloc.0
+//	// key >>= 16;
+//	IL_0011: ldarg.1
+//	IL_0012: ldc.i4.s 16
+//	IL_0014: shr
+//	IL_0015: starg.s key
+//	// int num2 = (int)(key & 0xFFFFF);
+//	IL_0017: ldarg.1
+//	IL_0018: ldc.i4 1048575
+//	IL_001d: conv.i8
+//	IL_001e: and
+//	IL_001f: conv.i4
+//	IL_0020: stloc.1
+//	// key >>= 24;
+//	IL_0021: ldarg.1
+//	IL_0022: ldc.i4.s 24
+//	IL_0024: shr
+//	IL_0025: starg.s key
+//	// int num3 = (int)key;
+//	IL_0027: ldarg.1
+//	IL_0028: conv.i4
+//	IL_0029: stloc.2
+//	// char[] array = new char[num2];
+//	IL_002a: ldloc.1
+//	IL_002b: newarr [mscorlib]System.Char
+//	IL_0030: stloc.3
+//	// int num4 = 0;
+//	IL_0031: ldc.i4.0
+//	IL_0032: stloc.s 4
+//	// (no C# code)
+//	IL_0034: br.s IL_005e
+//	// loop start (head: IL_005e)
+//		IL_0036: nop
+//		// int num5 = num4 + num3 << 2;
+//		IL_0037: ldloc.s 4
+//		IL_0039: ldloc.2
+//		IL_003a: add
+//		IL_003b: ldc.i4.1
+//		IL_003c: shl
+//		IL_003d: stloc.s 5
+//		// array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
+//		IL_003f: ldloc.3
+//		IL_0040: ldloc.s 4
+//		IL_0042: ldarg.0
+//		IL_0043: ldloc.s 5
+//		IL_0045: ldelem.u1
+//		IL_0046: ldc.i4.8
+//		IL_0047: shl
+//		IL_0048: ldarg.0
+//		IL_0049: ldloc.s 5
+//		IL_004b: ldc.i4.1
+//		IL_004c: add
+//		IL_004d: ldelem.u1
+//		IL_004e: add
+//		IL_004f: ldloc.0
+//		IL_0050: xor
+//		IL_0051: conv.u2
+//		IL_0052: stelem.i2
+//		// (no C# code)
+//		IL_0053: nop
+//		// num4++;
+//		IL_0054: ldloc.s 4
+//		IL_0056: ldc.i4.1
+//		IL_0057: add
+//		IL_0058: stloc.s 4
+//		// num++;
+//		IL_005a: ldloc.0
+//		IL_005b: ldc.i4.1
+//		IL_005c: add
+//		IL_005d: stloc.0
 
-		// while (num4 < num2)
-		IL_005e: ldloc.s 4
-		IL_0060: ldloc.1
-		IL_0061: clt
-		IL_0063: stloc.s 6
-		IL_0065: ldloc.s 6
-		IL_0067: brtrue.s IL_0036
-	// end loop
+//		// while (num4 < num2)
+//		IL_005e: ldloc.s 4
+//		IL_0060: ldloc.1
+//		IL_0061: clt
+//		IL_0063: stloc.s 6
+//		IL_0065: ldloc.s 6
+//		IL_0067: brtrue.s IL_0036
+//	// end loop
 
-	// return new string(array);
-	IL_0069: ldloc.3
-	IL_006a: newobj instance void [mscorlib]System.String::.ctor(char[])
-	IL_006f: stloc.s 7
-	// (no C# code)
-	IL_0071: br.s IL_0073
+//	// return new string(array);
+//	IL_0069: ldloc.3
+//	IL_006a: newobj instance void [mscorlib]System.String::.ctor(char[])
+//	IL_006f: stloc.s 7
+//	// (no C# code)
+//	IL_0071: br.s IL_0073
 
-	IL_0073: ldloc.s 7
-	IL_0075: ret
-} // end of method Class3::GetStringByLong";
-            this.IL_GetStringLong = this.IL_GetStringLong.Replace("mscorlib", this.LibName_mscorlib);
-        }
+//	IL_0073: ldloc.s 7
+//	IL_0075: ret
+//} // end of method Class3::GetStringByLong";
+//            this.IL_GetStringLong = this.IL_GetStringLong.Replace("mscorlib", this.LibName_mscorlib);
+//        }
 
-        public string IL_GetStringLong = null;
+//        public string IL_GetStringLong = null;
 
-        private static string GetStringByLong(byte[] datas, long key)
-        {
-            int key2 = (int)(key & 0xffff) ^ 9999;
-            key >>= 16;
-            int length = (int)(key & 0xfffff);
-            key >>= 24;
-            int startIndex = (int)key;
-            char[] array = new char[length];
-            for (int i = 0; i < length; i++, key2++)
-            {
-                int index2 = (i + startIndex) << 2;
-                array[i] = (char)(((datas[index2] << 8) + datas[index2 + 1]) ^ key2);
-            }
-            return new string(array);
-        }
+//        private static string GetStringByLong(byte[] datas, long key)
+//        {
+//            int key2 = (int)(key & 0xffff) ^ 9999;
+//            key >>= 16;
+//            int length = (int)(key & 0xfffff);
+//            key >>= 24;
+//            int startIndex = (int)key;
+//            char[] array = new char[length];
+//            for (int i = 0; i < length; i++, key2++)
+//            {
+//                int index2 = (i + startIndex) << 2;
+//                array[i] = (char)(((datas[index2] << 8) + datas[index2 + 1]) ^ key2);
+//            }
+//            return new string(array);
+//        }
 
-    }
+//    }
 
     internal class ILLabelIDGen
     {
@@ -21048,6 +23169,198 @@ namespace __DC20211119
     /// </summary>
     internal static class JIEJIEHelper
     {
+        private sealed class SMF_ResStream : System.IO.Stream
+        {
+            public SMF_ResStream(byte[] bs)
+            {
+                int gzipLen = BitConverter.ToInt32(bs, 0);
+                if(gzipLen == 0 )
+                {
+                    this._Content = new byte[bs.Length - 4];
+                    Array.Copy(bs, 4, this._Content, 0, this._Content.Length);
+                }
+                else
+                {
+                    // 使用GZIP压缩了。
+                    var msSource = new System.IO.MemoryStream(bs);
+                    msSource.Position = 4;
+                    var gm = new System.IO.Compression.GZipStream(msSource, System.IO.Compression.CompressionMode.Decompress);
+                    this._Content = new byte[gzipLen];
+                    gm.Read(this._Content, 0, gzipLen);
+                    gm.Close();
+                    msSource.Close();
+                }
+            }
+
+            private byte[] _Content = null;
+
+            public override bool CanRead
+            {
+                get
+                {
+                    return true;
+                }
+            }
+            public override bool CanSeek
+            {
+                get
+                {
+                    return true;
+                }
+            }
+            public override bool CanWrite
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public override long Length
+            {
+                get
+                {
+                    return this._Content.Length;
+                }
+            }
+            private long _Position = 0;
+            public override long Position
+            {
+                get
+                {
+                    return this._Position;
+                }
+                set
+                {
+                    this._Position = value;
+                }
+            }
+
+            public override void Flush()
+            {
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int len = (int)(this._Content.Length - this._Position);
+                if( len > count )
+                {
+                    len = count;
+                }
+                if (len > 0)
+                {
+                    Array.Copy(this._Content, this._Position, buffer, offset, len);
+                    int endIndex = offset + len;
+                    for(int iCount = offset; iCount < endIndex; iCount ++)
+                    {
+                        buffer[iCount] = (byte)(buffer[iCount] ^ 123);
+                    }
+                    this._Position += len;
+                }
+                return len;
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                switch (origin)
+                {
+                    case SeekOrigin.Begin:
+                        this._Position = offset;
+                        break;
+                    case SeekOrigin.Current:
+                        this._Position += offset;
+                        break;
+                    case SeekOrigin.End:
+                        this._Position = this._Content.Length - offset;
+                        break;
+                }
+                return this._Position;
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotImplementedException();
+            }
+        }
+ 
+
+        private static Dictionary<string, byte[]> __SMF_Contents = null;
+        private static readonly System.Reflection.Assembly ThisAssembly = typeof(JIEJIEHelper).Assembly;
+        
+        private static Dictionary<string, byte[]> SMF_GetContents()
+        {
+            var result = __SMF_Contents;
+            if( result == null )
+            {
+                result = new Dictionary<string, byte[]>();
+                SMF_InitContent(result);
+                __SMF_Contents = result;
+            }
+            return result;
+        }
+
+        private static void SMF_InitContent(Dictionary<string,byte[]> contents )
+        {
+            //contents["aaa"] = BitConverter.GetBytes(20222);
+        }
+
+        public static System.Reflection.ManifestResourceInfo SMF_GetManifestResourceInfo( System.Reflection.Assembly asm , string resourceName )
+        {
+            if (ThisAssembly.Equals(asm))
+            {
+                var dic = SMF_GetContents();
+                if (dic.ContainsKey( resourceName ))
+                {
+                    return new ManifestResourceInfo(asm, resourceName, ResourceLocation.Embedded);
+                }
+            }
+            return asm.GetManifestResourceInfo(resourceName);
+        }
+        public static string[] SMF_GetManifestResourceNames( System.Reflection.Assembly asm )
+        {
+            if (ThisAssembly.Equals(asm))
+            {
+                var dic = SMF_GetContents();
+                return new List<string>(dic.Keys).ToArray();
+            }
+            return asm.GetManifestResourceNames();
+        }
+        public static System.IO.Stream SMF_GetManifestResourceStream(System.Reflection.Assembly asm, string resourceName)
+        {
+            if ( ThisAssembly.Equals( asm ))
+            {
+                var dic = SMF_GetContents();
+                byte[] bsContent = null;
+                if (dic.TryGetValue(resourceName, out bsContent))
+                {
+                    return new SMF_ResStream(bsContent);
+                }
+            }
+            return asm.GetManifestResourceStream(resourceName);
+        }
+
+        public static System.IO.Stream SMF_GetManifestResourceStream2(System.Reflection.Assembly asm, Type t , string resourceName)
+        {
+            if( resourceName == null || resourceName.Length == 0 )
+            {
+                throw new ArgumentNullException('r'.ToString());
+            }
+            if (object.ReferenceEquals(t, null))
+            {
+                throw new ArgumentNullException('t'.ToString());
+            }
+            if (ThisAssembly.Equals(asm))
+            {
+                return SMF_GetManifestResourceStream(asm, t.FullName + '.'.ToString() + resourceName);
+            }
+            return asm.GetManifestResourceStream(t , resourceName);
+        }
+
         public static string String_Trim( string v )
         {
             return v.Trim();
@@ -21117,6 +23430,11 @@ namespace __DC20211119
             System.Threading.Monitor.Enter(a);
         }
 
+        public static void Monitor_Enter2(object a , ref bool lockTaken)
+        {
+            System.Threading.Monitor.Enter(a ,ref lockTaken);
+        }
+
         public static void Monitor_Exit(object a)
         {
             System.Threading.Monitor.Exit(a);
@@ -21147,8 +23465,9 @@ namespace __DC20211119
             {
                 return txt;
             }
-            lock (_CloneStringCrossThead_Event)
+            try
             {
+                System.Threading.Monitor.Enter(_CloneStringCrossThead_Event);
                 _CloneStringCrossThead_CurrentValue = txt;
                 _CloneStringCrossThead_Event_Inner.Set();
                 _CloneStringCrossThead_Event.Reset();
@@ -21160,7 +23479,12 @@ namespace __DC20211119
                 _CloneStringCrossThead_Event.WaitOne(100);
                 return _CloneStringCrossThead_CurrentValue;
             }
+            finally
+            {
+                System.Threading.Monitor.Exit(_CloneStringCrossThead_Event);
+            }
         }
+
         private static void CloneStringCrossThead_Thread()
         {
             try
