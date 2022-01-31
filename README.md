@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2022-1-31 : Happy CHINESE NEW YEAR!!!!!!!!!
 <br/> 2022-1-6  : Encrypt embedded resources.
 <br/> 2021-12-30: More powerfull stack trace translate for new year.
 <br/> 2021-12-14: Let software run faster and less memory used.support `crossgen.exe` for .net core.
@@ -296,7 +297,7 @@ public static byte[] z0ZzZzbn(string A_0)
   int num = -1;
   foreach (char value in A_0)
   {
-    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9¨¢?\ue8cf\uebd1¨ºG?e??¨¹a???y", a_).IndexOf(value);
+    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9Â¨Â¢?\ue8cf\uebd1Â¨ÂºG?e??Â¨Â¹a???y", a_).IndexOf(value);
     if (num2 >= 0)
     {
       if (num < 0)
