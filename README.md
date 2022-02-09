@@ -216,9 +216,8 @@ public int RemoveByControl(object control)
 	return result;
 }
 ```
-Look, the `foreach` and `lock` broken , and ILSpy has error ` /*Error near IL_003b: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
-<br />JieJie.NET can package small properties. In the old code ` task.ID ` , and in the new code it changed to ` backgroundTask.z0dwk() ` . JieJie.NET create a new method ` z0dwk() ` and copy the function of ` backgroundTask.get_ID() `.
-This cause the new code is more hard to read.
+Look, the control flow is very hard to understand , and ILSpy has error ` IL_000b: Incompatible stack heights: 1 vs 0 `. And use .NET Reflector 10.3,It stop work direct.
+
 
 ## 3 , Encrypt all string values define in assembly.
 JieJie.NET can collect all string values define in assembly,convert they to static readonly fields in a new class,and encrypt theirs value.Make hakers can no search string value direct, crack is more difficulty.
