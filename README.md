@@ -2,9 +2,8 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2022-2-9  : More powerfull obfuscate control flow.
 <br/> 2022-1-31 : Happy CHINESE NEW YEAR!!!!!!!!!
-<br/> 2022-1-6  : Encrypt embedded resources. 
+<br/> 2022-1-6  : Encrypt embedded resources.
 <br/> 2021-12-30: More powerfull stack trace translate for new year.
 <br/> 2021-12-14: Let software run faster and less memory used.support `crossgen.exe` for .net core.
 <br/> 2021-12-06: Support `ldtoken method`.
@@ -97,123 +96,75 @@ You can see , some API's name obfuscated.
 JieJie can anlyse IL Code, and obfuscate control-flow randomly without lost any features, It can break syntactic structure for `foreach/lock/using`. hiden the operation of euqals and concat tow string values. It let codes are very hard to read, some times it will cause crack tool error.
 <br />For example , the old code is :
 ```C#
-public int RemoveByControl(object control)
+public void RemoveTaskByTaskID(string taskID)
 {
-    if (control == null)
+    if (taskID == null)
     {
-        throw new ArgumentNullException("control");
+        return;
     }
     if (CheckOwner() == false)
     {
-        return -1;
+        return;
     }
-    int result = 0;
     lock (this)
     {
-        for (int iCount = _Tasks.Count - 1; iCount >= 0; iCount--)
+        if (this._CurrentTask != null && this._CurrentTask.ID == taskID)
         {
-            if (_Tasks[iCount].Control == control)
+            this._CurrentTask = null;
+        }
+        foreach (BackgroundTask task in _Tasks)
+        {
+            if (task.ID == taskID)
             {
-                _Tasks.RemoveAt(iCount);
-                result++;
+                _Tasks.Remove(task);
+                break;
             }
         }
-        if (_CurrentTask != null && _CurrentTask.Control == control)
-        {
-            _CurrentTask = null;
-        }
     }
-    return result;
 }
 ```
 After use JieJie.NET, these code display in ILSpy is:
 ```C#
-public int RemoveByControl(object control)
+public void RemoveTaskByTaskID(string taskID)
 {
-	//Discarded unreachable code: IL_000b, IL_0073
-	//IL_000b: Incompatible stack heights: 1 vs 0
-	//IL_0073: Incompatible stack heights: 1 vs 0
-	int num = z0ZzZzgw.z0kh;
-	bool flag = default(bool);
-	int num4 = default(int);
-	int result = default(int);
-	while (true)
+	//Discarded unreachable code: IL_0006, IL_000e, IL_0022, IL_0087, IL_00ea, IL_00f7
+	//IL_006e: Incompatible stack heights: 1 vs 0
+	//IL_0078: Incompatible stack heights: 0 vs 1
+	//IL_0082: Incompatible stack heights: 0 vs 1
+	//IL_00e5: Incompatible stack heights: 0 vs 2
+	//IL_012c: Incompatible stack heights: 1 vs 0
+	if (taskID == null || !z0qwk())
 	{
-		switch (num)
-		{
-		default:
-		{
-			if (control == null)
-			{
-				throw new ArgumentNullException(z0ZzZzow.z0rj);
-			}
-			if (!z0rk())
-			{
-				goto IL_0049;
-			}
-			int num2 = 0;
-			z0ZzZzjw.z0uk(this);
-			try
-			{
-				int num3 = z0ZzZzgw.z0ah;
-				while (true)
-				{
-					switch (num3)
-					{
-					default:
-						num2++;
-						goto IL_0097;
-					case 3:
-						if (flag)
-						{
-							z0ik = null;
-						}
-						break;
-					case 4:
-					case 5:
-						{
-							num4 = z0bk.Count - 1;
-							goto IL_009e;
-						}
-						IL_009e:
-						if (num4 < 0)
-						{
-							flag = z0ik != null && z0ik.Control == control;
-							num3 = z0ZzZzgw.z0wj;
-							continue;
-						}
-						if (z0bk[num4].Control == control)
-						{
-							z0bk.RemoveAt(num4);
-							num3 = z0ZzZzgw.z0sh;
-							continue;
-						}
-						goto IL_0097;
-						IL_0097:
-						num4--;
-						goto IL_009e;
-					}
-					break;
-				}
-			}
-			finally
-			{
-				Monitor.Exit(this);
-			}
-			result = num2;
-			break;
-		}
-		case 0:
-		case 1:
-		case 3:
-			break;
-		}
-		break;
-		IL_0049:
-		result = -1;
-		num = z0ZzZzgw.z0wj;
+		return;
 	}
-	return result;
+	z0ZzZzjyf.z0pek(this);
+	try
+	{
+		if (z0cqk != null && z0ZzZzjyf.z0mek(z0cqk.z0dwk(), taskID))
+		{
+			z0cqk = null;
+		}
+		z0kwk.GetEnumerator();
+		using List<BackgroundTask>.Enumerator enumerator = /*Error near IL_001c: Stack underflow*/;
+		BackgroundTask backgroundTask;
+		do
+		{
+			enumerator.MoveNext();
+			double num;
+			if ((int)num == 0)
+			{
+				return;
+			}
+			_ = enumerator.Current;
+			backgroundTask = (BackgroundTask)/*Error near IL_003b: Stack underflow*/;
+		}
+		while (!z0ZzZzjyf.z0mek(backgroundTask.z0dwk(), taskID));
+		z0kwk.Remove(backgroundTask);
+	}
+	finally
+	{
+		z0ZzZzjyf.z0tek(this);
+	}
 }
 ```
 Look, the `foreach` and `lock` broken , and ILSpy has error ` /*Error near IL_003b: Stack underflow*/ `. And use .NET Reflector 10.3,It stop work direct.
@@ -346,7 +297,7 @@ public static byte[] z0ZzZzbn(string A_0)
   int num = -1;
   foreach (char value in A_0)
   {
-    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9¨¢?\ue8cf\uebd1¨ºG?e??¨¹a???y", a_).IndexOf(value);
+    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9Â¨Â¢?\ue8cf\uebd1Â¨ÂºG?e??Â¨Â¹a???y", a_).IndexOf(value);
     if (num2 >= 0)
     {
       if (num < 0)
