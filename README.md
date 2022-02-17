@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2022-2-17 : Add Windows GUI.
 <br/> 2022-2-9  : More powerfull obfuscate control flow.
 <br/> 2022-1-31 : Happy CHINESE NEW YEAR!!!!!!!!!
 <br/> 2022-1-6  : Encrypt embedded resources. 
@@ -24,10 +25,13 @@
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
 <br/>So I write JieJie.NET can encrypt .NET assembly deeply,help people protect their copyright.and this tool is open source.
-It is a console .NET application, the UI is :
+It is a console .NET application, the GUI is :
+<br/>
+<img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/jiejie.gui.png"/>
+<br/>
+The console UI is :
 <br/>
 <img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/snapshort.png"/>
-
 ## Features
 It has following features.
 
