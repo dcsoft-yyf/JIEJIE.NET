@@ -25,7 +25,7 @@
 ## Background
 Many .net developers are worry about their software has been cracked,copyright under infringed, so they use some tools to obfuscate IL code.such as PreEmptive dotfuscator.But some times ,it is not enought.
 <br/>So I write JieJie.NET can encrypt .NET assembly deeply,help people protect their copyright.and this tool is open source.
-It is a console .NET application, the GUI is :
+It is a .NET application, the GUI is :
 <br/>
 <img src="https://raw.githubusercontent.com/dcsoft-yyf/DCNETProtector/main/source/snapshort/jiejie.gui.png"/>
 <br/>
