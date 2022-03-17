@@ -190,7 +190,7 @@ namespace JIEJIE
                         case "UILanguageName": this.UILanguageName = node.InnerText; break;
                         case "PrefixForTypeRename": this.PrefixForTypeRename = node.InnerText; break;
                         case "PrefixForMemberRename": this.PrefixForMemberRename = node.InnerText; break;
-                        case "ResourceNameNeedEncrypt": this.ResourceNameNeedEncrypt = node.InnerText; break;
+                        case "ResourceNameNeedEncrypt": this.ResourceNameNeedEncrypt = node.InnerText;break;
                         case "OutpuptMapXml": this.OutpuptMapXml = StringToBoolean(node.InnerText, true); break;
                         case "DeleteTempFile": this.DeleteTempFile = StringToBoolean(node.InnerText, false); break;
                         case "DebugMode": this.DebugMode = StringToBoolean(node.InnerText, false); break;
@@ -307,9 +307,9 @@ namespace JIEJIE
                 {
                     writer.WriteElementString("PrefixForMemberRename", this.PrefixForMemberRename);
                 }
-                if (this.ResourceNameNeedEncrypt != null)
+                if (this.ResourceNameNeedEncrypt != null && this.ResourceNameNeedEncrypt.Length > 0 )
                 {
-                    writer.WriteElementString("ResourceNameNeedEncrypt", this.ResourceNameNeedEncrypt);
+                    writer.WriteElementString("ResourceNameNeedEncrypt" , this.ResourceNameNeedEncrypt);
                 }
                 writer.WriteElementString("OutpuptMapXml", this.OutpuptMapXml.ToString());
                 writer.WriteElementString("DeleteTempFile", this.DeleteTempFile.ToString());
@@ -842,13 +842,18 @@ namespace JIEJIE
         {
 
         }
-        public JieJieSwitchs(string args, JieJieSwitchs baseOptions)
+        public JieJieSwitchs(string args, JieJieSwitchs baseOptions , object parentObject )
         {
             if (baseOptions != null)
             {
                 this.ControlFlow = baseOptions.ControlFlow;
                 this.Resources = baseOptions.Resources;
                 this.Strings = baseOptions.Strings;
+                this.HightStrings = baseOptions.HightStrings;
+                if (parentObject is DCILClass)
+                {
+                    this.AllocationCallStack = baseOptions.AllocationCallStack;
+                }
             }
             if (args != null)
             {
@@ -858,8 +863,8 @@ namespace JIEJIE
                     var item2 = item.Trim().ToLower();
                     switch (item2)
                     {
-                        case "+contorlfow": this.ControlFlow = true; break;
-                        case "-controlfow": this.ControlFlow = false; break;
+                        case "+contorlflow": this.ControlFlow = true; break;
+                        case "-controlflow": this.ControlFlow = false; break;
                         case "+strings": this.Strings = true; break;
                         case "-strings": this.Strings = false; break;
                         case "+resources": this.Resources = true; break;
@@ -872,6 +877,8 @@ namespace JIEJIE
                         case "-rename": this.Rename = false; break;
                         case "+removemember": this.RemoveMember = true; break;
                         case "-removemember": this.RemoveMember = false; break;
+                        case "+hightstrings": this.HightStrings = true;break;
+                        case "-hightstrings": this.HightStrings = false;break;
                     }
                 }
             }
@@ -884,6 +891,10 @@ namespace JIEJIE
         /// 加密字符串
         /// </summary>
         public bool Strings = true;
+        /// <summary>
+        /// 高度加密字符串,但会拖累性能。
+        /// </summary>
+        public bool HightStrings = false;
         /// <summary>
         /// 加密资源文件
         /// </summary>
@@ -906,6 +917,172 @@ namespace JIEJIE
         public bool RemoveMember = true;
     }
      
+    /// <summary>
+    /// 实体名称设置列表
+    /// </summary>
+    internal class EntryNameSettingList : List<EntryNameSettingList.EntryNameSettingItem>
+    {
+        public EntryNameSettingList(string text)
+        {
+            if (text != null && text.Length > 0)
+            {
+                foreach (var strItem in text.Split('|'))
+                {
+                    this.AddItem(strItem);
+                }
+            }
+        }
+        public override string ToString()
+        {
+            var str = new StringBuilder();
+            foreach( var item in this )
+            {
+                if(str.Length > 0 )
+                {
+                    str.Append('|');
+                }
+                str.Append(item.ToString());
+            }
+            return str.ToString();
+        }
+        /// <summary>
+        /// 是否包含指定名称
+        /// </summary>
+        /// <param name="name">指定名称</param>
+        /// <param name="defaultValue">默认值</param>
+        /// <returns>是否包含</returns>
+        public bool IsInclude( string name , bool defaultValue )
+        {
+            foreach( var item in this )
+            {
+                if(item.IsMatch( name ))
+                {
+                    return item.IsInclude;
+                }
+            }
+            return defaultValue;
+        }
+
+        public EntryNameSettingItem GetItem( string name )
+        {
+            foreach (var item in this)
+            {
+                if (item.IsMatch(name))
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+
+
+        public EntryNameSettingItem AddItem(string name)
+        {
+            if (name != null && name.Length > 0)
+            {
+                var item = new EntryNameSettingItem(name);
+                if (item.Name != null && item.Name.Length > 0)
+                {
+                    this.Add(item);
+                    return item;
+                }
+            }
+            return null;
+        }
+
+        internal class EntryNameSettingItem
+        {
+            public EntryNameSettingItem( string strName )
+            {
+                if(strName == null || strName.Length == 0 )
+                {
+                    return;
+                }
+                if (strName[0] == '-')
+                {
+                    this.IsInclude = false;
+                    strName = strName.Substring(1).Trim();
+                }
+                else if (strName[0] == '+')
+                {
+                    this.IsInclude = true;
+                    strName = strName.Substring(1).Trim();
+                }
+                else
+                {
+                    this.IsInclude = true;
+                }
+                if (strName.Length == 0)
+                {
+                    return;
+                }
+                this.Name = strName;
+                this.IsRegex = false;
+                foreach (var c in strName)
+                {
+                    if (_RegexChars.IndexOf(c) >= 0)
+                    {
+                        // 遇到特别字符，认为是正则表达式
+                        this.IsRegex = true;
+                        break;
+                    }
+                }
+            }
+
+            private static readonly string _RegexChars = @"$^{[(|)*+?\";
+            /// <summary>
+            /// 名称
+            /// </summary>
+            public readonly string Name = null;
+            /// <summary>
+            /// 是否为正则表达式
+            /// </summary>
+            public readonly bool IsRegex = false;
+            /// <summary>
+            /// 是否包含在输出结果中
+            /// </summary>
+            public readonly bool IsInclude = true;
+
+            public override string ToString()
+            {
+                if( this.IsInclude )
+                {
+                    return "+" + this.Name;
+                }
+                else
+                {
+                    return "-" + this.Name;
+                }
+            }
+            private System.Text.RegularExpressions.Regex _Regex = null;
+            /// <summary>
+            /// 判断是否命中本设置
+            /// </summary>
+            /// <param name="resName"></param>
+            /// <returns></returns>
+            public bool IsMatch( string resName )
+            {
+                if( this.Name == null || this.Name.Length == 0 )
+                {
+                    return false;
+                }
+                if( this.IsRegex )
+                {
+                    if( this._Regex == null  )
+                    {
+                        this._Regex = new System.Text.RegularExpressions.Regex(this.Name);
+                    }
+                    return this._Regex.IsMatch(resName);
+                }
+                else
+                {
+                    return string.Compare(this.Name, resName, StringComparison.OrdinalIgnoreCase) == 0;
+                }
+            }
+             
+        }
+    }
+
     [Serializable]
     internal class DCJieJieNetEngine : System.MarshalByRefObject, IDisposable
     {
@@ -4390,7 +4567,7 @@ namespace JIEJIE
                 && method.ReturnTypeInfo == DCILTypeReference.Type_String
                 && ((DCILClass)method.Parent ).InnerGenerate == false )
             {
-                var targetMethod =(DCILMethod) this._Type_JIEJIEHelper.LocalClass.ChildNodes.GetByName("CloneStringCrossThead");
+                var targetMethod =(DCILMethod) this._Type_JIEJIEHelper.LocalClass.GetChildNodeByName("CloneStringCrossThead");
                 // 加密关键字符串对象创建调用堆栈
                 for (int ilIndex = method.OperCodes.Count - 1; ilIndex >= 0; ilIndex--)
                 {
@@ -4492,7 +4669,7 @@ namespace JIEJIE
                 code.SetOperCode("call");
                 code.InvokeInfo = new DCILInvokeMethodInfo();
                 code.InvokeInfo.IsInstance = false;
-                code.InvokeInfo.ReturnType = DCILTypeReference.Type_Boolean.Clone();
+                code.InvokeInfo.ReturnType = DCILTypeReference.Type_Byte.Clone();
                 code.InvokeInfo.ReturnType.ArrayAndPointerSettings = "[]";
                 code.InvokeInfo.OwnerType = new DCILTypeReference(FullClassName, DCILTypeMode.Class);
                 code.InvokeInfo.MethodName = GetIndexName(index);// "_" + index;
@@ -4671,7 +4848,7 @@ namespace JIEJIE
                     var t2 = new DCILTypeReference(cls);
                     foreach (var code in this._MyCodes)
                     {
-                        code.InvokeInfo.LocalMethod = (DCILMethod)cls.ChildNodes.GetByName(code.InvokeInfo.MethodName);
+                        code.InvokeInfo.LocalMethod = (DCILMethod)cls.GetChildNodeByName(code.InvokeInfo.MethodName);
                         code.InvokeInfo.OwnerType = t2;
                     }
                 }
@@ -5589,306 +5766,362 @@ namespace JIEJIE
 
 
 	// Fields
-	.field private static class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __SMF_Contents
+	.field private static initonly class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __SMF_Contents
 	.field private static initonly class [mscorlib]System.Reflection.Assembly ThisAssembly
 	.field private static class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_Thread
 	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event
 	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
 	.field private static string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_CurrentValue
 
-	// Methods
-	.method private hidebysig static 
-		class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> SMF_GetContents () cil managed 
-	{
-		// Method begins at RVA 0x2050
-		// Code size 42 (0x2a)
-		.maxstack 2
-		.locals init (
-			[0] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> result,
-			[1] bool,
-			[2] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>
-		)
+.method private hidebysig static 
+	class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> SMF_CreateEmptyTable () cil managed 
+{
+	// Method begins at RVA 0x2050
+	// Code size 30 (0x1e)
+	.maxstack 8
+    IL_0000: ret
+} // end of method JIEJIEHelper::SMF_CreateEmptyTable
 
-		IL_0000: nop
-		IL_0001: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
-		IL_0006: stloc.0
-		IL_0007: ldloc.0
-		IL_0008: ldnull
-		IL_0009: ceq
-		IL_000b: stloc.1
-		IL_000c: ldloc.1
-		IL_000d: brfalse.s IL_0024
 
-		IL_000f: nop
-		IL_0010: newobj instance void class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::.ctor()
-		IL_0015: stloc.0
-		IL_0016: ldloc.0
-		IL_0017: call void __DC20211119.JIEJIEHelper::SMF_InitContent(class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>)
-		IL_001c: nop
-		IL_001d: ldloc.0
-		IL_001e: stsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
-		IL_0023: nop
+.method private hidebysig static 
+	uint8[] SMF_GetContent (
+		string name
+	) cil managed 
+{
+	// Method begins at RVA 0x20a4
+	// Code size 7 (0x7)
+	.maxstack 1
+	.locals init (
+		[0] uint8[]
+	)
 
-		IL_0024: ldloc.0
-		IL_0025: stloc.2
-		IL_0026: br.s IL_0028
+	// {
+	IL_0000: nop
+	// return null;
+	IL_0001: ldnull
+	IL_0002: stloc.0
+	// (no C# code)
+	IL_0003: br.s IL_0005
 
-		IL_0028: ldloc.2
-		IL_0029: ret
-	} // end of method JIEJIEHelper::SMF_GetContents
+	IL_0005: ldloc.0
+	IL_0006: ret
+} // end of method JIEJIEHelper::SMF_GetContent
 
-	.method private hidebysig static 
-		void SMF_InitContent (
-			class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> contents
-		) cil managed 
-	{
-		// Method begins at RVA 0x2086
-		// Code size 2 (0x2)
-		.maxstack 8
+ .method public hidebysig static 
+	class [mscorlib]System.Reflection.ManifestResourceInfo SMF_GetManifestResourceInfo (
+		class [mscorlib]System.Reflection.Assembly asm,
+		string resourceName
+	) cil managed 
+{
+	// Method begins at RVA 0x2050
+	// Code size 70 (0x46)
+	.maxstack 3
+	.locals init (
+		[0] bool,
+		[1] bool,
+		[2] class [mscorlib]System.Reflection.ManifestResourceInfo
+	)
 
-		IL_0000: nop
-		IL_0001: ret
-	} // end of method JIEJIEHelper::SMF_InitContent
+	// {
+	IL_0000: nop
+	// if (ThisAssembly.Equals(asm) && __SMF_Contents != null && __SMF_Contents.ContainsKey(resourceName))
+	IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+	IL_0006: ldarg.0
+	IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
+	IL_000c: brfalse.s IL_0018
 
-	.method public hidebysig static 
-		class [mscorlib]System.Reflection.ManifestResourceInfo SMF_GetManifestResourceInfo (
-			class [mscorlib]System.Reflection.Assembly asm,
-			string resourceName
-		) cil managed 
-	{
-		// Method begins at RVA 0x208c
-		// Code size 59 (0x3b)
-		.maxstack 3
-		.locals init (
-			[0] bool,
-			[1] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> dic,
-			[2] bool,
-			[3] class [mscorlib]System.Reflection.ManifestResourceInfo
-		)
+	IL_000e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0013: ldnull
+	IL_0014: cgt.un
+	IL_0016: br.s IL_0019
 
-		IL_0000: nop
-		IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
-		IL_0006: ldarg.0
-		IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
-		IL_000c: stloc.0
-		IL_000d: ldloc.0
-		IL_000e: brfalse.s IL_002f
+	// (no C# code)
+	IL_0018: ldc.i4.0
 
-		IL_0010: nop
-		IL_0011: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_GetContents()
-		IL_0016: stloc.1
-		IL_0017: ldloc.1
-		IL_0018: ldarg.1
-		IL_0019: callvirt instance bool class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::ContainsKey(!0)
-		IL_001e: stloc.2
-		IL_001f: ldloc.2
-		IL_0020: brfalse.s IL_002e
+	IL_0019: stloc.0
+	IL_001a: ldloc.0
+	IL_001b: brfalse.s IL_003a
 
-		IL_0022: nop
-		IL_0023: ldarg.0
-		IL_0024: ldarg.1
-		IL_0025: ldc.i4.1
-		IL_0026: newobj instance void [mscorlib]System.Reflection.ManifestResourceInfo::.ctor(class [mscorlib]System.Reflection.Assembly, string, valuetype [mscorlib]System.Reflection.ResourceLocation)
-		IL_002b: stloc.3
-		IL_002c: br.s IL_0039
+	IL_001d: nop
+	IL_001e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0023: ldarg.1
+	IL_0024: callvirt instance bool class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::ContainsKey(!0)
+	IL_0029: stloc.1
+	IL_002a: ldloc.1
+	IL_002b: brfalse.s IL_0039
 
-		IL_002e: nop
+	// return new ManifestResourceInfo(asm, resourceName, ResourceLocation.Embedded);
+	IL_002d: nop
+	IL_002e: ldarg.0
+	IL_002f: ldarg.1
+	IL_0030: ldc.i4.1
+	IL_0031: newobj instance void [mscorlib]System.Reflection.ManifestResourceInfo::.ctor(class [mscorlib]System.Reflection.Assembly, string, valuetype [mscorlib]System.Reflection.ResourceLocation)
+	IL_0036: stloc.2
+	// (no C# code)
+	IL_0037: br.s IL_0044
 
-		IL_002f: ldarg.0
-		IL_0030: ldarg.1
-		IL_0031: callvirt instance class [mscorlib]System.Reflection.ManifestResourceInfo [mscorlib]System.Reflection.Assembly::GetManifestResourceInfo(string)
-		IL_0036: stloc.3
-		IL_0037: br.s IL_0039
+	// return asm.GetManifestResourceInfo(resourceName);
+	IL_0039: nop
 
-		IL_0039: ldloc.3
-		IL_003a: ret
-	} // end of method JIEJIEHelper::SMF_GetManifestResourceInfo
+	IL_003a: ldarg.0
+	IL_003b: ldarg.1
+	IL_003c: callvirt instance class [mscorlib]System.Reflection.ManifestResourceInfo [mscorlib]System.Reflection.Assembly::GetManifestResourceInfo(string)
+	IL_0041: stloc.2
+	// (no C# code)
+	IL_0042: br.s IL_0044
 
-	.method public hidebysig static 
-		string[] SMF_GetManifestResourceNames (
-			class [mscorlib]System.Reflection.Assembly asm
-		) cil managed 
-	{
-		// Method begins at RVA 0x20d4
-		// Code size 53 (0x35)
-		.maxstack 2
-		.locals init (
-			[0] bool,
-			[1] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> dic,
-			[2] string[]
-		)
+	IL_0044: ldloc.2
+	IL_0045: ret
+} // end of method JIEJIEHelper::SMF_GetManifestResourceInfo
 
-		IL_0000: nop
-		IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
-		IL_0006: ldarg.0
-		IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
-		IL_000c: stloc.0
-		IL_000d: ldloc.0
-		IL_000e: brfalse.s IL_002a
+.method public hidebysig static 
+	string[] SMF_GetManifestResourceNames (
+		class [mscorlib]System.Reflection.Assembly asm
+	) cil managed 
+{
+	// Method begins at RVA 0x20b8
+	// Code size 64 (0x40)
+	.maxstack 2
+	.locals init (
+		[0] bool,
+		[1] string[]
+	)
 
-		IL_0010: nop
-		IL_0011: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_GetContents()
-		IL_0016: stloc.1
-		IL_0017: ldloc.1
-		IL_0018: callvirt instance class [mscorlib]System.Collections.Generic.Dictionary`2/KeyCollection<!0, !1> class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::get_Keys()
-		IL_001d: newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor(class [mscorlib]System.Collections.Generic.IEnumerable`1<!0>)
-		IL_0022: call instance !0[] class [mscorlib]System.Collections.Generic.List`1<string>::ToArray()
-		IL_0027: stloc.2
-		IL_0028: br.s IL_0033
+	// {
+	IL_0000: nop
+	// if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
+	IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+	IL_0006: ldarg.0
+	IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
+	IL_000c: brfalse.s IL_0018
 
-		IL_002a: ldarg.0
-		IL_002b: callvirt instance string[] [mscorlib]System.Reflection.Assembly::GetManifestResourceNames()
-		IL_0030: stloc.2
-		IL_0031: br.s IL_0033
+	IL_000e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0013: ldnull
+	IL_0014: cgt.un
+	IL_0016: br.s IL_0019
 
-		IL_0033: ldloc.2
-		IL_0034: ret
-	} // end of method JIEJIEHelper::SMF_GetManifestResourceNames
+	// (no C# code)
+	IL_0018: ldc.i4.0
 
-	.method public hidebysig static 
-		class [mscorlib]System.IO.Stream SMF_GetManifestResourceStream (
-			class [mscorlib]System.Reflection.Assembly asm,
-			string resourceName
-		) cil managed 
-	{
-		// Method begins at RVA 0x2118
-		// Code size 64 (0x40)
-		.maxstack 3
-		.locals init (
-			[0] bool,
-			[1] class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> dic,
-			[2] uint8[] bsContent,
-			[3] bool,
-			[4] class [mscorlib]System.IO.Stream
-		)
+	IL_0019: stloc.0
+	IL_001a: ldloc.0
+	IL_001b: brfalse.s IL_0035
 
-		IL_0000: nop
-		IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
-		IL_0006: ldarg.0
-		IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
-		IL_000c: stloc.0
-		IL_000d: ldloc.0
-		IL_000e: brfalse.s IL_0032
+	// return new List<string>(__SMF_Contents.Keys).ToArray();
+	IL_001d: nop
+	IL_001e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0023: callvirt instance class [mscorlib]System.Collections.Generic.Dictionary`2/KeyCollection<!0, !1> class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::get_Keys()
+	IL_0028: newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor(class [mscorlib]System.Collections.Generic.IEnumerable`1<!0>)
+	IL_002d: call instance !0[] class [mscorlib]System.Collections.Generic.List`1<string>::ToArray()
+	IL_0032: stloc.1
+	// return asm.GetManifestResourceNames();
+	IL_0033: br.s IL_003e
 
-		IL_0010: nop
-		IL_0011: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_GetContents()
-		IL_0016: stloc.1
-		IL_0017: ldnull
-		IL_0018: stloc.2
-		IL_0019: ldloc.1
-		IL_001a: ldarg.1
-		IL_001b: ldloca.s 2
-		IL_001d: callvirt instance bool class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::TryGetValue(!0, !1&)
-		IL_0022: stloc.3
-		IL_0023: ldloc.3
-		IL_0024: brfalse.s IL_0031
+	IL_0035: ldarg.0
+	IL_0036: callvirt instance string[] [mscorlib]System.Reflection.Assembly::GetManifestResourceNames()
+	IL_003b: stloc.1
+	// (no C# code)
+	IL_003c: br.s IL_003e
 
-		IL_0026: nop
-		IL_0027: ldloc.2
-		IL_0028: newobj instance void __DC20211119.JIEJIEHelper/SMF_ResStream::.ctor(uint8[])
-		IL_002d: stloc.s 4
-		IL_002f: br.s IL_003d
+	IL_003e: ldloc.1
+	IL_003f: ret
+} // end of method JIEJIEHelper::SMF_GetManifestResourceNames
 
-		IL_0031: nop
+.method public hidebysig static 
+	class [mscorlib]System.IO.Stream SMF_GetManifestResourceStream (
+		class [mscorlib]System.Reflection.Assembly asm,
+		string resourceName
+	) cil managed 
+{
+	// Method begins at RVA 0x2104
+	// Code size 105 (0x69)
+	.maxstack 3
+	.locals init (
+		[0] bool,
+		[1] uint8[] bsContent,
+		[2] bool,
+		[3] bool,
+		[4] class [mscorlib]System.IO.Stream
+	)
 
-		IL_0032: ldarg.0
-		IL_0033: ldarg.1
-		IL_0034: callvirt instance class [mscorlib]System.IO.Stream [mscorlib]System.Reflection.Assembly::GetManifestResourceStream(string)
-		IL_0039: stloc.s 4
-		IL_003b: br.s IL_003d
+	// {
+	IL_0000: nop
+	// if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
+	IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+	IL_0006: ldarg.0
+	IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
+	IL_000c: brfalse.s IL_0018
 
-		IL_003d: ldloc.s 4
-		IL_003f: ret
-	} // end of method JIEJIEHelper::SMF_GetManifestResourceStream
+	IL_000e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0013: ldnull
+	IL_0014: cgt.un
+	IL_0016: br.s IL_0019
 
-	.method public hidebysig static 
-		class [mscorlib]System.IO.Stream SMF_GetManifestResourceStream2 (
-			class [mscorlib]System.Reflection.Assembly asm,
-			class [mscorlib]System.Type t,
-			string resourceName
-		) cil managed 
-	{
-		// Method begins at RVA 0x2164
-		// Code size 125 (0x7d)
-		.maxstack 4
-		.locals init (
-			[0] bool,
-			[1] char,
-			[2] bool,
-			[3] bool,
-			[4] class [mscorlib]System.IO.Stream
-		)
+	// (no C# code)
+	IL_0018: ldc.i4.0
 
-		IL_0000: nop
-		IL_0001: ldarg.2
-		IL_0002: brfalse.s IL_000f
+	IL_0019: stloc.0
+	IL_001a: ldloc.0
+	IL_001b: brfalse.s IL_005b
 
-		IL_0004: ldarg.2
-		IL_0005: callvirt instance int32 [mscorlib]System.String::get_Length()
-		IL_000a: ldc.i4.0
-		IL_000b: ceq
-		IL_000d: br.s IL_0010
+	// byte[] value = null;
+	IL_001d: nop
+	IL_001e: ldnull
+	IL_001f: stloc.1
+	// if (__SMF_Contents.TryGetValue(resourceName, out value))
+	IL_0020: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0025: ldarg.1
+	IL_0026: ldloca.s 1
+	IL_0028: callvirt instance bool class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::TryGetValue(!0, !1&)
+	IL_002d: stloc.2
+	IL_002e: ldloc.2
+	IL_002f: brfalse.s IL_005a
 
-		IL_000f: ldc.i4.1
+	// if (value == null)
+	IL_0031: nop
+	IL_0032: ldloc.1
+	IL_0033: ldnull
+	IL_0034: ceq
+	IL_0036: stloc.3
+	IL_0037: ldloc.3
+	IL_0038: brfalse.s IL_0050
 
-		IL_0010: stloc.0
-		IL_0011: ldloc.0
-		IL_0012: brfalse.s IL_0025
+	// value = SMF_GetContent(resourceName);
+	IL_003a: nop
+	IL_003b: ldarg.1
+	IL_003c: call uint8[] __DC20211119.JIEJIEHelper::SMF_GetContent(string)
+	IL_0041: stloc.1
+	// __SMF_Contents[resourceName] = value;
+	IL_0042: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0047: ldarg.1
+	IL_0048: ldloc.1
+	IL_0049: callvirt instance void class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::set_Item(!0, !1)
+	// (no C# code)
+	IL_004e: nop
+	// return new SMF_ResStream(value);
+	IL_004f: nop
 
-		IL_0014: nop
-		IL_0015: ldc.i4.s 114
-		IL_0017: stloc.1
-		IL_0018: ldloca.s 1
-		IL_001a: call instance string [mscorlib]System.Char::ToString()
-		IL_001f: newobj instance void [mscorlib]System.ArgumentNullException::.ctor(string)
-		IL_0024: throw
+	IL_0050: ldloc.1
+	IL_0051: newobj instance void __DC20211119.JIEJIEHelper/SMF_ResStream::.ctor(uint8[])
+	IL_0056: stloc.s 4
+	// (no C# code)
+	IL_0058: br.s IL_0066
 
-		IL_0025: ldarg.1
-		IL_0026: ldnull
-		IL_0027: ceq
-		IL_0029: stloc.2
-		IL_002a: ldloc.2
-		IL_002b: brfalse.s IL_003e
+	// return asm.GetManifestResourceStream(resourceName);
+	IL_005a: nop
 
-		IL_002d: nop
-		IL_002e: ldc.i4.s 116
-		IL_0030: stloc.1
-		IL_0031: ldloca.s 1
-		IL_0033: call instance string [mscorlib]System.Char::ToString()
-		IL_0038: newobj instance void [mscorlib]System.ArgumentNullException::.ctor(string)
-		IL_003d: throw
+	IL_005b: ldarg.0
+	IL_005c: ldarg.1
+	IL_005d: callvirt instance class [mscorlib]System.IO.Stream [mscorlib]System.Reflection.Assembly::GetManifestResourceStream(string)
+	IL_0062: stloc.s 4
+	// (no C# code)
+	IL_0064: br.s IL_0066
 
-		IL_003e: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
-		IL_0043: ldarg.0
-		IL_0044: callvirt instance bool [mscorlib]System.Object::Equals(object)
-		IL_0049: stloc.3
-		IL_004a: ldloc.3
-		IL_004b: brfalse.s IL_006e
+	IL_0066: ldloc.s 4
+	IL_0068: ret
+} // end of method JIEJIEHelper::SMF_GetManifestResourceStream
 
-		IL_004d: nop
-		IL_004e: ldarg.0
-		IL_004f: ldarg.1
-		IL_0050: callvirt instance string [mscorlib]System.Type::get_FullName()
-		IL_0055: ldc.i4.s 46
-		IL_0057: stloc.1
-		IL_0058: ldloca.s 1
-		IL_005a: call instance string [mscorlib]System.Char::ToString()
-		IL_005f: ldarg.2
-		IL_0060: call string [mscorlib]System.String::Concat(string, string, string)
-		IL_0065: call class [mscorlib]System.IO.Stream __DC20211119.JIEJIEHelper::SMF_GetManifestResourceStream(class [mscorlib]System.Reflection.Assembly, string)
-		IL_006a: stloc.s 4
-		IL_006c: br.s IL_007a
+.method public hidebysig static 
+	class [mscorlib]System.IO.Stream SMF_GetManifestResourceStream2 (
+		class [mscorlib]System.Reflection.Assembly asm,
+		class [mscorlib]System.Type t,
+		string resourceName
+	) cil managed 
+{
+	// Method begins at RVA 0x217c
+	// Code size 125 (0x7d)
+	.maxstack 4
+	.locals init (
+		[0] bool,
+		[1] char,
+		[2] bool,
+		[3] bool,
+		[4] class [mscorlib]System.IO.Stream
+	)
 
-		IL_006e: ldarg.0
-		IL_006f: ldarg.1
-		IL_0070: ldarg.2
-		IL_0071: callvirt instance class [mscorlib]System.IO.Stream [mscorlib]System.Reflection.Assembly::GetManifestResourceStream(class [mscorlib]System.Type, string)
-		IL_0076: stloc.s 4
-		IL_0078: br.s IL_007a
+	// {
+	IL_0000: nop
+	// if (resourceName == null || resourceName.Length == 0)
+	IL_0001: ldarg.2
+	IL_0002: brfalse.s IL_000f
 
-		IL_007a: ldloc.s 4
-		IL_007c: ret
-	} // end of method JIEJIEHelper::SMF_GetManifestResourceStream2
+	IL_0004: ldarg.2
+	IL_0005: callvirt instance int32 [mscorlib]System.String::get_Length()
+	IL_000a: ldc.i4.0
+	IL_000b: ceq
+	IL_000d: br.s IL_0010
+
+	// (no C# code)
+	IL_000f: ldc.i4.1
+
+	IL_0010: stloc.0
+	IL_0011: ldloc.0
+	IL_0012: brfalse.s IL_0025
+
+	// throw new ArgumentNullException('r'.ToString());
+	IL_0014: nop
+	IL_0015: ldc.i4.s 114
+	IL_0017: stloc.1
+	// if ((object)t == null)
+	IL_0018: ldloca.s 1
+	IL_001a: call instance string [mscorlib]System.Char::ToString()
+	IL_001f: newobj instance void [mscorlib]System.ArgumentNullException::.ctor(string)
+	IL_0024: throw
+
+	IL_0025: ldarg.1
+	IL_0026: ldnull
+	IL_0027: ceq
+	IL_0029: stloc.2
+	IL_002a: ldloc.2
+	IL_002b: brfalse.s IL_003e
+
+	// throw new ArgumentNullException('t'.ToString());
+	IL_002d: nop
+	IL_002e: ldc.i4.s 116
+	IL_0030: stloc.1
+	// if (ThisAssembly.Equals(asm))
+	IL_0031: ldloca.s 1
+	IL_0033: call instance string [mscorlib]System.Char::ToString()
+	IL_0038: newobj instance void [mscorlib]System.ArgumentNullException::.ctor(string)
+	IL_003d: throw
+
+	IL_003e: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+	IL_0043: ldarg.0
+	IL_0044: callvirt instance bool [mscorlib]System.Object::Equals(object)
+	IL_0049: stloc.3
+	IL_004a: ldloc.3
+	IL_004b: brfalse.s IL_006e
+
+	// return SMF_GetManifestResourceStream(asm, t.FullName + '.' + resourceName);
+	IL_004d: nop
+	IL_004e: ldarg.0
+	IL_004f: ldarg.1
+	IL_0050: callvirt instance string [mscorlib]System.Type::get_FullName()
+	IL_0055: ldc.i4.s 46
+	IL_0057: stloc.1
+	IL_0058: ldloca.s 1
+	IL_005a: call instance string [mscorlib]System.Char::ToString()
+	IL_005f: ldarg.2
+	IL_0060: call string [mscorlib]System.String::Concat(string, string, string)
+	IL_0065: call class [mscorlib]System.IO.Stream __DC20211119.JIEJIEHelper::SMF_GetManifestResourceStream(class [mscorlib]System.Reflection.Assembly, string)
+	IL_006a: stloc.s 4
+	// return asm.GetManifestResourceStream(t, resourceName);
+	IL_006c: br.s IL_007a
+
+	IL_006e: ldarg.0
+	IL_006f: ldarg.1
+	IL_0070: ldarg.2
+	IL_0071: callvirt instance class [mscorlib]System.IO.Stream [mscorlib]System.Reflection.Assembly::GetManifestResourceStream(class [mscorlib]System.Type, string)
+	IL_0076: stloc.s 4
+	// (no C# code)
+	IL_0078: br.s IL_007a
+
+	IL_007a: ldloc.s 4
+	IL_007c: ret
+} // end of method JIEJIEHelper::SMF_GetManifestResourceStream2
+
+
+
 
 	.method public hidebysig static 
 		string String_Trim (
@@ -6847,8 +7080,8 @@ namespace JIEJIE
 		// Code size 65 (0x41)
 		.maxstack 1
 
-		IL_0000: ldnull
-		IL_0001: stsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+		IL_0000: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_CreateEmptyTable()
+	    IL_0005: stsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
 		IL_0006: ldtoken __DC20211119.JIEJIEHelper
 		IL_000b: call class [mscorlib]System.Type [mscorlib]System.Type::GetTypeFromHandle(valuetype [mscorlib]System.RuntimeTypeHandle)
 		IL_0010: callvirt instance class [mscorlib]System.Reflection.Assembly [mscorlib]System.Type::get_Assembly()
@@ -7106,7 +7339,7 @@ namespace JIEJIE
                 && strFeature.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
             {
                 string strSettings = strFeature.Substring(_SwitchPrefix.Length);
-                result = new JieJieSwitchs(strSettings, parent);
+                result = new JieJieSwitchs(strSettings, parent , cls );
             }
             else
             {
@@ -7124,7 +7357,7 @@ namespace JIEJIE
                                 if (cv.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
                                 {
                                     string strSettings = cv.Substring(_SwitchPrefix.Length);
-                                    result = new JieJieSwitchs(strSettings, parent);
+                                    result = new JieJieSwitchs(strSettings, parent , cls );
                                     break;
                                 }
                             }
@@ -7164,7 +7397,7 @@ namespace JIEJIE
                 && strFeature.StartsWith(_SwitchPrefix, StringComparison.OrdinalIgnoreCase))
             {
                 string strSettings = strFeature.Substring(_SwitchPrefix.Length);
-                result = new JieJieSwitchs(strSettings, parent);
+                result = new JieJieSwitchs(strSettings, parent , method.Parent);
             }
             else if (method.OperCodes != null && method.OperCodes.Count > 0)
             {
@@ -7184,7 +7417,7 @@ namespace JIEJIE
                                 "string [" + this.Document.LibName_mscorlib + "]System.String::Empty");
                             code.Value = string.Empty;
                             string strSettings = strCode.Substring(_SwitchPrefix.Length);
-                            result = new JieJieSwitchs(strSettings, parent);
+                            result = new JieJieSwitchs(strSettings, parent , method.Parent);
                             break;
                         }
                     }
@@ -7472,6 +7705,7 @@ namespace JIEJIE
                 "ldsfld",
                 "string [" + this.Document.LibName_mscorlib + "]System.String::Empty");
             var codeFields = new Dictionary<string, DCILOperCode_HandleField>();
+            var codeMethods = new Dictionary<string, DCILOperCode_HandleMethod>();
             int totalCount = 0;
             int startTick = Environment.TickCount;
 
@@ -7501,8 +7735,27 @@ namespace JIEJIE
                         {
                             ldCode.ReplaceCode = emptyILCode;
                         }
+                        else if (method.RuntimeSwitchs.HightStrings)
+                        {
+                            // 高强度加密
+                            DCILOperCode_HandleMethod codeMethod = null;
+                            if (codeMethods.TryGetValue(ldCode.Value, out codeMethod) == false)
+                            {
+                                var method2 = new DCILMethod();
+                                method2.AddStyles("public", "static");
+                                method2.IsInstance = false;
+                                method2._Name = null;
+                                method2.RuntimeSwitchs = this.Switchs;
+                                codeMethod = new DCILOperCode_HandleMethod(null, "call", method2);
+                                codeMethods[ldCode.Value] = codeMethod;
+                            }
+                            ldCode.ReplaceCode = codeMethod;
+                            ldCode.Value = null;
+                            ldCode.OperData = null;
+                        }
                         else
                         {
+                            // 普通加密字符串
                             DCILOperCode_HandleField codeField = null;
                             if (codeFields.TryGetValue(ldCode.Value, out codeField) == false)
                             {
@@ -7523,13 +7776,232 @@ namespace JIEJIE
             if (totalCount == 0)
             {
                 MyConsole.Instance.WriteLine("Do nothings.");
+                return;
             }
-            else if (codeFields.Count == 0)
+            else if (codeFields.Count == 0 && codeMethods.Count == 0)
             {
                 MyConsole.Instance.WriteLine(" Handle " + totalCount + " empty string values.");
+                return;
             }
-            else
+            if (codeMethods.Count > 0)
             {
+                // 高强度加密字符串
+                var methods = new List<DCILMethod>();
+                var strValues = new Dictionary<DCILMethod, string>();
+                foreach (var item in codeMethods)
+                {
+                    methods.Add(item.Value.LocalMethod);
+                    strValues[item.Value.LocalMethod] = item.Key;
+                }
+                DCUtils.ObfuseListOrder(methods);
+                int classCount = 0;
+                var rnd = new System.Random();
+                //string[] fieldNames = null;
+                while (methods.Count > 0)
+                {
+                    var clsName = _ClassNamePrefix + "Strings" + Convert.ToString(classCount++);
+                    var keyOffset = rnd.Next(10000, 99999);
+                    var strNewClassILCode = @"
+.class private auto ansi abstract sealed beforefieldinit MyClass extends [mscorlib]System.Object
+{
+.method private hidebysig specialname rtspecialname static void .cctor () cil managed 
+{
+	.maxstack 3
+	.locals init (
+		[0] uint8[] datas
+	)
+}// end of method
+
+.field private static initonly uint8[] _Data 
+
+.method private hidebysig static string dcsoft (
+		uint8[] datas,
+		int64 key
+	) cil managed 
+{
+	// Method begins at RVA 0x2bf4
+	// Code size 118 (0x76)
+	.maxstack 6
+	.locals init (
+		[0] int32 key2,
+		[1] int32 length,
+		[2] int32 startIndex,
+		[3] char[] 'array',
+		[4] int32 i,
+		[5] int32 index2,
+		[6] bool,
+		[7] string
+	)
+
+	// (no C# code)
+	IL_0000: nop
+	// int num = (int)(key & 0xFFFF) ^ 0x270F;
+	IL_0001: ldarg.1
+	IL_0002: ldc.i4 65535
+	IL_0007: conv.i8
+	IL_0008: and
+	IL_0009: conv.i4
+	IL_000a: ldc.i4 " + keyOffset + @"
+	IL_000f: xor
+	IL_0010: stloc.0
+	// key >>= 16;
+	IL_0011: ldarg.1
+	IL_0012: ldc.i4.s 16
+	IL_0014: shr
+	IL_0015: starg.s key
+	// int num2 = (int)(key & 0xFFFFF);
+	IL_0017: ldarg.1
+	IL_0018: ldc.i4 1048575
+	IL_001d: conv.i8
+	IL_001e: and
+	IL_001f: conv.i4
+	IL_0020: stloc.1
+	// key >>= 24;
+	IL_0021: ldarg.1
+	IL_0022: ldc.i4.s 24
+	IL_0024: shr
+	IL_0025: starg.s key
+	// int num3 = (int)key;
+	IL_0027: ldarg.1
+	IL_0028: conv.i4
+	IL_0029: stloc.2
+	// char[] array = new char[num2];
+	IL_002a: ldloc.1
+	IL_002b: newarr [mscorlib]System.Char
+	IL_0030: stloc.3
+	// int num4 = 0;
+	IL_0031: ldc.i4.0
+	IL_0032: stloc.s 4
+	// (no C# code)
+	IL_0034: br.s IL_005e
+	// loop start (head: IL_005e)
+		IL_0036: nop
+		// int num5 = num4 + num3 << 2;
+		IL_0037: ldloc.s 4
+		IL_0039: ldloc.2
+		IL_003a: add
+		IL_003b: ldc.i4.1
+		IL_003c: shl
+		IL_003d: stloc.s 5
+		// array[num4] = (char)(((datas[num5] << 8) + datas[num5 + 1]) ^ num);
+		IL_003f: ldloc.3
+		IL_0040: ldloc.s 4
+		IL_0042: ldarg.0
+		IL_0043: ldloc.s 5
+		IL_0045: ldelem.u1
+		IL_0046: ldc.i4.8
+		IL_0047: shl
+		IL_0048: ldarg.0
+		IL_0049: ldloc.s 5
+		IL_004b: ldc.i4.1
+		IL_004c: add
+		IL_004d: ldelem.u1
+		IL_004e: add
+		IL_004f: ldloc.0
+		IL_0050: xor
+		IL_0051: conv.u2
+		IL_0052: stelem.i2
+		// (no C# code)
+		IL_0053: nop
+		// num4++;
+		IL_0054: ldloc.s 4
+		IL_0056: ldc.i4.1
+		IL_0057: add
+		IL_0058: stloc.s 4
+		// num++;
+		IL_005a: ldloc.0
+		IL_005b: ldc.i4.1
+		IL_005c: add
+		IL_005d: stloc.0
+
+		// while (num4 < num2)
+		IL_005e: ldloc.s 4
+		IL_0060: ldloc.1
+		IL_0061: clt
+		IL_0063: stloc.s 6
+		IL_0065: ldloc.s 6
+		IL_0067: brtrue.s IL_0036
+	// end loop
+
+	// return new string(array);
+	IL_0069: ldloc.3
+	IL_006a: newobj instance void [mscorlib]System.String::.ctor(char[])
+	IL_006f: stloc.s 7
+	// (no C# code)
+	IL_0071: br.s IL_0073
+
+	IL_0073: ldloc.s 7
+	IL_0075: ret
+}
+}// end of class";
+                    strNewClassILCode = strNewClassILCode.Replace("[mscorlib]", "[" + this.Document.LibName_mscorlib + "]");
+                    var newClass = new DCILClass(strNewClassILCode, this.Document);
+                    newClass._Name = _ClassNamePrefix + "HightStrings" + Convert.ToString(methods.Count);
+                    var methodDecrypt = this.Document.CacheDCILInvokeMethodInfo(
+                        new DCILInvokeMethodInfo((DCILMethod)newClass.GetChildNodeByName("dcsoft")));
+                    this.Document.Classes.Add(newClass);
+                    this.Document.ClearCacheForAllClasses();
+                    this.UpdateRuntimeSwitchs_Class(newClass, this.Switchs);
+
+                    //if (fieldNames == null)
+                    //{
+                    //    fieldNames = new string[110];
+                    //    for (int iCount = 0; iCount < fieldNames.Length; iCount++)
+                    //    {
+                    //        fieldNames[iCount] = GetIndexName(iCount);// "_" + iCount.ToString();
+                    //    }
+                    //}
+                    int itemNum = Math.Min(rnd.Next(50, 100), methods.Count);
+                    var lstDatas = new List<byte>();
+                    //var lbGen = new ILLabelIDGen();
+                    var fieldRef_Data = new DCILFieldReference((DCILField)newClass.GetChildNodeByName("_Data"));
+                    for (int iCount = 0; iCount < itemNum; iCount++)
+                    {
+                        var method = methods[iCount];
+                        method._Name = GetIndexName(iCount);// fieldNames[iCount];// "_" + iCount.ToString();
+                        method.Parent = newClass;
+                        method.ReturnTypeInfo = DCILTypeReference.Type_String;
+                        method.Maxstack = 4;
+                        method.IsInstance = false;
+                        newClass.ChildNodes.Add(method);
+                        long longKey = EncryptStringValues_AddString(lstDatas, strValues[method], keyOffset);
+                        //var strValue = strValues[method];
+                        //var bsContent = System.Text.Encoding.UTF8.GetBytes(strValue);
+                        //var itemEncryptKey = rnd.Next(10000, ushort.MaxValue - 10000);
+                        //long longKey = lstDatas.Count / 2;
+                        //longKey = (longKey << 24) + strValue.Length;
+                        //longKey = (longKey << 16) + (ushort)(itemEncryptKey ^ keyOffset);
+                        //var key = itemEncryptKey;
+                        //foreach (var c in strValue)
+                        //{
+                        //    ushort v3 = (ushort)(c ^ key);
+                        //    lstDatas.Add((byte)(v3 >> 8));
+                        //    lstDatas.Add((byte)(v3 & 0xff));
+                        //    key++;
+                        //}
+                        method.Maxstack = 3;
+                        method.OperCodes = new DCILOperCodeList();
+                        method.OperCodes.Add(new DCILOperCode_HandleField(method.GenNewLabelID(), "ldsfld", fieldRef_Data));
+                        method.OperCodes.AddItem(method.GenNewLabelID(), "ldc.i8", longKey.ToString());
+                        method.OperCodes.Add(new DCILOperCode_HandleMethod(method.GenNewLabelID(), "call", methodDecrypt));
+                        method.OperCodes.AddItem(method.GenNewLabelID(), "ret");
+                    }
+                    var methodCctor = newClass.Method_Cctor;
+                    methodCctor.OperCodes = new DCILOperCodeList();
+                    methodCctor.OperCodes.AddItem(methodCctor.GenNewLabelID(), "nop");
+                    methodCctor.OperCodes.Add(this._ByteDataContainer.GetOperCode(methodCctor.GenNewLabelID(), lstDatas.ToArray()));
+                    methodCctor.OperCodes.Add(new DCILOperCode_HandleField(methodCctor.GenNewLabelID(), "stsfld", fieldRef_Data));
+                    methodCctor.OperCodes.AddItem(methodCctor.GenNewLabelID(), "ret");
+                    methods.RemoveRange(0, itemNum);
+                }//while
+                codeMethods.Clear();
+                MyConsole.Instance.WriteLine(" Handle " + totalCount + " ldstr instructions, "
+                    + strValues.Count + " height string values , span "
+                    + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
+            }
+            if (codeFields.Count > 0)
+            {
+                // 普通加密字符串
                 var fields = new List<DCILField>();
                 var strValues = new Dictionary<DCILField, string>();
                 foreach (var item in codeFields)
@@ -7683,7 +8155,7 @@ namespace JIEJIE
                     newClass.Method_Cctor.OperCodes = operCodes;
                     var methodCctor = newClass.Method_Cctor;
                     var methodDecrypt = this.Document.CacheDCILInvokeMethodInfo(
-                        new DCILInvokeMethodInfo((DCILMethod)newClass.ChildNodes.GetByName("dcsoft")));
+                        new DCILInvokeMethodInfo((DCILMethod)newClass.GetChildNodeByName("dcsoft")));
 
                     this.Document.Classes.Add(newClass);
                     this.Document.ClearCacheForAllClasses();
@@ -7706,20 +8178,21 @@ namespace JIEJIE
                         field._Name = GetIndexName(iCount);// fieldNames[iCount];// "_" + iCount.ToString();
                         field.Parent = newClass;
                         newClass.ChildNodes.Add(field);
-                        var strValue = strValues[field];
-                        var bsContent = System.Text.Encoding.UTF8.GetBytes(strValue);
-                        var itemEncryptKey = rnd.Next(10000, ushort.MaxValue - 10000);
-                        long longKey = lstDatas.Count / 2;
-                        longKey = (longKey << 24) + strValue.Length;
-                        longKey = (longKey << 16) + (ushort)(itemEncryptKey ^ keyOffset);
-                        var key = itemEncryptKey;
-                        foreach (var c in strValue)
-                        {
-                            ushort v3 = (ushort)(c ^ key);
-                            lstDatas.Add((byte)(v3 >> 8));
-                            lstDatas.Add((byte)(v3 & 0xff));
-                            key++;
-                        }
+                        var longKey = EncryptStringValues_AddString(lstDatas, strValues[field], keyOffset);
+                        //var strValue = strValues[field];
+                        //var bsContent = System.Text.Encoding.UTF8.GetBytes(strValue);
+                        //var itemEncryptKey = rnd.Next(10000, ushort.MaxValue - 10000);
+                        //long longKey = lstDatas.Count / 2;
+                        //longKey = (longKey << 24) + strValue.Length;
+                        //longKey = (longKey << 16) + (ushort)(itemEncryptKey ^ keyOffset);
+                        //var key = itemEncryptKey;
+                        //foreach (var c in strValue)
+                        //{
+                        //    ushort v3 = (ushort)(c ^ key);
+                        //    lstDatas.Add((byte)(v3 >> 8));
+                        //    lstDatas.Add((byte)(v3 & 0xff));
+                        //    key++;
+                        //}
                         operCodes.AddItem(methodCctor.GenNewLabelID(), "ldloc.0");
                         operCodes.AddItem(methodCctor.GenNewLabelID(), "ldc.i8", longKey.ToString());
                         operCodes.Add(new DCILOperCode_HandleMethod(methodCctor.GenNewLabelID(), "call", methodDecrypt));
@@ -7736,11 +8209,30 @@ namespace JIEJIE
                     }
                 }//while
                 codeFields.Clear();
-                MyConsole.Instance.WriteLine(" Handle " + totalCount + " ldstr instructions, " 
+                MyConsole.Instance.WriteLine(" Handle " + totalCount + " ldstr instructions, "
                     + strValues.Count + " string values , span "
                     + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
             }
         }
+
+        private long EncryptStringValues_AddString( List<byte> lstDatas, string strValue , int keyOffset )
+        {
+            var bsContent = System.Text.Encoding.UTF8.GetBytes(strValue);
+            var itemEncryptKey = _Random.Next(10000, ushort.MaxValue - 10000);
+            long longKey = lstDatas.Count / 2;
+            longKey = (longKey << 24) + strValue.Length;
+            longKey = (longKey << 16) + (ushort)(itemEncryptKey ^ keyOffset);
+            var key = itemEncryptKey;
+            foreach (var c in strValue)
+            {
+                ushort v3 = (ushort)(c ^ key);
+                lstDatas.Add((byte)(v3 >> 8));
+                lstDatas.Add((byte)(v3 & 0xff));
+                key++;
+            }
+            return longKey;
+        }
+
         /// <summary>
         /// 需要进行加密的资源名称，支持正则表达式
         /// </summary>
@@ -7777,7 +8269,7 @@ namespace JIEJIE
                     }
                 }
             }
-            if (isCancel || this.Switchs.ControlFlow == false)
+            if (isCancel || this.Switchs.Resources == false )
             {
                 // 不需要处理任何数据,删除无用的功能模块
                 for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
@@ -7795,22 +8287,34 @@ namespace JIEJIE
                 return;
             }
             // 收集要处理的数据
-            var datas = new Dictionary<string, DCILMResource>();
-            System.Text.RegularExpressions.Regex nameRegex = null;
-            if (this.ResourceNameNeedEncrypt != null && this.ResourceNameNeedEncrypt.Length > 0)
+            var datas = new SortedDictionary<string, DCILMResource>();
+            EntryNameSettingList resNameEncrypt = null;
+            if(this.ResourceNameNeedEncrypt != null && this.ResourceNameNeedEncrypt.Length > 0 )
             {
-                nameRegex = new System.Text.RegularExpressions.Regex(this.ResourceNameNeedEncrypt);
+                resNameEncrypt = new EntryNameSettingList(this.ResourceNameNeedEncrypt);
             }
             foreach (var item in this.Document.Resouces)
             {
-                if (nameRegex != null && nameRegex.IsMatch(item.Key))
+                var resName = DCUtils.CleanSurroundingSemicolon(item.Key);
+                //if(resName.Contains(".exe"))
+                //{
+
+                //}
+                if (resNameEncrypt != null)
                 {
-                    // 匹配正则表达式
-                    datas[item.Key] = item.Value;
+                    var item2 = resNameEncrypt.GetItem(resName);
+                    if (item2 != null)
+                    {
+                        if (item2.IsInclude)
+                        {
+                            datas[item.Key] = item.Value;
+                        }
+                        continue;
+                    }
                 }
-                else if (item.Key.EndsWith(".resources", StringComparison.OrdinalIgnoreCase) == false
-                    && item.Key.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) == false
-                    && item.Key.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) == false
+                if (resName.EndsWith(".resources", StringComparison.OrdinalIgnoreCase) == false
+                    && resName.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) == false
+                    && resName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) == false
                     && item.Value.Data != null
                     && item.Value.Data.Length > 0)
                 {
@@ -7862,7 +8366,7 @@ namespace JIEJIE
                         if (newMethodName != null)
                         {
                             targetMethod = targetMethod.Clone();
-                            targetMethod.LocalMethod = (DCILMethod)this._Type_JIEJIEHelper.LocalClass.ChildNodes.GetByName(newMethodName);
+                            targetMethod.LocalMethod = (DCILMethod)this._Type_JIEJIEHelper.LocalClass.GetChildNodeByName(newMethodName);
                             targetMethod.OwnerType = this._Type_JIEJIEHelper;
                             targetMethod.IsInstance = false;
                             hmcode.SetOperCode("call");
@@ -7877,7 +8381,8 @@ namespace JIEJIE
                 // 不需要处理任何数据,删除无用的功能模块
                 for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
                 {
-                    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_"))
+                    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_")
+                        || rootCls.ChildNodes[iCount].Name == "__SMF_Contents")
                     {
                         rootCls.ChildNodes.RemoveAt(iCount);
                     }
@@ -7887,12 +8392,15 @@ namespace JIEJIE
                 {
                     rootCls.NestedClasses.Remove(cls2);
                 }
+                var operCodes = rootCls.Method_Cctor.OperCodes;
+                operCodes.RemoveAt(0);
+                operCodes.RemoveAt(0);
                 MyConsole.Instance.WriteLine(" Do nothing.");
             }
             else
             {
                 byte xorKey = (byte)(new System.Random().Next(100, 233));
-                var methodRead = rootCls.GetNestedClass("SMF_ResStream")?.ChildNodes.GetByName("Read") as DCILMethod;
+                var methodRead = rootCls.GetNestedClass("SMF_ResStream")?.GetChildNodeByName("Read") as DCILMethod;
                 if (methodRead != null)
                 {
                     foreach (var item in methodRead.OperCodes)
@@ -7904,20 +8412,34 @@ namespace JIEJIE
                         }
                     }
                 }
-                var methodInitContent = (DCILMethod)rootCls.ChildNodes.GetByName("SMF_InitContent");
-                var codesInit = methodInitContent.OperCodes;
-                codesInit.Clear();
-                //var lbGen = new ILLabelIDGen();
-                codesInit.AddItem(methodInitContent.GenNewLabelID(), "nop");
+                var methodCreateEmtpy = (DCILMethod)rootCls.GetChildNodeByName("SMF_CreateEmptyTable");
+                methodCreateEmtpy.OperCodes.Clear();
+                methodCreateEmtpy.OperCodes.AddItem( methodCreateEmtpy.GenNewLabelID() , "newobj" , "instance void class [" +this.Document.LibName_mscorlib + "]System.Collections.Generic.Dictionary`2<string, uint8[]>::.ctor()");
+              
+                var methodGetContent = (DCILMethod)rootCls.GetChildNodeByName("SMF_GetContent");
+                var codesGetContent = methodGetContent.OperCodes;
+                codesGetContent.Clear();
+                codesGetContent.AddItem(methodGetContent.GenNewLabelID(), "nop");
+                string firstLabelID = methodGetContent.GenNewLabelID();
+                var initTableCodes = new DCILOperCodeList();
+                MyConsole.Instance.WriteLine();
                 foreach (var item in datas)
                 {
-                    codesInit.AddItem(methodInitContent.GenNewLabelID(), "ldarg.0");
-                    var resName = item.Key;
-                    if (resName.StartsWith("'"))
-                    {
-                        resName = resName.Substring(1, resName.Length - 2);
-                    }
-                    codesInit.Add(new DCILOperCode_LoadString(methodInitContent.GenNewLabelID(), resName));
+                    codesGetContent.AddItem(firstLabelID, "ldarg.0");
+                    var resName = DCUtils.CleanSurroundingSemicolon( item.Key );
+
+                    MyConsole.Instance.WriteLine("    Processing " + resName);
+
+                    methodCreateEmtpy.OperCodes.AddItem(methodCreateEmtpy.GenNewLabelID(), "dup");
+                    methodCreateEmtpy.OperCodes.Add(new DCILOperCode_LoadString(methodCreateEmtpy.GenNewLabelID(), resName));
+                    methodCreateEmtpy.OperCodes.AddItem(methodCreateEmtpy.GenNewLabelID(), "ldnull");
+                    methodCreateEmtpy.OperCodes.AddItem(methodCreateEmtpy.GenNewLabelID(), "callvirt", "instance void class [" + this.Document.LibName_mscorlib + "]System.Collections.Generic.Dictionary`2<string, uint8[]>::Add(!0, !1)");
+
+                    codesGetContent.Add(new DCILOperCode_LoadString(methodGetContent.GenNewLabelID(), resName));
+                    codesGetContent.Add(new DCILOperCode(methodGetContent.GenNewLabelID(), "call", "bool [" + this.Document.LibName_mscorlib + "]System.String::Equals(string, string)"));
+                    firstLabelID = methodGetContent.GenNewLabelID();
+                    codesGetContent.Add(new DCILOperCode(methodGetContent.GenNewLabelID(), "brfalse", firstLabelID));
+
                     var data = item.Value.Data;
                     for (int iCount = 0; iCount < data.Length; iCount++)
                     {
@@ -7946,13 +8468,17 @@ namespace JIEJIE
                     var bsLen = BitConverter.GetBytes(gzipLen);
                     Array.Copy(bsLen, dataWrite, 4);
                     Array.Copy(data, 0, dataWrite, 4, data.Length);
-                    codesInit.Add(this._ByteDataContainer.GetOperCode(methodInitContent.GenNewLabelID(), dataWrite));
-                    codesInit.AddItem(methodInitContent.GenNewLabelID(), "callvirt", "instance void class [" + this.Document.LibName_mscorlib + "]System.Collections.Generic.Dictionary`2<string, uint8[]>::set_Item(!0, !1)");
-                    codesInit.AddItem(methodInitContent.GenNewLabelID(), "nop");
+                    codesGetContent.Add(this._ByteDataContainer.GetOperCode(methodGetContent.GenNewLabelID(), dataWrite));
+                    //codesGetContent.AddItem(methodGetContent.GenNewLabelID(), "callvirt", "instance void class [" + this.Document.LibName_mscorlib + "]System.Collections.Generic.Dictionary`2<string, uint8[]>::set_Item(!0, !1)");
+                    codesGetContent.AddItem(methodGetContent.GenNewLabelID(), "ret");
                     item.Value.Dispose();
                     this.Document.Resouces.Remove(item.Key);
                 }
-                codesInit.AddItem(methodInitContent.GenNewLabelID(), "ret");
+
+                methodCreateEmtpy.OperCodes.AddItem(methodCreateEmtpy.GenNewLabelID(), "ret");
+
+                codesGetContent.AddItem(firstLabelID, "ldnull");
+                codesGetContent.AddItem(methodGetContent.GenNewLabelID(), "ret");
                 MyConsole.Instance.WriteLine(" encrypt " + datas.Count + " resources ,span " + Math.Abs(Environment.TickCount - startTick) + " milliseconds.");
             }
         }
@@ -8185,7 +8711,7 @@ namespace JIEJIE
                 var addOperCode = new DCILOperCode(null, "callvirt", "instance void class " + strListTypeName + "<valuetype [" + this.Document.LibName_mscorlib + "]System.RuntimeTypeHandle>::Add(!0)");
                 var method_Cctor = clsContainer.Method_Cctor;
                 var operCodes = method_Cctor.OperCodes;
-                var methodGetHandle = (DCILMethod)clsContainer.ChildNodes.GetByName("GetTypeInstance");
+                var methodGetHandle = (DCILMethod)clsContainer.GetChildNodeByName("GetTypeInstance");
                 //var labelGen = new ILLabelIDGen();
                 methodGetHandle.CacheInfo(this.Document, this.Document.GetAllClassesUseCache());
                 operCodes.Clear();
@@ -8208,7 +8734,7 @@ namespace JIEJIE
                     }
                 }
                 operCodes.Add(new DCILOperCode(method_Cctor.GenNewLabelID(), "callvirt", "instance !0[] class " + strListTypeName + "<valuetype [" + this.Document.LibName_mscorlib + "]System.RuntimeTypeHandle>::ToArray()"));
-                operCodes.Add(new DCILOperCode_HandleField(method_Cctor.GenNewLabelID(), "stsfld", new DCILFieldReference((DCILField)clsContainer.ChildNodes.GetByName("_Handles"))));
+                operCodes.Add(new DCILOperCode_HandleField(method_Cctor.GenNewLabelID(), "stsfld", new DCILFieldReference((DCILField)clsContainer.GetChildNodeByName("_Handles"))));
                 operCodes.Add(new DCILOperCode(method_Cctor.GenNewLabelID(), "ret", null));
                 //ObfuscateMethodOperCodes(clsContainer.Method_Cctor);
                 this.Document.ClearCacheForAllClasses();
@@ -8302,7 +8828,7 @@ namespace JIEJIE
                 this._Class.OwnerDocument = document;
                 this._Class.RuntimeSwitchs = eng.Switchs;
                 document.ClearCacheForAllClasses();
-                this._Method_GetHandle = (DCILMethod)this._Class.ChildNodes.GetByName("GetHandle");
+                this._Method_GetHandle = (DCILMethod)this._Class.GetChildNodeByName("GetHandle");
                 this._RFH = new DCILTypeReference(typeof(System.RuntimeFieldHandle), document);
             }
             public void Dispose()
@@ -8344,7 +8870,7 @@ namespace JIEJIE
                     operCodes.Add(new DCILOperCode(method.GenNewLabelID(), "callvirt", strAddCode));
                 }
                 operCodes.Add(new DCILOperCode(method.GenNewLabelID(), "callvirt", "instance !0[] class " + strListTypeName + "<valuetype [" + doc.LibName_mscorlib + "]System.RuntimeFieldHandle>::ToArray()"));
-                operCodes.Add(new DCILOperCode_HandleField(method.GenNewLabelID(), "stsfld", new DCILFieldReference((DCILField)this._Class.ChildNodes.GetByName("_Handles"))));
+                operCodes.Add(new DCILOperCode_HandleField(method.GenNewLabelID(), "stsfld", new DCILFieldReference((DCILField)this._Class.GetChildNodeByName("_Handles"))));
                 operCodes.Add(new DCILOperCode(method.GenNewLabelID(), "ret", null));
                 if(eng.Switchs.ControlFlow)
                 {
@@ -9257,13 +9783,20 @@ namespace JIEJIE
             {
                 throw new ArgumentNullException("method");
             }
-            this.OwnerType = new DCILTypeReference((DCILClass)method.Parent);
+            if (method.Parent != null)
+            {
+                this.OwnerType = new DCILTypeReference((DCILClass)method.Parent);
+            }
             this.LocalMethod = method;
             this.ReturnType = method.ReturnTypeInfo;
             this.Paramters = method.Parameters;
             this.MethodName = method.Name;
             this.SimpleMode = simpleMode;
-            this.OwnerType = new DCILTypeReference((DCILClass)method.Parent);
+            if (method.Parent != null)
+            {
+                this.OwnerType = new DCILTypeReference((DCILClass)method.Parent);
+            }
+            this.IsInstance = method.IsInstance;
         }
 
         public DCILInvokeMethodInfo(DCILReader reader, bool simpleMode = false)
@@ -13173,12 +13706,14 @@ namespace JIEJIE
             this.LabelID = labelID;
             this.SetOperCode(code);
             this.InvokeInfo = new DCILInvokeMethodInfo( method );
+            this.LocalMethod = method;
         }
         public DCILOperCode_HandleMethod(string labelID, string code, DCILInvokeMethodInfo method)
         {
             this.LabelID = labelID;
             this.SetOperCode(code);
             this.InvokeInfo = method;
+            this.LocalMethod = this.InvokeInfo.LocalMethod;
         }
         //public DCILOperCode_HandleMethod(string code, DCILReader reader)
         //{
@@ -13335,6 +13870,8 @@ namespace JIEJIE
         public List<DCILCatchBlock> _Catchs = null;
         public DCILObject _Finally = null;
         public DCILObject _fault = null;
+        public DCILObject _Filter = null;
+
         public override DCILOperCode Clone(string newLabelID)
         {
             return base.Clone(newLabelID);
@@ -13382,6 +13919,11 @@ namespace JIEJIE
                 this._fault.Dispose();
                 this._fault = null;
             }
+            if(this._Filter != null )
+            {
+                this._Filter.Dispose();
+                this._Filter = null;
+            }
         }
         public int TotalOperCodesCount
         {
@@ -13407,6 +13949,10 @@ namespace JIEJIE
                 {
                     result += this._fault.TotalOperCodesCount;
                 }
+                if( this._Filter != null )
+                {
+                    result += this._Filter.TotalOperCodesCount;
+                }
                 return result;
             }
         }
@@ -13415,6 +13961,10 @@ namespace JIEJIE
             var str = new StringBuilder();
 
             WriteText(str, "try", this._Try.OperCodes);
+            if( this._Filter != null )
+            {
+                WriteText(str, "filter" , this._Filter.OperCodes);
+            }
             if (this._Catchs != null && this._Catchs.Count > 0)
             {
                 foreach (var item in this._Catchs)
@@ -13459,13 +14009,28 @@ namespace JIEJIE
                 item.WriteTo(writer);
             }
             writer.WriteEndGroup();
-
+            if( this._Filter != null )
+            {
+                writer.WriteLine("filter");
+                writer.WriteStartGroup();
+                foreach( var item in this._Filter.OperCodes )
+                {
+                    item.WriteTo(writer);
+                }
+                writer.WriteEndGroup();
+            }
             if (this._Catchs != null && this._Catchs.Count > 0)
             {
                 foreach (var item in this._Catchs)
                 {
-                    writer.Write("catch ");
-                    item.ExcpetionType.WriteTo(writer, false);
+                    if (this._Filter == null)
+                    {
+                        writer.Write("catch ");
+                        if (item.ExcpetionType != null)
+                        {
+                            item.ExcpetionType.WriteTo(writer, false);
+                        }
+                    }
                     writer.WriteLine();
                     writer.WriteStartGroup();
                     foreach (var item2 in item.OperCodes)
@@ -15898,7 +16463,24 @@ namespace JIEJIE
             }
             return null;
         }
-
+        public DCILObject GetChildNodeByName(string name)
+        {
+            if (name == null || name.Length == 0)
+            {
+                throw new ArgumentNullException("name");
+            }
+            if( this.ChildNodes != null )
+            {
+                foreach( var item in this.ChildNodes )
+                {
+                    if( item.Name == name )
+                    {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
         public List<DCILTypeReference> ImplementsInterfaces = null;
         public List<int> FieldLineIndexs = new List<int>();
         public bool Modified = false;
@@ -17487,17 +18069,17 @@ namespace JIEJIE
             return false;
         }
 
-        public DCILObject GetByName( string name )
-        {
-            foreach( var item in this )
-            {
-                if(item.Name == name )
-                {
-                    return item;
-                }
-            }
-            return null;
-        }
+        //public DCILObject GetByName( string name )
+        //{
+        //    foreach( var item in this )
+        //    {
+        //        if(item.Name == name )
+        //        {
+        //            return item;
+        //        }
+        //    }
+        //    return null;
+        //}
         //public int IndexOf<T>(string name) where T : DCILObject
         //{
         //    int len = this.Count;
@@ -19552,7 +20134,18 @@ namespace JIEJIE
             this.Parent = parent;
             this.Load(reader);
             this.HasGenericStyle = GetHasGenericStyle();
+            if( this.Name == "SMF_CreateEmptyTable")
+            {
 
+            }
+            //if ( parent.IsInterface == false
+            //    && this.IsAbstract == false
+            //    && ( this.OperCodes == null || this.OperCodes.Count == 0 ) 
+            //    && parent.BaseType.Name != "System.MulticastDelegate"
+            //    && this.Pinvokeimpl == null )
+            //{
+
+            //}
         }
 
         private static readonly List<string> _NewLabelIDList = new List<string>();
@@ -20299,10 +20892,33 @@ namespace JIEJIE
                 rootObject.OperCodes = null;
             }
             DCILOperCodeList operInfoList = rootObject.OperCodes;
+            bool lastIsFilter = false;
             while (reader.HasContentLeft())
             {
                 int pos = reader.Position;
                 var strWord = reader.ReadWord();
+
+                if (lastIsFilter)
+                {
+                    lastIsFilter = false;
+                    if (strWord == "{")
+                    {
+                        var tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList.LastCode;
+                        if (tryBlock != null && tryBlock._Filter != null)
+                        {
+                            var catch2 = new DCILCatchBlock();
+                            catch2.Parent = rootObject;
+                            if (tryBlock._Catchs == null)
+                            {
+                                tryBlock._Catchs = new List<DCILCatchBlock>();
+                            }
+                            tryBlock._Catchs.Add(catch2);
+                            InnerLoadILOperCode(catch2, reader);
+                            reader.NumOfOperCode++;
+                            continue;
+                        }
+                    }
+                }
                 if (strWord.StartsWith("IL_", StringComparison.Ordinal))
                 {
                     // 开始读取IL指令
@@ -20370,17 +20986,17 @@ namespace JIEJIE
                             break;
                         default:
                             {
-                                if( myDefine.WithoutOperData)// DCILOperCode.WithoutOperData( strOperCode))
+                                if (myDefine.WithoutOperData)// DCILOperCode.WithoutOperData( strOperCode))
                                 {
                                     operInfoList.AddItem(labelID, myDefine);
                                     reader.MoveNextLine();
                                     break;
                                 }
-                                if(myDefine.ExtCodeType == ILOperCodeType.LoadNumberByOperData )
+                                if (myDefine.ExtCodeType == ILOperCodeType.LoadNumberByOperData)
                                 {
                                     reader.SkipLineWhitespace();
                                     var nc = reader.Peek();
-                                    if( nc >='0' && nc <='9')
+                                    if (nc >= '0' && nc <= '9')
                                     {
                                         var strOperData2 = reader.ReadWord();
                                         operInfoList.AddItem(labelID, myDefine, strOperData2);
@@ -20393,14 +21009,14 @@ namespace JIEJIE
                                     }
                                 }
                                 var strOperData = reader.ReadLineTrim();
-                                if( myDefine.Value == DCILOpCodeValue.Ldc_R8)// strOperCode == "ldc.r8")
+                                if (myDefine.Value == DCILOpCodeValue.Ldc_R8)// strOperCode == "ldc.r8")
                                 {
                                     //var sss = DCUtils.ToHexString(BitConverter.GetBytes(float.NaN));
-                                    if ( strOperData == "-nan(ind)")
+                                    if (strOperData == "-nan(ind)")
                                     {
                                         strOperData = DCUtils.ToHexString(BitConverter.GetBytes(double.NaN));// "(00 00 00 00 00 00 F8 FF)";
                                     }
-                                    else if( strOperData == "-inf")
+                                    else if (strOperData == "-inf")
                                     {
                                         strOperData = DCUtils.ToHexString(BitConverter.GetBytes(double.NegativeInfinity));// "(00 00 00 00 00 00 F0 FF)";
                                     }
@@ -20409,7 +21025,7 @@ namespace JIEJIE
                                         strOperData = DCUtils.ToHexString(BitConverter.GetBytes(double.PositiveInfinity)); //"(00 00 00 00 00 00 F0 7F)";
                                     }
                                 }
-                                else if(myDefine.Value == DCILOpCodeValue.Ldc_R4)//strOperCode == "ldc.r4")
+                                else if (myDefine.Value == DCILOpCodeValue.Ldc_R4)//strOperCode == "ldc.r4")
                                 {
                                     if (strOperData == "-nan(ind)")
                                     {
@@ -20424,17 +21040,19 @@ namespace JIEJIE
                                         strOperData = DCUtils.ToHexString(BitConverter.GetBytes(float.PositiveInfinity)); //"(00 00 00 00 00 00 F0 7F)";
                                     }
                                 }
-                                operInfoList.AddItem(labelID, myDefine , strOperData);
+                                operInfoList.AddItem(labelID, myDefine, strOperData);
                             }
                             break;
                     }
 
                     reader.NumOfOperCode++;
                 }
+                
                 else if (strWord == ".try"
                     || strWord == "catch"
                     || strWord == "finally"
-                    || strWord == "fault")
+                    || strWord == "fault"
+                    || strWord == "filter")
                 {
 
                     DCILOperCode_Try_Catch_Finally tryBlock = null;
@@ -20459,7 +21077,7 @@ namespace JIEJIE
                     }
                     else if (strWord == "catch")
                     {
-                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList[operInfoList.Count - 1];
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList.LastCode;
                         var catch2 = new DCILCatchBlock();
                         catch2.ExcpetionType = DCILTypeReference.Load("class", reader);
                         catch2.Parent = rootObject;
@@ -20470,9 +21088,20 @@ namespace JIEJIE
                         tryBlock._Catchs.Add(catch2);
                         InnerLoadILOperCode(catch2, reader);
                     }
+                    else if (strWord == "filter")
+                    {
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList.LastCode;
+                        var filter = new DCILObject();
+                        filter._Name = "fiter";
+                        filter.OperCodes = new DCILOperCodeList();
+                        filter.Parent = rootObject;
+                        tryBlock._Filter = filter;
+                        InnerLoadILOperCode(filter, reader);
+                        lastIsFilter = true;
+                    }
                     else if (strWord == "fault")
                     {
-                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList[operInfoList.Count - 1];
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList.LastCode;
                         tryBlock._fault = new DCILObject();
                         tryBlock._fault._Name = "fault";
                         tryBlock._fault.OperCodes = new DCILOperCodeList();
@@ -20481,7 +21110,7 @@ namespace JIEJIE
                     }
                     else // finally
                     {
-                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList[operInfoList.Count - 1];
+                        tryBlock = (DCILOperCode_Try_Catch_Finally)operInfoList.LastCode;
                         tryBlock._Finally = new DCILObject();
                         tryBlock._Finally._Name = "finally";
                         tryBlock._Finally.OperCodes = new DCILOperCodeList();
@@ -20568,7 +21197,7 @@ namespace JIEJIE
                                 this.Locals.Add(pinfo);
                             }
                             char endChar = char.MinValue;
-                            pinfo.Name = DCUtils.GetStringUseTable( reader.ReadAfterCharsExcludeLastChar(",)", out endChar).Trim() );
+                            pinfo.Name = DCUtils.GetStringUseTable(reader.ReadAfterCharsExcludeLastChar(",)", out endChar).Trim());
 
                             if (endChar == ')')
                             {
@@ -21764,6 +22393,27 @@ namespace JIEJIE
 
     internal static class DCUtils
     {
+        /// <summary>
+        /// 去除文本两边的分号
+        /// </summary>
+        /// <param name="text">文本</param>
+        /// <returns>处理后的文本</returns>
+        public static string CleanSurroundingSemicolon(string text)
+        {
+            if (text != null && text.Length > 0)
+            {
+                if (text[0] == '\'' && text[text.Length - 1] == '\'')
+                {
+                    return text.Substring(1, text.Length - 2);
+                }
+                else if (text[0] == '"' && text[text.Length - 1] == '"')
+                {
+                    return text.Substring(1, text.Length - 2);
+                }
+            }
+            return text;
+        }
+
         /// <summary>
         /// 获得程序集支持的所有的用户界面语言的数组
         /// </summary>
@@ -23014,57 +23664,86 @@ namespace __DC20211119
                 throw new NotImplementedException();
             }
         }
- 
 
-        private static Dictionary<string, byte[]> __SMF_Contents = null;
+
+        private static readonly Dictionary<string, byte[]> __SMF_Contents = SMF_CreateEmptyTable();
+        private static Dictionary<string, byte[]> SMF_CreateEmptyTable()
+        {
+            var table = new Dictionary<string, byte[]>();
+            table["aaaaaaa"] = null;
+            table["bbbbbbbbbbb"] = null;
+            return table;
+        }
         private static readonly System.Reflection.Assembly ThisAssembly = typeof(JIEJIEHelper).Assembly;
         
-        private static Dictionary<string, byte[]> SMF_GetContents()
-        {
-            var result = __SMF_Contents;
-            if( result == null )
-            {
-                result = new Dictionary<string, byte[]>();
-                SMF_InitContent(result);
-                __SMF_Contents = result;
-            }
-            return result;
-        }
+        //private static Dictionary<string, byte[]> SMF_GetContents()
+        //{
+        //    var result = __SMF_Contents;
+        //    if( result == null )
+        //    {
+        //        result = new Dictionary<string, byte[]>();
+        //        SMF_InitContent(result);
+        //        __SMF_Contents = result;
+        //    }
+        //    return result;
+        //}
 
-        private static void SMF_InitContent(Dictionary<string,byte[]> contents )
-        {
-            //contents["aaa"] = BitConverter.GetBytes(20222);
-        }
+        //private static void SMF_InitContent(Dictionary<string,byte[]> contents )
+        //{
+        //    //contents["aaa"] = BitConverter.GetBytes(20222);
+        //}
 
         public static System.Reflection.ManifestResourceInfo SMF_GetManifestResourceInfo( System.Reflection.Assembly asm , string resourceName )
         {
-            if (ThisAssembly.Equals(asm))
+            if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
             {
-                var dic = SMF_GetContents();
-                if (dic.ContainsKey( resourceName ))
+                if (__SMF_Contents.ContainsKey( resourceName ))
                 {
                     return new ManifestResourceInfo(asm, resourceName, ResourceLocation.Embedded);
                 }
             }
             return asm.GetManifestResourceInfo(resourceName);
         }
+        private static byte[] aaaa()
+        {
+            return null;
+        }
+        private static byte [] bbbbbbb()
+        {
+            return null;
+        }
+        private static byte[] SMF_GetContent( string name )
+        {
+            if(name == "1111111111")
+            {
+                return aaaa();
+            }
+            if(name == "22222222")
+            {
+                return bbbbbbb();
+            }
+            return null;
+        }
         public static string[] SMF_GetManifestResourceNames( System.Reflection.Assembly asm )
         {
-            if (ThisAssembly.Equals(asm))
+            if (ThisAssembly.Equals(asm) && __SMF_Contents != null )
             {
-                var dic = SMF_GetContents();
-                return new List<string>(dic.Keys).ToArray();
+                return new List<string>(__SMF_Contents.Keys).ToArray();
             }
             return asm.GetManifestResourceNames();
         }
         public static System.IO.Stream SMF_GetManifestResourceStream(System.Reflection.Assembly asm, string resourceName)
         {
-            if ( ThisAssembly.Equals( asm ))
+            if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
             {
-                var dic = SMF_GetContents();
                 byte[] bsContent = null;
-                if (dic.TryGetValue(resourceName, out bsContent))
+                if (__SMF_Contents.TryGetValue(resourceName, out bsContent))
                 {
+                    if (bsContent == null)
+                    {
+                        bsContent = SMF_GetContent(resourceName);
+                        __SMF_Contents[resourceName] = bsContent;
+                    }
                     return new SMF_ResStream(bsContent);
                 }
             }
