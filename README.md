@@ -2,6 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br/> 2022-4-13 : Fix bug while working with VS.NET.
 <br/> 2022-3-7  : Support `filter{}`.
 <br/> 2022-2-17 : Add Windows GUI.
 <br/> 2022-2-9  : More powerfull obfuscate control flow.
@@ -1002,7 +1003,7 @@ My new tool is a .NET framework console  application.
 
 ```
 
-## So many cool features! But JieJie.NET only has 20000 lines C# source code!
+## So many cool features! But JieJie.NET only has 24000 lines C# source code!
    
    So it is small and without any third party component.
 

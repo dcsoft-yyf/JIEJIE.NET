@@ -5779,7 +5779,8 @@ namespace JIEJIE
 	// Method begins at RVA 0x2050
 	// Code size 30 (0x1e)
 	.maxstack 8
-    IL_0000: ret
+    IL_0001: newobj instance void class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::.ctor()
+    IL_0002: ret
 } // end of method JIEJIEHelper::SMF_CreateEmptyTable
 
 
@@ -7264,9 +7265,9 @@ namespace JIEJIE
                     }
                 }
             }
-            if (cls.IsValueType)
+            if (cls.IsValueType || cls.IsEnum )
             {
-                // 对于结构体不混淆成员次序
+                // 对于结构体和枚举类型，不混淆成员次序
                 return;
             }
 
