@@ -5880,52 +5880,50 @@ namespace JIEJIE
 		class [mscorlib]System.Reflection.Assembly asm
 	) cil managed 
 {
-	// Method begins at RVA 0x20b8
-	// Code size 64 (0x40)
+	// Method begins at RVA 0x20d4
+	// Code size 67 (0x43)
 	.maxstack 2
 	.locals init (
-		[0] bool,
-		[1] string[]
+		[0] class [mscorlib]System.Collections.Generic.List`1<string> list,
+		[1] string[] names2
 	)
 
-	// {
-	IL_0000: nop
 	// if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
-	IL_0001: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
-	IL_0006: ldarg.0
-	IL_0007: callvirt instance bool [mscorlib]System.Object::Equals(object)
-	IL_000c: brfalse.s IL_0018
+	IL_0000: ldsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+	IL_0005: ldarg.0
+	IL_0006: callvirt instance bool [mscorlib]System.Object::Equals(object)
+	IL_000b: brfalse.s IL_003c
 
-	IL_000e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
-	IL_0013: ldnull
-	IL_0014: cgt.un
-	IL_0016: br.s IL_0019
+	IL_000d: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0012: brfalse.s IL_003c
 
-	// (no C# code)
-	IL_0018: ldc.i4.0
+	// List<string> list = new List<string>(__SMF_Contents.Keys);
+	IL_0014: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_0019: callvirt instance class [mscorlib]System.Collections.Generic.Dictionary`2/KeyCollection<!0, !1> class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::get_Keys()
+	IL_001e: newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor(class [mscorlib]System.Collections.Generic.IEnumerable`1<!0>)
+	IL_0023: stloc.0
+	// string[] manifestResourceNames = asm.GetManifestResourceNames();
+	IL_0024: ldarg.0
+	IL_0025: callvirt instance string[] [mscorlib]System.Reflection.Assembly::GetManifestResourceNames()
+	IL_002a: stloc.1
+	// if (manifestResourceNames != null)
+	IL_002b: ldloc.1
+	IL_002c: brfalse.s IL_0035
 
-	IL_0019: stloc.0
-	IL_001a: ldloc.0
-	IL_001b: brfalse.s IL_0035
+	// list.AddRange(manifestResourceNames);
+	IL_002e: ldloc.0
+	IL_002f: ldloc.1
+	IL_0030: callvirt instance void class [mscorlib]System.Collections.Generic.List`1<string>::AddRange(class [mscorlib]System.Collections.Generic.IEnumerable`1<!0>)
 
-	// return new List<string>(__SMF_Contents.Keys).ToArray();
-	IL_001d: nop
-	IL_001e: ldsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
-	IL_0023: callvirt instance class [mscorlib]System.Collections.Generic.Dictionary`2/KeyCollection<!0, !1> class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]>::get_Keys()
-	IL_0028: newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor(class [mscorlib]System.Collections.Generic.IEnumerable`1<!0>)
-	IL_002d: call instance !0[] class [mscorlib]System.Collections.Generic.List`1<string>::ToArray()
-	IL_0032: stloc.1
+	// return list.ToArray();
+	IL_0035: ldloc.0
+	IL_0036: callvirt instance !0[] class [mscorlib]System.Collections.Generic.List`1<string>::ToArray()
+	IL_003b: ret
+
 	// return asm.GetManifestResourceNames();
-	IL_0033: br.s IL_003e
-
-	IL_0035: ldarg.0
-	IL_0036: callvirt instance string[] [mscorlib]System.Reflection.Assembly::GetManifestResourceNames()
-	IL_003b: stloc.1
-	// (no C# code)
-	IL_003c: br.s IL_003e
-
-	IL_003e: ldloc.1
-	IL_003f: ret
+	IL_003c: ldarg.0
+	IL_003d: callvirt instance string[] [mscorlib]System.Reflection.Assembly::GetManifestResourceNames()
+	IL_0042: ret
 } // end of method JIEJIEHelper::SMF_GetManifestResourceNames
 
 .method public hidebysig static 
@@ -23725,14 +23723,21 @@ namespace __DC20211119
             }
             return null;
         }
-        public static string[] SMF_GetManifestResourceNames( System.Reflection.Assembly asm )
+        public static string[] SMF_GetManifestResourceNames(System.Reflection.Assembly asm)
         {
-            if (ThisAssembly.Equals(asm) && __SMF_Contents != null )
+            if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
             {
-                return new List<string>(__SMF_Contents.Keys).ToArray();
+                var list = new List<string>(__SMF_Contents.Keys);
+                var names2 = asm.GetManifestResourceNames();
+                if (names2 != null)
+                {
+                    list.AddRange(names2);
+                }
+                return list.ToArray();
             }
             return asm.GetManifestResourceNames();
         }
+
         public static System.IO.Stream SMF_GetManifestResourceStream(System.Reflection.Assembly asm, string resourceName)
         {
             if (ThisAssembly.Equals(asm) && __SMF_Contents != null)
