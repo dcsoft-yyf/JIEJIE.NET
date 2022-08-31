@@ -1986,15 +1986,19 @@ namespace JIEJIE
                 if (this.Switchs.Rename && this.OutpuptMapXml)
                 {
                     ConsoleWriteTask();
-                    var fn2 = asmFileName + ".map.xml";
-                    using (var writer = new System.Xml.XmlTextWriter(fn2, Encoding.UTF8))
+                    string strMapFileName = this._SpecifyOutputMapXmlFileName;
+                    if (string.IsNullOrEmpty(strMapFileName))
+                    {
+                        strMapFileName = asmFileName + ".map.xml";
+                    }
+                    using (var writer = new System.Xml.XmlTextWriter(strMapFileName, Encoding.UTF8))
                     {
                         writer.Formatting = System.Xml.Formatting.Indented;
                         writer.IndentChar = ' ';
                         writer.Indentation = 3;
                         this.WriteMapXml2(writer);
                     }
-                    MyConsole.Instance.WriteLine("Write rename map xml to\"" + fn2 + "\".");
+                    MyConsole.Instance.WriteLine("Write rename map xml to\"" + strMapFileName + "\".");
                 }
                 if (this.Document.Content_DepsJson != null && this.Document.Content_DepsJson.Length > 0)
                 {
@@ -2031,6 +2035,7 @@ namespace JIEJIE
                 return false;
             }
         }
+        internal string _SpecifyOutputMapXmlFileName = null;
         private string _InputAssemblyFileName = null;
         private string _InputAssemblyDirectory = null;
         internal string _UseAnotherExeName = null;
@@ -4051,6 +4056,24 @@ namespace JIEJIE
                 if (cls.IsImport)
                 {
                     // 外界导入的COM接口，则不改名
+                    continue;
+                }
+                bool ignoreClass = false;
+                if( cls.ImplementsInterfaces != null && cls.ImplementsInterfaces.Count > 0 )
+                {
+                    foreach( var item in cls.ImplementsInterfaces )
+                    {
+                        if(item.Name == "System.Runtime.CompilerServices.IAsyncStateMachine")
+                        {
+                            // 针对 await 语句自动生成的类型，则例外处理。
+                            ignoreClass = true;
+                            break;
+                        }
+                    }
+                }
+                if(ignoreClass )
+                {
+                    // 遇到忽略的类型
                     continue;
                 }
                 var clsOs = cls.ObfuscationSettings;

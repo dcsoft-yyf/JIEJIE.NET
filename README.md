@@ -2,7 +2,8 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2022-7-19 : Fix bug for SMF_GetManifestResourceNames().
+<br/> 2022-8-31 : Fix bug for `await` call.
+<br/> 2022-7-19 : Fix bug for `SMF_GetManifestResourceNames()`.
 <br/> 2022-4-13 : Fix bug while working with VS.NET.
 <br/> 2022-3-7  : Support `filter{}`.
 <br/> 2022-2-17 : Add Windows GUI.
