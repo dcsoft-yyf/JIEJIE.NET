@@ -1967,7 +1967,14 @@ namespace JIEJIE
                     }
                     if (File.Exists(pathNgen))
                     {
-                        DCUtils.RunExe(pathNgen, "install \"" + asmTempFileName + "\"  /NoDependencies");
+                        string appBase = null;
+                        if( this.Document.AssemblyFileName != null 
+                            && this.Document.AssemblyFileName.Length > 0
+                            && File.Exists( this.Document.AssemblyFileName))
+                        {
+                            appBase = " \"/AppBase:" + Path.GetDirectoryName( this.Document.AssemblyFileName ) + "\"";
+                        }
+                        DCUtils.RunExe(pathNgen, "install \"" + asmTempFileName + "\"  /NoDependencies" + appBase);
                         DCUtils.RunExe(pathNgen, "uninstall \"" + asmTempFileName + "\"");
                     }
                     else
@@ -8315,18 +8322,19 @@ namespace JIEJIE
             if (isCancel || this.Switchs.Resources == false )
             {
                 // 不需要处理任何数据,删除无用的功能模块
-                for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
-                {
-                    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_"))
-                    {
-                        rootCls.ChildNodes.RemoveAt(iCount);
-                    }
-                }
-                var cls2 = rootCls.GetNestedClass("SMF_ResStream");
-                if (cls2 != null)
-                {
-                    rootCls.NestedClasses.Remove(cls2);
-                }
+                RemoveSMF_Function(rootCls);
+                //for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                //{
+                //    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_"))
+                //    {
+                //        rootCls.ChildNodes.RemoveAt(iCount);
+                //    }
+                //}
+                //var cls2 = rootCls.GetNestedClass("SMF_ResStream");
+                //if (cls2 != null)
+                //{
+                //    rootCls.NestedClasses.Remove(cls2);
+                //}
                 return;
             }
             // 收集要处理的数据
@@ -8422,22 +8430,28 @@ namespace JIEJIE
             if (changeCount == 0)
             {
                 // 不需要处理任何数据,删除无用的功能模块
-                for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
-                {
-                    if (rootCls.ChildNodes[iCount].Name.StartsWith("SMF_")
-                        || rootCls.ChildNodes[iCount].Name == "__SMF_Contents")
-                    {
-                        rootCls.ChildNodes.RemoveAt(iCount);
-                    }
-                }
-                var cls2 = rootCls.GetNestedClass("SMF_ResStream");
-                if (cls2 != null)
-                {
-                    rootCls.NestedClasses.Remove(cls2);
-                }
-                var operCodes = rootCls.Method_Cctor.OperCodes;
-                operCodes.RemoveAt(0);
-                operCodes.RemoveAt(0);
+                RemoveSMF_Function(rootCls);
+
+                //for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+                //{
+                //    var item99 = rootCls.ChildNodes[iCount];
+                //    if (item99.Name.StartsWith("SMF_") || item99.Name == "__SMF_Contents")
+                //    {
+                //        rootCls.ChildNodes.RemoveAt(iCount);
+                //    }
+                //    else if( item99.Name == ".cctor")
+                //    {
+
+                //    }
+                //}
+                //var cls2 = rootCls.GetNestedClass("SMF_ResStream");
+                //if (cls2 != null)
+                //{
+                //    rootCls.NestedClasses.Remove(cls2);
+                //}
+                //var operCodes = rootCls.Method_Cctor.OperCodes;
+                //operCodes.RemoveAt(0);
+                //operCodes.RemoveAt(0);
                 MyConsole.Instance.WriteLine(" Do nothing.");
             }
             else
@@ -8526,6 +8540,25 @@ namespace JIEJIE
             }
         }
 
+        private void RemoveSMF_Function( DCILClass rootCls )
+        {
+            for (int iCount = rootCls.ChildNodes.Count - 1; iCount >= 0; iCount--)
+            {
+                var item99 = rootCls.ChildNodes[iCount];
+                if (item99.Name.StartsWith("SMF_") || item99.Name == "__SMF_Contents")
+                {
+                    rootCls.ChildNodes.RemoveAt(iCount);
+                }
+            }
+            var cls2 = rootCls.GetNestedClass("SMF_ResStream");
+            if (cls2 != null)
+            {
+                rootCls.NestedClasses.Remove(cls2);
+            }
+            var operCodes = rootCls.Method_Cctor.OperCodes;
+            operCodes.RemoveAt(0);
+            operCodes.RemoveAt(0);
+        }
         internal void EncryptCharValue(List<DCILMethod> methods)
         {
             ConsoleWriteTask();
@@ -15505,6 +15538,7 @@ namespace JIEJIE
             this.ValueType = null;
             this.ConstValue = null;
             //this.DataLabel = null;
+            this.MarshalAs = null;
         }
         /// <summary>
         /// 对象类型
@@ -15536,7 +15570,7 @@ namespace JIEJIE
         //public string DataLabel = null;
         public DCILData ReferenceData = null;
 
-        //public string MarshalAs = null; 
+        public string MarshalAs = null; 
         //public List<System.Tuple<string,string>> ExtStyles = null;
         public override void Load(DCILReader reader)
         {
@@ -15556,6 +15590,10 @@ namespace JIEJIE
                 if (_FieldAttributes.Contains(strWord))
                 {
                     this.AddStyle(strWord , reader );
+                }
+                else if( strWord == "marshal")
+                {
+                    this.MarshalAs = reader.ReadStyleExtValue();
                 }
                 else if (DCILTypeReference.IsStartWord(strWord))
                 {
@@ -15637,6 +15675,10 @@ namespace JIEJIE
                 writer.Write(" [" + this.SpecifyIndex + "] ");
             }
             base.WriteStyles(writer);
+            if( this.MarshalAs != null && this.MarshalAs.Length > 0 )
+            {
+                writer.Write(" marshal(" + this.MarshalAs + ") ");
+            }
             this.ValueType.WriteTo(writer);
             writer.Write(" " + this._Name);
             if (this.ConstValue != null && this.ConstValue.Length > 0)
