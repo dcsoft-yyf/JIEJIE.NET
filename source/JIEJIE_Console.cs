@@ -86,7 +86,7 @@ namespace JIEJIE
                                 prj.SnkFileName = argValue;
                                 break;
                             case "switch":
-                                prj.Switchs = new JieJieSwitchs(argValue, null);
+                                prj.Switchs = new JieJieSwitchs(argValue, null,null);
                                 break;
                             case "sdkpath":
                                 if (argValue != null
