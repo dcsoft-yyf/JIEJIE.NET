@@ -2,7 +2,7 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br/> 2023-6-30 : Update when 500 stars.
+<br/> 2023-7-29 : Big update when 500 stars(Support Blazor web assembly,clean custom attributes,remove dead code ......).
 <br/> 2023-2-15 : Support .NET6.0.
 <br/> 2022-11-11: Fix bug for `SMF_CreateEmptyTable` and `marshal` in field.
 <br/> 2022-11-7 : Fix bug for `modopt`,`modreq` and `marshal` instruction.Fix bug for COM.Interop .
