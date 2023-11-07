@@ -965,7 +965,7 @@ public Dictionary<string, string> GetAllOptionValues()
    When developing , many .NET application split to some assembly files,maby include one exe file and many dll files.
    <br/>JIEJIE.NET can merge assembly files into a single assembly file.This let application more easy to copy or upgrade.
 
-## 13 Change target platform
+## 13 , Change target platform
   JIEJIE.NET support change .coreflags or .subsystem arguments to change the target platform for result assembly . For example , a .NET assembly is design for x86 , using the following command line: 
 <br/> `jiejie.net.exe d:\aa.dll .corflags=0x1`
 <br/>This can modify the result assembly file to x64 platform.
@@ -973,7 +973,21 @@ public Dictionary<string, string> GetAllOptionValues()
 ## 14 , Support .NET Core 3.1
    JIEJIE.NET now support .NET Core 3.1.
 
-## 15 , Easy to use.
+## 16 , Support Blazor Web assembly.
+   JIEJIE.NET can handle Blazor Web assembly , It can delete `*.pdb` and `*.pdb.gz` files , Update SHA256 code in `blazor.boot.json` .
+
+## 17 , Remove dead code.
+   JIEJIE.NET can remove dead code, there are 3 types:
+<br/>Disabled, The option is disabled.
+<br/>Normal , JIEJIE.NET remove all method that renamed , and without any custom attributes and never used.
+<br/>All = JIEJIE.NET remove all method than renamed and never used.
+
+## 18 , Remove custom attributes.
+    JIEJIE.NET can remove cutom attributes speicfy full type name.For example:
+<br/> `jiejie.net.exe d:\a.dll RemoveCustomAttributeTypeFullnames=System.Runtime.InteropServices.ComVisibleAttribute,System.Runtime.InteropServices.GuidAttribute,"`
+    It can decrease output file size.
+    
+## 19 , Easy to use.
 My new tool is a .NET framework console  application. 
 <br/>It support following command line argument :
 ```
@@ -1001,21 +1015,15 @@ My new tool is a .NET framework console  application.
       merge=[optional,some .net assembly file to merge to the result file. '*' for all referenced assembly files.]
       .subsystem=[optional, it a integer value, '2' for application in GUI mode.'3' for application in console mode.]
       .corflags=[optional, it is a integer flag,'3' for 32-bit process without strong name signature, '1' for 64-bit wihout strong name, '9' for 32-bit with strong name ,'10' for 64-bit with strong name.]
-
+      [BlazorWebAssembly] , optional , process for Blazor web assembly.
+      DeadCode=[optional ,It can be `Disalbed`, or `Normal`(All method renamed , and without any custom attributes and never used) or `All`(All method renamed and never used).]
+      RemoveCustomAttributeTypeFullnames=[optional, Full type name list for custom attributes which you want remove.]
    Example 1, protect d:\a.dll ,this will modify dll file.
       >JIEJIE.NET.exe d:\a.dll  
    Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
       >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk switch=+contorlfow,-resources
 
 ```
-
-## So many cool features! But JieJie.NET only has 24000 lines C# source code!
-   
-   So it is small and without any third party component.
-
-## In the future
-
-   It will support upgrad assembly file from .NET Framework to .NET Core without any source code.Please pay attention to me.
 
 ## License
 JieJie.NET use GPL-2.0 License. 
