@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?> 
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -28,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -46,8 +46,73 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="JIEJIEEngine\CodeTemplate.cs" />
+    <Compile Include="JIEJIEEngine\CrossGenHelper.cs" />
+    <Compile Include="JIEJIEEngine\DCILAssembly.cs" />
+    <Compile Include="JIEJIEEngine\DCILCatchBlock.cs" />
+    <Compile Include="JIEJIEEngine\DCILClass.cs" />
+    <Compile Include="JIEJIEEngine\DCILCustomAttribute.cs" />
+    <Compile Include="JIEJIEEngine\DCILCustomAttributeValue.cs" />
+    <Compile Include="JIEJIEEngine\DCILData.cs" />
+    <Compile Include="JIEJIEEngine\DCILDocument.cs" />
+    <Compile Include="JIEJIEEngine\DCILEditorAttribute.cs" />
+    <Compile Include="JIEJIEEngine\DCILEvent.cs" />
+    <Compile Include="JIEJIEEngine\DCILField.cs" />
+    <Compile Include="JIEJIEEngine\DCILFieldReference.cs" />
+    <Compile Include="JIEJIEEngine\DCILGenericParamter.cs" />
+    <Compile Include="JIEJIEEngine\DCILGenericParamterList.cs" />
+    <Compile Include="JIEJIEEngine\DCILInvokeMethodInfo.cs" />
+    <Compile Include="JIEJIEEngine\DCILMemberInfo.cs" />
+    <Compile Include="JIEJIEEngine\DCILMethod.cs" />
+    <Compile Include="JIEJIEEngine\DCILMethodLocalVariable.cs" />
+    <Compile Include="JIEJIEEngine\DCILMethodLocalVariableList.cs" />
+    <Compile Include="JIEJIEEngine\DCILMethodParamter.cs" />
+    <Compile Include="JIEJIEEngine\DCILModule.cs" />
+    <Compile Include="JIEJIEEngine\DCILMResource.cs" />
+    <Compile Include="JIEJIEEngine\DCILObfuscationAttribute.cs" />
+    <Compile Include="JIEJIEEngine\DCILObject.cs" />
+    <Compile Include="JIEJIEEngine\DCILObjectList.cs" />
+    <Compile Include="JIEJIEEngine\DCILObjectType.cs" />
+    <Compile Include="JIEJIEEngine\DCILOpCodeValue.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCodeComment.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCodeDefine.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCodeList.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_HandleClass.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_HandleField.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_HandleMethod.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_LdToken.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_LoadString.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_Switch.cs" />
+    <Compile Include="JIEJIEEngine\DCILOperCode_Try_Catch_Finally.cs" />
+    <Compile Include="JIEJIEEngine\DCILProperty.cs" />
+    <Compile Include="JIEJIEEngine\DCILReader.cs" />
+    <Compile Include="JIEJIEEngine\DCILRenameState.cs" />
+    <Compile Include="JIEJIEEngine\DCILTypeConverterAttribute.cs" />
+    <Compile Include="JIEJIEEngine\DCILTypeMode.cs" />
+    <Compile Include="JIEJIEEngine\DCILTypeNameInfo.cs" />
+    <Compile Include="JIEJIEEngine\DCILTypeReference.cs" />
+    <Compile Include="JIEJIEEngine\DCILUnknowObject.cs" />
+    <Compile Include="JIEJIEEngine\DCILWriter.cs" />
+    <Compile Include="JIEJIEEngine\DCInterfaceimpl.cs" />
+    <Compile Include="JIEJIEEngine\DCJieJieNetEngine.cs" />
+    <Compile Include="JIEJIEEngine\DCUtils.cs" />
+    <Compile Include="JIEJIEEngine\DetectDeadCodeMode.cs" />
+    <Compile Include="JIEJIEEngine\EntryNameSettingList.cs" />
+    <Compile Include="JIEJIEEngine\EnumOperCodeArgs.cs" />
+    <Compile Include="JIEJIEEngine\IDGenerator.cs" />
+    <Compile Include="JIEJIEEngine\IEqualsValue.cs" />
+    <Compile Include="JIEJIEEngine\ILOperCodeType.cs" />
+    <Compile Include="JIEJIEEngine\InnerAssemblyHelper20211018.cs" />
+    <Compile Include="JIEJIEEngine\JIEJIEPerformanceCounter.cs" />
+    <Compile Include="JIEJIEEngine\JieJieProject.cs" />
+    <Compile Include="JIEJIEEngine\JieJieSwitchs.cs" />
+    <Compile Include="JIEJIEEngine\List_modopt_modreq.cs" />
+    <Compile Include="JIEJIEEngine\MyConsole.cs" />
+    <Compile Include="JIEJIEEngine\ReadCustomAttributeValueArgs.cs" />
+    <Compile Include="JIEJIEEngine\StringPattern.cs" />
     <Compile Include="JIEJIE_Console.cs" />
-    <Compile Include="JIEJIE.cs" />
+    <Compile Include="JIEJIEEngine\JIEJIEHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
