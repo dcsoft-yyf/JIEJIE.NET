@@ -978,14 +978,15 @@ public Dictionary<string, string> GetAllOptionValues()
 
 ## 17 , Remove dead code.
    JIEJIE.NET can remove dead code, there are 3 types:
-<br/>Disabled, The option is disabled.
-<br/>Normal , JIEJIE.NET remove all method that renamed , and without any custom attributes and never used.
-<br/>All = JIEJIE.NET remove all method than renamed and never used.
+<br/>`Disabled` = The option is disabled.
+<br/>`Normal` = JIEJIE.NET remove all method that renamed , and without any custom attributes and never used.
+<br/>`All` = JIEJIE.NET remove all method than renamed and never used.
 
 ## 18 , Remove custom attributes.
     JIEJIE.NET can remove cutom attributes speicfy full type name.For example:
-<br/> `jiejie.net.exe d:\a.dll RemoveCustomAttributeTypeFullnames=System.Runtime.InteropServices.ComVisibleAttribute,System.Runtime.InteropServices.GuidAttribute,"`
-    It can decrease output file size.
+    
+<br/> `jiejie.net.exe d:\a.dll RemoveCustomAttributeTypeFullnames=System.Runtime.InteropServices.ComVisibleAttribute,System.Runtime.InteropServices.GuidAttribute`
+<br/>  It can decrease output file size.
     
 ## 19 , Easy to use.
 My new tool is a .NET framework console  application. 
