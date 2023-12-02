@@ -345,12 +345,11 @@ namespace __DC20211119
             obj.Dispose();
         }
 
-        private static volatile System.Threading.Thread _CloneStringCrossThead_Thread = null;
-        private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event
-            = new System.Threading.AutoResetEvent(false);
-        private static readonly System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
-            = new System.Threading.AutoResetEvent(false);
-        private static volatile string _CloneStringCrossThead_CurrentValue = null;
+        private static volatile System.Threading.Thread _CloneStringCrossThead_Thread ;
+        private static System.Threading.AutoResetEvent _CloneStringCrossThead_Event;
+        private static System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner;
+        private static volatile string _CloneStringCrossThead_CurrentValue;
+        private static readonly object _LockObject = null;
         /// <summary>
         /// 跨线程的复制字符串值，用于改变创建字符串的调用堆栈
         /// </summary>
@@ -364,7 +363,15 @@ namespace __DC20211119
             }
             try
             {
-                System.Threading.Monitor.Enter(_CloneStringCrossThead_Event);
+                System.Threading.Monitor.Enter(_LockObject);
+                if( _CloneStringCrossThead_Event_Inner == null )
+                {
+                    _CloneStringCrossThead_Event_Inner = new System.Threading.AutoResetEvent(false);
+                }
+                if(_CloneStringCrossThead_Event == null )
+                {
+                    _CloneStringCrossThead_Event = new System.Threading.AutoResetEvent(false);
+                }
                 _CloneStringCrossThead_CurrentValue = txt;
                 _CloneStringCrossThead_Event_Inner.Set();
                 _CloneStringCrossThead_Event.Reset();
@@ -378,7 +385,7 @@ namespace __DC20211119
             }
             finally
             {
-                System.Threading.Monitor.Exit(_CloneStringCrossThead_Event);
+                System.Threading.Monitor.Exit(_LockObject);
             }
         }
 
@@ -388,7 +395,8 @@ namespace __DC20211119
             {
                 while (true)
                 {
-                    if (_CloneStringCrossThead_Event_Inner.WaitOne(1000) == false)
+                    if (_CloneStringCrossThead_Event_Inner != null 
+                        && _CloneStringCrossThead_Event_Inner.WaitOne(1000) == false)
                     {
                         // 等了1秒没任务了，退出线程。
                         break;

@@ -5518,6 +5518,21 @@ namespace JIEJIE
             var cls = new DCILClass(code, this.Document);
             this.Document.Classes.Add(cls);
             this.Document.ClearCacheForAllClasses();
+            if( this.Switchs.AllocationCallStack || this.ForBlazorWebAssembly)
+            {
+                // 删除加密字符串调用堆栈的代码
+                for( var iCount = cls.ChildNodes.Count -1;iCount >= 0;iCount --)
+                {
+                    var name = cls.ChildNodes[iCount].Name;
+                    if(name.Contains("CloneStringCrossThead")
+                        || name.Contains("Monitor_Enter") 
+                        || name.Contains("Monitor_Exit"))
+                    {
+                        cls.ChildNodes.RemoveAt(iCount);
+                    }
+                    
+                }
+            }
             this._Type_JIEJIEHelper = new DCILTypeReference(CodeTemplate._ClassName_JIEJIEHelper, DCILTypeMode.Class);
             this._Type_JIEJIEHelper.LocalClass = cls;
             UpdateRuntimeSwitchs_Class(cls, this.Switchs);

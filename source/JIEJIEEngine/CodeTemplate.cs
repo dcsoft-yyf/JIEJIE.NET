@@ -1426,12 +1426,14 @@ namespace JIEJIE
 
 
 	// Fields
-	.field private static initonly class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __SMF_Contents
-	.field private static initonly class [mscorlib]System.Reflection.Assembly ThisAssembly
-	.field private static class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_Thread
-	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event
-	.field private static initonly class [mscorlib]System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
-	.field private static string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_CurrentValue
+	.field private static initonly class [System.Collections]System.Collections.Generic.Dictionary`2<string, uint8[]> __SMF_Contents
+	.field private static initonly class [System.Runtime]System.Reflection.Assembly ThisAssembly
+	.field private static class [System.Threading.Thread]System.Threading.Thread modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_Thread
+	.field private static class [System.Threading]System.Threading.AutoResetEvent _CloneStringCrossThead_Event
+	.field private static class [System.Threading]System.Threading.AutoResetEvent _CloneStringCrossThead_Event_Inner
+	.field private static string modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) _CloneStringCrossThead_CurrentValue
+	.field private static initonly object _LockObject
+
 
 .method private hidebysig static 
 	class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> SMF_CreateEmptyTable () cil managed 
@@ -2173,183 +2175,149 @@ namespace JIEJIE
 		IL_0008: ret
 	} // end of method JIEJIEHelper::MyDispose
 
-	.method public hidebysig static 
-		string CloneStringCrossThead (
-			string txt
-		) cil managed 
+.method public hidebysig static 
+	string CloneStringCrossThead (
+		string txt
+	) cil managed 
+{
+	// Method begins at RVA 0x22e4
+	// Header size: 12
+	// Code size: 171 (0xab)
+	.maxstack 2
+	.locals init (
+		[0] string
+	)
+
+	IL_0000: ldarg.0
+	IL_0001: brfalse.s IL_000b
+
+	IL_0003: ldarg.0
+	IL_0004: callvirt instance int32 [System.Runtime]System.String::get_Length()
+	IL_0009: brtrue.s IL_000d
+
+	IL_000b: ldarg.0
+	IL_000c: ret
+
+	IL_000d: nop
+	.try
 	{
-		// Method begins at RVA 0x23c4
-		// Code size 163 (0xa3)
-		.maxstack 2
-		.locals init (
-			[0] bool,
-			[1] string,
-			[2] bool
-		)
+		IL_000e: ldsfld object __DC20211119.JIEJIEHelper::_LockObject
+		IL_0013: call void [System.Threading]System.Threading.Monitor::Enter(object)
+		IL_0018: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+		IL_001d: brtrue.s IL_002a
 
-		IL_0000: nop
-		IL_0001: ldarg.0
-		IL_0002: brfalse.s IL_000f
+		IL_001f: ldc.i4.0
+		IL_0020: newobj instance void [System.Threading]System.Threading.AutoResetEvent::.ctor(bool)
+		IL_0025: stsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
 
-		IL_0004: ldarg.0
-		IL_0005: callvirt instance int32 [mscorlib]System.String::get_Length()
-		IL_000a: ldc.i4.0
-		IL_000b: ceq
-		IL_000d: br.s IL_0010
+		IL_002a: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+		IL_002f: brtrue.s IL_003c
 
-		IL_000f: ldc.i4.1
+		IL_0031: ldc.i4.0
+		IL_0032: newobj instance void [System.Threading]System.Threading.AutoResetEvent::.ctor(bool)
+		IL_0037: stsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
 
-		IL_0010: stloc.0
-		IL_0011: ldloc.0
-		IL_0012: brfalse.s IL_001c
+		IL_003c: ldarg.0
+		IL_003d: volatile.
+		IL_003f: stsfld string modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+		IL_0044: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+		IL_0049: callvirt instance bool [System.Threading]System.Threading.EventWaitHandle::Set()
+		IL_004e: pop
+		IL_004f: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+		IL_0054: callvirt instance bool [System.Threading]System.Threading.EventWaitHandle::Reset()
+		IL_0059: pop
+		IL_005a: volatile.
+		IL_005c: ldsfld class [System.Threading.Thread]System.Threading.Thread modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+		IL_0061: brtrue.s IL_0087
 
-		IL_0014: nop
-		IL_0015: ldarg.0
-		IL_0016: stloc.1
-		IL_0017: br IL_00a1
+		IL_0063: ldnull
+		IL_0064: ldftn void __DC20211119.JIEJIEHelper::CloneStringCrossThead_Thread()
+		IL_006a: newobj instance void [System.Threading.Thread]System.Threading.ThreadStart::.ctor(object, native int)
+		IL_006f: newobj instance void [System.Threading.Thread]System.Threading.Thread::.ctor(class [System.Threading.Thread]System.Threading.ThreadStart)
+		IL_0074: volatile.
+		IL_0076: stsfld class [System.Threading.Thread]System.Threading.Thread modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+		IL_007b: volatile.
+		IL_007d: ldsfld class [System.Threading.Thread]System.Threading.Thread modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+		IL_0082: callvirt instance void [System.Threading.Thread]System.Threading.Thread::Start()
 
-		IL_001c: nop
-		.try
-		{
-			IL_001d: nop
-			IL_001e: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-			IL_0023: call void [mscorlib]System.Threading.Monitor::Enter(object)
-			IL_0028: nop
-			IL_0029: ldarg.0
-			IL_002a: volatile.
-			IL_002c: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-			IL_0031: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-			IL_0036: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
-			IL_003b: pop
-			IL_003c: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-			IL_0041: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-			IL_0046: pop
-			IL_0047: volatile.
-			IL_0049: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-			IL_004e: ldnull
-			IL_004f: ceq
-			IL_0051: stloc.2
-			IL_0052: ldloc.2
-			IL_0053: brfalse.s IL_007c
-
-			IL_0055: nop
-			IL_0056: ldnull
-			IL_0057: ldftn void __DC20211119.JIEJIEHelper::CloneStringCrossThead_Thread()
-			IL_005d: newobj instance void [mscorlib]System.Threading.ThreadStart::.ctor(object, native int)
-			IL_0062: newobj instance void [mscorlib]System.Threading.Thread::.ctor(class [mscorlib]System.Threading.ThreadStart)
-			IL_0067: volatile.
-			IL_0069: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-			IL_006e: volatile.
-			IL_0070: ldsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-			IL_0075: callvirt instance void [mscorlib]System.Threading.Thread::Start()
-			IL_007a: nop
-			IL_007b: nop
-
-			IL_007c: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-			IL_0081: ldc.i4.s 100
-			IL_0083: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
-			IL_0088: pop
-			IL_0089: volatile.
-			IL_008b: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-			IL_0090: stloc.1
-			IL_0091: leave.s IL_00a1
-		} // end .try
-		finally
-		{
-			IL_0093: nop
-			IL_0094: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-			IL_0099: call void [mscorlib]System.Threading.Monitor::Exit(object)
-			IL_009e: nop
-			IL_009f: nop
-			IL_00a0: endfinally
-		} // end handler
-
-		IL_00a1: ldloc.1
-		IL_00a2: ret
-	} // end of method JIEJIEHelper::CloneStringCrossThead
-
-	.method private hidebysig static 
-		void CloneStringCrossThead_Thread () cil managed 
+		IL_0087: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+		IL_008c: ldc.i4.s 100
+		IL_008e: callvirt instance bool [System.Runtime]System.Threading.WaitHandle::WaitOne(int32)
+		IL_0093: pop
+		IL_0094: volatile.
+		IL_0096: ldsfld string modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+		IL_009b: stloc.0
+		IL_009c: leave.s IL_00a9
+	} // end .try
+	finally
 	{
-		// Method begins at RVA 0x2484
-		// Code size 134 (0x86)
-		.maxstack 2
-		.locals init (
-			[0] bool,
-			[1] bool,
-			[2] bool
-		)
+		IL_009e: ldsfld object __DC20211119.JIEJIEHelper::_LockObject
+		IL_00a3: call void [System.Threading]System.Threading.Monitor::Exit(object)
+		IL_00a8: endfinally
+	} // end handler
 
-		IL_0000: nop
-		.try
-		{
-			IL_0001: nop
-			IL_0002: br.s IL_005d
-			// loop start (head: IL_005d)
-				IL_0004: nop
-				IL_0005: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-				IL_000a: ldc.i4 1000
-				IL_000f: callvirt instance bool [mscorlib]System.Threading.WaitHandle::WaitOne(int32)
-				IL_0014: ldc.i4.0
-				IL_0015: ceq
-				IL_0017: stloc.0
-				IL_0018: ldloc.0
-				IL_0019: brfalse.s IL_001e
+	IL_00a9: ldloc.0
+	IL_00aa: ret
+} // end of method JIEJIEHelper::CloneStringCrossThead
 
-				IL_001b: nop
-				IL_001c: br.s IL_0061
+.method private hidebysig static 
+	void CloneStringCrossThead_Thread () cil managed 
+{
+	// Method begins at RVA 0x23ac
+	// Header size: 12
+	// Code size: 115 (0x73)
+	.maxstack 2
 
-				IL_001e: volatile.
-				IL_0020: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-				IL_0025: ldnull
-				IL_0026: cgt.un
-				IL_0028: stloc.1
-				IL_0029: ldloc.1
-				IL_002a: brfalse.s IL_0046
+	.try
+	{
+		// loop start
+			IL_0000: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+			IL_0005: brfalse.s IL_001a
 
-				IL_002c: nop
-				IL_002d: volatile.
-				IL_002f: ldsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-				IL_0034: callvirt instance char[] [mscorlib]System.String::ToCharArray()
-				IL_0039: newobj instance void [mscorlib]System.String::.ctor(char[])
-				IL_003e: volatile.
-				IL_0040: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-				IL_0045: nop
+			IL_0007: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+			IL_000c: ldc.i4 1000
+			IL_0011: callvirt instance bool [System.Runtime]System.Threading.WaitHandle::WaitOne(int32)
+			IL_0016: brtrue.s IL_001a
 
-				IL_0046: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-				IL_004b: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Set()
-				IL_0050: pop
-				IL_0051: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-				IL_0056: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-				IL_005b: pop
-				IL_005c: nop
+			IL_0018: leave.s IL_0072
 
-				IL_005d: ldc.i4.1
-				IL_005e: stloc.2
-				IL_005f: br.s IL_0004
-			// end loop
+			IL_001a: volatile.
+			IL_001c: ldsfld string modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+			IL_0021: brfalse.s IL_003b
 
-			IL_0061: nop
-			IL_0062: leave.s IL_0085
-		} // end .try
-		finally
-		{
-			IL_0064: nop
-			IL_0065: ldnull
-			IL_0066: volatile.
-			IL_0068: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-			IL_006d: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-			IL_0072: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-			IL_0077: pop
-			IL_0078: ldsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-			IL_007d: callvirt instance bool [mscorlib]System.Threading.EventWaitHandle::Reset()
-			IL_0082: pop
-			IL_0083: nop
-			IL_0084: endfinally
-		} // end handler
+			IL_0023: volatile.
+			IL_0025: ldsfld string modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
+			IL_002a: callvirt instance char[] [System.Runtime]System.String::ToCharArray()
+			IL_002f: newobj instance void [System.Runtime]System.String::.ctor(char[])
+			IL_0034: volatile.
+			IL_0036: stsfld string modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
 
-		IL_0085: ret
-	} // end of method JIEJIEHelper::CloneStringCrossThead_Thread
+			IL_003b: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+			IL_0040: callvirt instance bool [System.Threading]System.Threading.EventWaitHandle::Set()
+			IL_0045: pop
+			IL_0046: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+			IL_004b: callvirt instance bool [System.Threading]System.Threading.EventWaitHandle::Reset()
+			IL_0050: pop
+			IL_0051: br.s IL_0000
+		// end loop
+	} // end .try
+	finally
+	{
+		IL_0053: ldnull
+		IL_0054: volatile.
+		IL_0056: stsfld class [System.Threading.Thread]System.Threading.Thread modreq([System.Runtime]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
+		IL_005b: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
+		IL_0060: callvirt instance bool [System.Threading]System.Threading.EventWaitHandle::Reset()
+		IL_0065: pop
+		IL_0066: ldsfld class [System.Threading]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
+		IL_006b: callvirt instance bool [System.Threading]System.Threading.EventWaitHandle::Reset()
+		IL_0070: pop
+		IL_0071: endfinally
+	} // end handler
+
+	IL_0072: ret
+} // end of method JIEJIEHelper::CloneStringCrossThead_Thread
+
 
 	.method public hidebysig static 
 		string GetString (
@@ -2727,33 +2695,26 @@ namespace JIEJIE
 		IL_00a8: ret
 	} // end of method JIEJIEHelper::GetStream
 
-	.method private hidebysig specialname rtspecialname static 
-		void .cctor () cil managed 
-	{
-		// Method begins at RVA 0x26bc
-		// Code size 65 (0x41)
-		.maxstack 1
+.method private hidebysig specialname rtspecialname static 
+	void .cctor () cil managed 
+{
+	// Method begins at RVA 0x259a
+	// Header size: 1
+	// Code size: 37 (0x25)
+	.maxstack 8
 
-		IL_0000: call class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_CreateEmptyTable()
-	    IL_0005: stsfld class [mscorlib]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
-		IL_0006: ldtoken __DC20211119.JIEJIEHelper
-		IL_000b: call class [mscorlib]System.Type [mscorlib]System.Type::GetTypeFromHandle(valuetype [mscorlib]System.RuntimeTypeHandle)
-		IL_0010: callvirt instance class [mscorlib]System.Reflection.Assembly [mscorlib]System.Type::get_Assembly()
-		IL_0015: stsfld class [mscorlib]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
-		IL_001a: ldnull
-		IL_001b: volatile.
-		IL_001d: stsfld class [mscorlib]System.Threading.Thread modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Thread
-		IL_0022: ldc.i4.0
-		IL_0023: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
-		IL_0028: stsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event
-		IL_002d: ldc.i4.0
-		IL_002e: newobj instance void [mscorlib]System.Threading.AutoResetEvent::.ctor(bool)
-		IL_0033: stsfld class [mscorlib]System.Threading.AutoResetEvent __DC20211119.JIEJIEHelper::_CloneStringCrossThead_Event_Inner
-		IL_0038: ldnull
-		IL_0039: volatile.
-		IL_003b: stsfld string modreq([mscorlib]System.Runtime.CompilerServices.IsVolatile) __DC20211119.JIEJIEHelper::_CloneStringCrossThead_CurrentValue
-		IL_0040: ret
-	} // end of method JIEJIEHelper::.cctor
+	IL_0000: call class [System.Collections]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::SMF_CreateEmptyTable()
+	IL_0005: stsfld class [System.Collections]System.Collections.Generic.Dictionary`2<string, uint8[]> __DC20211119.JIEJIEHelper::__SMF_Contents
+	IL_000a: ldtoken __DC20211119.JIEJIEHelper
+	IL_000f: call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)
+	IL_0014: callvirt instance class [System.Runtime]System.Reflection.Assembly [System.Runtime]System.Type::get_Assembly()
+	IL_0019: stsfld class [System.Runtime]System.Reflection.Assembly __DC20211119.JIEJIEHelper::ThisAssembly
+	IL_001e: ldnull
+	IL_001f: stsfld object __DC20211119.JIEJIEHelper::_LockObject
+	IL_0024: ret
+} // end of method JIEJIEHelper::.cctor
+
+
 
 } // end of class __DC20211119.JIEJIEHelper
 
