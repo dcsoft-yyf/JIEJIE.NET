@@ -97,10 +97,6 @@ namespace JIEJIE
         public override void Load(DCILReader reader)
         {
             this.StartLineIndex = reader.CurrentLineIndex();
-            if( this.StartLineIndex == 222669)
-            {
-
-            }
             if (reader.PeekContentChar() == '[')
             {
                 this.SpecifyIndex = reader.ReadArrayIndex();

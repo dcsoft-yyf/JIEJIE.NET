@@ -23,7 +23,7 @@ namespace JIEJIE
     [Serializable]
     internal class DCJieJieNetEngine : System.MarshalByRefObject, IDisposable
     {
-        public const string ProductVersion = "1.2023.11.7";
+        public const string ProductVersion = "1.2022.11.7";
 
 
         public DCJieJieNetEngine(DCILDocument doc)
@@ -839,39 +839,39 @@ namespace JIEJIE
             var hs = SelfPerformanceCounterForTest.Enter(SelfPerformanceCounterForTest.MethodIndexs.SaveAssemblyFile);
             if (InnerSaveAssemblyFile(asmFileName, checkUseNgen))
             {
-                //if (this.ForBlazorWebAssembly)
-                //{
-                //    // 为 Blazor WebAssembly 而更新文件
-                //    UpdateForBlazorWebAssembly(asmFileName);
-                //    foreach (var cls in this.Document.GetAllClassesUseCache().Values)
-                //    {
-                //        if (cls.Name.StartsWith("DCSoft.Chart"))
-                //        {
-                //            foreach (var item in cls.ChildNodes)
-                //            {
-                //                if (item is DCILMethod)
-                //                {
-                //                    var m = (DCILMethod)item;
-                //                    if (m.OperCodes != null && m.OperCodes.Count > 10)
-                //                    {
-                //                        m.OperCodes.Clear();
-                //                        m.OperCodes.AddItem("il00333", "newobj","instance void [System.Runtime]System.NotSupportedException::.ctor()");
-                //                        m.OperCodes.AddItem("il00044", "throw");
-                //                    }
-                //                }
-                //            }
-                //        }
-                //    }
-                //    this.OutpuptMapXml = false;
-                //    var fn2 = asmFileName + "_empty.dll";
-                //    if( InnerSaveAssemblyFile(fn2, false))
-                //    {
-                //        var sha256 = System.Security.Cryptography.SHA256.Create();
-                //        var bs256 = sha256.ComputeHash(File.ReadAllBytes( fn2 ));
-                //        var strSHA256_Base64 = Convert.ToBase64String(bs256);
-                //        File.WriteAllText(fn2 + ".sha256.txt", strSHA256_Base64);
-                //    }
-                //}
+                if (this.ForBlazorWebAssembly)
+                {
+                    // 为 Blazor WebAssembly 而更新文件
+                    UpdateForBlazorWebAssembly(asmFileName);
+                    //foreach (var cls in this.Document.GetAllClassesUseCache().Values)
+                    //{
+                    //    if (cls.Name.StartsWith("DCSoft.Chart"))
+                    //    {
+                    //        foreach (var item in cls.ChildNodes)
+                    //        {
+                    //            if (item is DCILMethod)
+                    //            {
+                    //                var m = (DCILMethod)item;
+                    //                if (m.OperCodes != null && m.OperCodes.Count > 10)
+                    //                {
+                    //                    m.OperCodes.Clear();
+                    //                    m.OperCodes.AddItem("il00333", "newobj", "instance void [System.Runtime]System.NotSupportedException::.ctor()");
+                    //                    m.OperCodes.AddItem("il00044", "throw");
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //}
+                    //this.OutpuptMapXml = false;
+                    //var fn2 = asmFileName + "_empty.dll";
+                    //if (InnerSaveAssemblyFile(fn2, false))
+                    //{
+                    //    var sha256 = System.Security.Cryptography.SHA256.Create();
+                    //    var bs256 = sha256.ComputeHash(File.ReadAllBytes(fn2));
+                    //    var strSHA256_Base64 = Convert.ToBase64String(bs256);
+                    //    File.WriteAllText(fn2 + ".sha256.txt", strSHA256_Base64);
+                    //}
+                }
                 return true;
             }
             else

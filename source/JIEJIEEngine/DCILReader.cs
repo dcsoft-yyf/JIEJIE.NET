@@ -1098,6 +1098,8 @@ namespace JIEJIE
                             endIndex = this._Position + 1;
                             // 如果不是定义字符串，则跳到下一行。
                             this.MoveNextLine();
+                            this._Position--;
+                            continue;
                             //this.SkipWhitespace();
                         }
                     }
