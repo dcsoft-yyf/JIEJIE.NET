@@ -91,7 +91,7 @@ namespace JIEJIE
             this.Parent = parent;
             this.Load(reader);
             this.HasGenericStyle = GetHasGenericStyle();
-            if( this.Name == "SMF_CreateEmptyTable")
+            if (this.Name == "SMF_CreateEmptyTable")
             {
 
             }
@@ -103,6 +103,61 @@ namespace JIEJIE
             //{
 
             //}
+        }
+        public string[] GetStringValues()
+        {
+            var list = new System.Collections.Generic.List<string>();
+            this.EnumOperCodes(delegate (EnumOperCodeArgs args)
+            {
+                if (args.Current is DCILOperCode_LoadString)
+                {
+                    var lds = (DCILOperCode_LoadString)args.Current;
+                    if ( lds.Value != null 
+                        &&  lds.Value.Length > 0 
+                        && list.Contains(lds.Value) == false)
+                    {
+                        list.Add(lds.Value);
+                    }
+                }
+            });
+            list.Sort();
+            return list.ToArray();
+        }
+    
+
+        /// <summary>
+        /// 获得方法中快速初始化数组的字节数大小
+        /// </summary>
+        /// <param name="eng"></param>
+        /// <returns></returns>
+        public int GetByteArraySize(DCJieJieNetEngine eng)
+        {
+            var bytesArraySize = 0;
+            this.EnumOperCodes(delegate (EnumOperCodeArgs args)
+            {
+                var callCode = args.Current as DCILOperCode_HandleMethod;
+                if (callCode != null
+                    && callCode.MatchTypeAndMethod(
+                        "System.Runtime.CompilerServices.RuntimeHelpers",
+                        "InitializeArray",
+                        2))
+                {
+                    var items = args.OwnerList;
+                    var codeIndex = args.CurrentCodeIndex;
+                    var ldTokenCode = items[codeIndex - 1] as DCILOperCode_LdToken;
+                    var data = ldTokenCode.FieldReference?.LocalField?.ReferenceData?.Value;
+                    if (data is byte[])
+                    {
+                        bytesArraySize += ((byte[])data).Length;
+                    }
+                    else if (data is string)
+                    {
+                        bytesArraySize += ((string)data).Length;
+                    }
+                }
+            });
+
+            return bytesArraySize;
         }
 
         private static readonly List<string> _NewLabelIDList = new List<string>();

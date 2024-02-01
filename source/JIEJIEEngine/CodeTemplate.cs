@@ -1453,10 +1453,7 @@ namespace JIEJIE
 {
 	// Method begins at RVA 0x20a4
 	// Code size 7 (0x7)
-	.maxstack 1
-	.locals init (
-		[0] uint8[]
-	)
+	.maxstack 8
 
 	// {
 	IL_0000: nop

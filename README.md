@@ -2,6 +2,8 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
+<br />2024-2-1 : Fix bug for `LoadResourceSet`.
+<br/> 2024-1-12 : Fix bug for `SMF_GetContent`.
 <br/> 2023-12-2 : Fix bug for parse string value.
 <br/> 2023-11-7 : Support Blazor Web assembly.clean custom attributes,remove dead code.
 <br/> 2023-2-15 : Support .NET6.0.
@@ -358,7 +360,7 @@ public static byte[] z0ZzZzbn(string A_0)
   int num = -1;
   foreach (char value in A_0)
   {
-    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9¨¢?\ue8cf\uebd1¨ºG?e??¨¹a???y", a_).IndexOf(value);
+    int num2 = z0ZzZzbbz.b("\uf0bf\uf3c1\uf6c3\uf5c5\uffc9  ?\ue8cf\uebd1  G?e??  a???y", a_).IndexOf(value);
     if (num2 >= 0)
     {
       if (num < 0)
