@@ -1,0 +1,6 @@
+E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.Console.csproj.AssemblyReference.cache
+E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.Console.csproj.CoreCompileInputs.cache
+E:\Source\github\JIEJIE.NET\source\bin\Debug\JIEJIE.NET.Console.exe
+E:\Source\github\JIEJIE.NET\source\bin\Debug\JIEJIE.NET.Console.pdb
+E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.Console.exe
+E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.Console.pdb

@@ -98,6 +98,10 @@ namespace JIEJIE
         /// </summary>
         public JieJieSwitchs Switchs = new JieJieSwitchs();
         /// <summary>
+        /// 执行加密字符串的类型或者方法名称的选择器
+        /// </summary>
+        public string StringsSelector = null;
+        /// <summary>
         /// 指定的.NET SDK安装目录
         /// </summary>
         public string SDKDirectory = null;
@@ -501,6 +505,7 @@ namespace JIEJIE
                 eng.RemoveTypes = this.RemoveTypes;
                 eng.RemoveDeadCodeTypes = this.RemoveDeadCodeTypes;
                 eng.IsNativeConsole = this.IsNativeConsole;
+                eng.StringsSelector = this.StringsSelector;
                 if (string.Compare(startDir, inputDir, true) != 0 && eng.Switchs.Rename)
                 {
 #if DOTNETCORE

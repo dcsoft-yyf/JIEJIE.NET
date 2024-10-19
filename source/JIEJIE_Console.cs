@@ -18,26 +18,27 @@ namespace JIEJIE
 {
     internal static class JIEJIE_Console
     {
-        //static string Test()
-        //{
-        //    try
-        //    { 
-        //        var s = new StringBuilder();
-        //        s.Append("aaaaaaaaa");
-        //        s.Append("bbbbb");
-        //        if (s.Length > 1)
-        //        {
-        //            return s.ToString();
-        //        }
-        //    }
-        //    catch( System.Exception ext )
-        //    {
-        //        return ext.ToString();
-        //    }
-        //    return "bbb";
-        //}
+        static string Test()
+        {
+            try
+            {
+                var s = new StringBuilder();
+                s.Append("aaaaaaaaa");
+                s.Append("bbbbb");
+                if (s.Length > 1)
+                {
+                    return s.ToString();
+                }
+            }
+            catch( System.Exception ext )
+            {
+                return ext.ToString();
+            }
+            return "bbb";
+        }
         static void Main(string[] args)
         {
+            Console.WriteLine("Argument command line:" + Environment.CommandLine);
             //var fn = @"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASM\bin\Debug\net6.0\wwwroot\_framework\DCSoft.Writer.ForWASM.dll";
             //var sh = System.Security.Cryptography.SHA256.Create();
             //var bs2 = sh.ComputeHash(System.IO.File.ReadAllBytes(fn));
@@ -72,69 +73,71 @@ namespace JIEJIE
             //        }
             //    }
             //}
-            /////* test data **************************/
-            //if (args == null || args.Length == 0)
-            //{
-            //    args = new string[] {
-            //     //   @"d:\temp3\RFLeaderboards.dll",
-            //    //@"translatestack=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib\DCSoft.Writer.ForWinForm.dll.map.xml",
-            //    //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.ASPNETDemo\bin\DCSoft.Writer.ForASPNET.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForASPNET\bin\debug\DCSoft.Writer.ForASPNET.dll",
-            //    //@"C:\Users\yfyuan\source\repos\WindowsFormsApp13\bin\Debug\WindowsFormsApp13.exe",
-            //    //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\Bin\DCSoft.WinFormDemo.exe",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Common\bin\Debug\DCSoft.Common.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForWinForm\bin\debug\DCSoft.Writer.ForWinForm.dll",
-            //    //@"E:\Source\DCSoft.WASM.Publish\bin\Release\net7.0\DCSoft.WASM.dll",
-            //    @"D:\DCSoft.WASM.Publish\bin\Debug\net7.0\DCSoft.WASM.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASM\bin\Debug\net7.0\DCSoft.WASM.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\bin\Debug\net7.0\DCSoft.Writer.ForWASM.dll",
-            //    //@"C:\Users\yfyuan\source\repos\ClassLibrary3\bin\Debug\net7.0\ClassLibrary3.dll",
-            //    //@"C:\Users\yfyuan\.nuget\packages\dcsoft.writer.forwasm\1.2023.3.10\lib\net7.0\DCSoft.Writer.ForWASM.dll",
-            //    //@"C:\Users\yfyuan\source\repos\ClassLibrary2\bin\Debug\net7.0\ClassLibrary2.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WinForms\Source\bin\Debug\DCSoft.WinForms.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Data\Source\bin\Debug\DCSoft.Data.dll",
-            //        //@"D:\temp3\DCSoft.Writer.ForWinForm.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Drawing\Source\bin\Debug\DCSoft.Drawing.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Writer.Core\bin\debug\DCSoft.Writer.Core.dll",
-            //    //@"E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\bin_netcore\debug\netcoreapp3.0\DCSoft.Writer.ForASPNETCore.dll",
-            //   // @"d:\temp\DecryptVSEncrypt.exe",
-            //        //@"inputtemppath=D:\temp3\JieJie.NET_Temp",
-            //    "outputmapxml",
-            //    @"output=E:\Source\DCSoft.WASM.Publish\bin\Release\net7.0",
-            //    //@"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.ASPNETDemo\DCLib",
-            //    //@"output=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\MyWriterMvcCore\wwwroot\wasm\_framework",
-            //    //@"output=E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASM\bin\Debug\net7.0\wwwroot\_framework",
-            //    //@"output=E:\Source\DCSoft\08代码\ConsoleApp1\Lib",
-            //    //@"output=C:\Users\yfyuan\.nuget\packages\dcsoft.writer.forwasm\1.2023.3.10\lib\net7.0",
-            //    //@"output=E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASMTest\Lib",
-            //    //@"output=C:\Users\yfyuan\.nuget\packages\dcsoft.writer.forwasm\1.2023.3.10\lib\net7.0\",
-            //    //@"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib",
-            //    //@"output=D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo",
-            //    @"snk=E:\Source\DCSoft\08代码\DCSoft\yyf.snk",
-            //    @"merge=*",
-            //    //".subsystem=3",
-            //    //".corflags=1",
-            //    "switch=+rename,-controlflow,+strings,+resources,+memberorder,+removemember,-allocationcallstack",
-            //    "SpecifyRename=DCSoft.Writer.Controls.IWASMParent,DCSoft.Common.FileHeaderHelper,DCSoft.Common.TickSpanTable,DCSoft.Common.TypeConverterSupportProperties,DCSoft.Common.ListDebugView,DCSoft.Writer.Controls.WASMEnvironment,DCSoft.Writer.Dom.Undo.XTextDocumentUndoList,DCSoft.Writer.Undo.*,DCSoft.Writer.Serialization.ArrayXmlReader,DCSoft.Drawing.DefaultFontNameValueAttribute",
-            //    "RemoveTypes=DCSystem_Resources.*,DCSoft.Common.SafeCreateResourceManager",
-            //    //"switch=+hightstrings,-rename" ,
-            //    //"switch=-rename" ,
-            //    //"prefixfortyperename=_jiejie._0",
-            //    //"prefixformemberrename=_jj",
-            //    "prefixfortyperename=zzz.z0ZzZz",
-            //    "prefixformemberrename=z0",
-            //    //"debugmode",
-            //    @"ResourceNameNeedEncrypt=DCSoft\.Chart.Design\.Images\.ChartViewStyle\s*",
-            //    "RemoveCustomAttributeTypeFullnames=System.Runtime.InteropServices.ComVisibleAttribute,DCSoft.Common.DCDescriptionAttribute,System.Runtime.InteropServices.GuidAttribute,DCSoft.Common.DCDisplayNameAttribute,System.ComponentModel.CategoryAttribute,DCSoft.Common.DCPublishAPIAttribute,System.Xml.Serialization.XmlTypeAttribute,System.Xml.Serialization.XmlIncludeAttribute,System.SerializableAttribute,System.ComponentModel.BrowsableAttribute,System.Xml.Serialization.XmlElementAttribute,System.Xml.Serialization.XmlAttributeAttribute,System.Xml.Serialization.XmlIgnoreAttribute,System.ObsoleteAttribute,System.ComponentModel.EditorBrowsableAttribute,DCSoft.Common.DCPublishAPIAttribute,DCSoft.Common.DCXSDAttribute,System.Drawing.ToolboxBitmapAttribute",
-            //    "BlazorWebAssembly",
-            //    //"PerformanceCounter",
-            //    "DeadCode=All",
-            //    "RemoveDeadCodeTypes=DCSoft.Writer.NewSerialization.NewSerializer20220801,DCSoft.Writer.NewSerialization.JsonSerializer20220818",
-            //    "pause",
-            //    //"notnativeconsole",
-            //    //"OnlyForReleaseAssembly"
-            //    };
-            //}
+            ///* test data **************************/
+            if (args == null || args.Length == 0)
+            {
+                args = new string[] {
+                 //   @"d:\temp3\RFLeaderboards.dll",
+                //@"translatestack=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib\DCSoft.Writer.ForWinForm.dll.map.xml",
+                //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.ASPNETDemo\bin\DCSoft.Writer.ForASPNET.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForASPNET\bin\debug\DCSoft.Writer.ForASPNET.dll",
+                //@"C:\Users\yfyuan\source\repos\WindowsFormsApp13\bin\Debug\WindowsFormsApp13.exe",
+                //@"E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\Bin\DCSoft.WinFormDemo.exe",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Common\bin\Debug\DCSoft.Common.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCWriterForWinForm\bin\debug\DCSoft.Writer.ForWinForm.dll",
+                //@"E:\Source\DCSoft.WASM.Publish\bin\Release\net7.0\DCSoft.WASM.dll",
+                @"D:\DCSoft.WASM.Publish\bin\Debug\net7.0\DCSoft.WASM.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASM\bin\Debug\net7.0\DCSoft.WASM.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\bin\Debug\net7.0\DCSoft.Writer.ForWASM.dll",
+                //@"C:\Users\yfyuan\source\repos\ClassLibrary3\bin\Debug\net7.0\ClassLibrary3.dll",
+                //@"C:\Users\yfyuan\.nuget\packages\dcsoft.writer.forwasm\1.2023.3.10\lib\net7.0\DCSoft.Writer.ForWASM.dll",
+                //@"C:\Users\yfyuan\source\repos\ClassLibrary2\bin\Debug\net7.0\ClassLibrary2.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.WinForms\Source\bin\Debug\DCSoft.WinForms.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Data\Source\bin\Debug\DCSoft.Data.dll",
+                    //@"D:\temp3\DCSoft.Writer.ForWinForm.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Drawing\Source\bin\Debug\DCSoft.Drawing.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCSoft.Writer.Core\bin\debug\DCSoft.Writer.Core.dll",
+                //@"E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\DCSoft.Writer.ForASPNETCore_All\bin_netcore\debug\netcoreapp3.0\DCSoft.Writer.ForASPNETCore.dll",
+               // @"d:\temp\DecryptVSEncrypt.exe",
+                    //@"inputtemppath=D:\temp3\JieJie.NET_Temp",
+                "outputmapxml",
+                @"output=E:\Source\DCSoft.WASM.Publish\bin\test",
+                //@"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.ASPNETDemo\DCLib",
+                //@"output=E:\Source\DCSoft\08代码\DCSoft\DCWriter专用版\MyWriterMvcCore\wwwroot\wasm\_framework",
+                //@"output=E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASM\bin\Debug\net7.0\wwwroot\_framework",
+                //@"output=E:\Source\DCSoft\08代码\ConsoleApp1\Lib",
+                //@"output=C:\Users\yfyuan\.nuget\packages\dcsoft.writer.forwasm\1.2023.3.10\lib\net7.0",
+                //@"output=E:\Source\DCSoft\08代码\DCSoft\DCSoft.WASMTest\Lib",
+                //@"output=C:\Users\yfyuan\.nuget\packages\dcsoft.writer.forwasm\1.2023.3.10\lib\net7.0\",
+                //@"output=E:\Source\DCSoftDemoCenter\08代码\旧版演示程序\DCSoft.DCWriterSimpleDemo\Lib",
+                //@"output=D:\temp\DCWriterCoreMVCDemo30\DCWriterCoreMVCDemo",
+                @"snk=E:\Source\DCSoft\08代码\DCSoft\yyf.snk",
+                @"merge=*",
+                //".subsystem=3",
+                //".corflags=1",
+                "switch=-rename,-controlflow,+strings,+resources,+memberorder,+removemember,-allocationcallstack",
+                "StringsSelector=+DCSoft.DCSR|+ShowAboutDialog|+GetNotSupportModules|+DCSoft.MyLicense*|-*",
+                "SpecifyRename=DCSoft.Writer.Controls.IWASMParent,DCSoft.Common.FileHeaderHelper,DCSoft.Common.TickSpanTable,DCSoft.Common.TypeConverterSupportProperties,DCSoft.Common.ListDebugView,DCSoft.Writer.Controls.WASMEnvironment,DCSoft.Writer.Dom.Undo.XTextDocumentUndoList,DCSoft.Writer.Undo.*,DCSoft.Writer.Serialization.ArrayXmlReader,DCSoft.Drawing.DefaultFontNameValueAttribute",
+                "RemoveTypes=DCSystem_Resources.*,DCSoft.Common.SafeCreateResourceManager",
+                //"switch=+hightstrings,-rename" ,
+                //"switch=-rename" ,
+                //"prefixfortyperename=_jiejie._0",
+                //"prefixformemberrename=_jj",
+                "prefixfortyperename=zzz.z0ZzZz",
+                "prefixformemberrename=z0",
+                //"debugmode",
+                @"ResourceNameNeedEncrypt=DCSoft\.Chart.Design\.Images\.ChartViewStyle\s*",
+                "RemoveCustomAttributeTypeFullnames=System.Runtime.InteropServices.ComVisibleAttribute,DCSoft.Common.DCDescriptionAttribute,System.Runtime.InteropServices.GuidAttribute,DCSoft.Common.DCDisplayNameAttribute,System.ComponentModel.CategoryAttribute,DCSoft.Common.DCPublishAPIAttribute,System.Xml.Serialization.XmlTypeAttribute,System.Xml.Serialization.XmlIncludeAttribute,System.SerializableAttribute,System.ComponentModel.BrowsableAttribute,System.Xml.Serialization.XmlElementAttribute,System.Xml.Serialization.XmlAttributeAttribute,System.Xml.Serialization.XmlIgnoreAttribute,System.ObsoleteAttribute,System.ComponentModel.EditorBrowsableAttribute,DCSoft.Common.DCPublishAPIAttribute,DCSoft.Common.DCXSDAttribute,System.Drawing.ToolboxBitmapAttribute",
+                "BlazorWebAssembly",
+                //"PerformanceCounter",
+                "DeadCode=All",
+                "RemoveDeadCodeTypes=DCSoft.Writer.NewSerialization.NewSerializer20220801,DCSoft.Writer.NewSerialization.JsonSerializer20220818",
+                "pause",
+                "MeasureSizeOfMethod"
+                //"notnativeconsole",
+                //"OnlyForReleaseAssembly"
+                };
+            }
             //var p = System.Diagnostics.Process.GetCurrentProcess();
             //Console.WriteLine("Tittttttttt:" + p.. .StartInfo.UseShellExecute);
             //Console.WriteLine("aaa:" + Environment.UserInteractive);
@@ -212,6 +215,9 @@ namespace JIEJIE
                             case "switch":
                                 prj.Switchs = new JieJieSwitchs(argValue, null , null );
                                 break;
+                            case "stringsselector":
+                                prj.StringsSelector = argValue;
+                                break;
                             case "sdkpath":
                                 if (argValue != null
                                     && argValue.Length > 0
@@ -288,14 +294,21 @@ namespace JIEJIE
                             case "performancecounter":prj.AddPerformanceCounter = true;break;
                             case "notnativeconsole": MyConsole.Instance.IsNativeConsole = false;break;
                             case "onlyforreleaseassembly": prj.OnlyForReleaseAssembly = true;break;
+                            case "measuresizeofmethod":prj.MeasureSizeOfMethod = true;break;
                             default:
                                 if (arg != null
                                     && arg.Length > 0
-                                    && Path.IsPathRooted(arg)
-                                    && File.Exists(arg))
+                                    && Path.IsPathRooted(arg))
                                 {
-                                    // 默认为输入的程序集的文件全路径名
-                                    prj.InputAssemblyFileName = arg;
+                                    if (File.Exists(arg))
+                                    {
+                                        // 默认为输入的程序集的文件全路径名
+                                        prj.InputAssemblyFileName = arg;
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Error:File not exist:" + arg);
+                                    }
                                 }
                                 break;
                         }

@@ -4,6 +4,7 @@ using System.Text;
 
 namespace JIEJIE
 {
+     
     /// <summary>
     /// 简单的字符串通配符，只支持星号和问号
     /// </summary>
@@ -15,7 +16,7 @@ namespace JIEJIE
             {
                 List<StringPattern> specifyRenameTypes = null;
                 specifyRenameTypes = new List<StringPattern>();
-                foreach (var item in strSettings.Split(','))
+                foreach (var item in strSettings.Split(new char[] { ',', '|' }))
                 {
                     var item2 = item.Trim();
                     if (item2.Length > 0)
@@ -27,7 +28,7 @@ namespace JIEJIE
                                 specifyRenameTypes.Add(new StringPattern(item2.Substring(1), true, true));
                             }
                         }
-                        else if (item2[1] == '-')
+                        else if (item2[0] == '-')
                         {
                             if (item2.Length > 0)
                             {
@@ -48,48 +49,64 @@ namespace JIEJIE
             return null;
         }
 
-        public StringPattern( string pattern , bool ignoreCase , bool isInclude)
+        public StringPattern(string pattern, bool ignoreCase, bool isInclude)
         {
             this.IsInclude = isInclude;
             this._Pattern = pattern;
-            if( this._Pattern == null )
+            if (this._Pattern == null)
             {
                 this._Pattern = string.Empty;
             }
             this._CompareMode = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            if( this._Pattern != null 
-                && this._Pattern.Length > 0 
-                && ( this._Pattern.IndexOf('*') >= 0 || this._Pattern.IndexOf('?') >=0))
+            if (this._Pattern == "*")
             {
-                var items = new List<string>();
-                var lastIndex = 0;
-                for(var iCount = 0;iCount < this._Pattern.Length; iCount ++)
+                this._Both = true;
+            }
+            else
+            {
+                if (this._Pattern != null
+                    && this._Pattern.Length > 0
+                    && (this._Pattern.IndexOf('*') >= 0 || this._Pattern.IndexOf('?') >= 0))
                 {
-                    var c = this._Pattern[iCount];
-                    if( c== '*' || c == '?')
+                    var items = new List<string>();
+                    var lastIndex = 0;
+                    for (var iCount = 0; iCount < this._Pattern.Length; iCount++)
                     {
-                        if(iCount > lastIndex)
+                        var c = this._Pattern[iCount];
+                        if (c == '*' || c == '?')
                         {
-                            items.Add(this._Pattern.Substring(lastIndex, iCount - lastIndex));
+                            if (iCount > lastIndex)
+                            {
+                                items.Add(this._Pattern.Substring(lastIndex, iCount - lastIndex));
+                            }
+                            items.Add(c.ToString());
+                            lastIndex = iCount + 1;
                         }
-                        items.Add(c.ToString());
-                        lastIndex = iCount + 1;
                     }
+                    if (lastIndex < this._Pattern.Length - 1)
+                    {
+                        items.Add(this._Pattern.Substring(lastIndex));
+                    }
+                    this._Items = items.ToArray();
                 }
-                if(lastIndex < this._Pattern.Length -1 )
-                {
-                    items.Add(this._Pattern.Substring(lastIndex));
-                }
-                this._Items = items.ToArray();
             }
         }
-        public bool IsInclude;
- 
-        private string _Pattern;
-        private StringComparison _CompareMode;
-        private string[] _Items = null;
+        private readonly bool _Both = false;
+        public readonly bool IsInclude;
+        private  string _Pattern;
+        private readonly StringComparison _CompareMode;
+        private  string[] _Items = null;
         public bool Match( string txt )
         {
+            if(this._Both )
+            {
+                // 无条件全部匹配
+                return true;
+            }
+            if(txt == null || txt.Length == 0 )
+            {
+                return false;
+            }
             if( this._Items == null )
             {
                 return string.Equals(txt, this._Pattern, this._CompareMode);

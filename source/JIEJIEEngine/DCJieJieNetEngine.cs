@@ -126,6 +126,7 @@ namespace JIEJIE
             eng.SpeicfyRename = this.SpeicfyRename;
             eng.RemoveTypes = this.RemoveTypes;
             eng.RemoveDeadCodeTypes = this.RemoveDeadCodeTypes;
+            eng.StringsSelector = this.StringsSelector;
         }
         /// <summary>
         /// 关闭对象
@@ -1288,9 +1289,11 @@ namespace JIEJIE
             var pathItems = outputAssemblyFileName.Split(Path.DirectorySeparatorChar);
             // 搜索obj目录下的同名程序集文件,若找到需要替换，因为AOT会使用这个文件
             string objOutputDir = null;
-            if( pathItems != null && pathItems.Length > 4 && pathItems[ pathItems.Length - 4 ] == "bin")
+            if( pathItems != null 
+                && pathItems.Length > 4 
+                && pathItems[ pathItems.Length - 4 ].IndexOf("bin",StringComparison.OrdinalIgnoreCase) >=0)
             {
-                pathItems[pathItems.Length - 4] = "obj";
+                pathItems[pathItems.Length - 4] = pathItems[pathItems.Length - 4].Replace("bin", "obj");
                 objOutputDir = pathItems[0];
                 for (var iCount = 1; iCount < pathItems.Length -1; iCount++)
                 {
@@ -1477,17 +1480,20 @@ namespace JIEJIE
                         }
                     }
                     MyConsole.Instance.WriteLine("   Modifiy " + jsonFileName);
-                    var fn9 = Path.Combine(objOutputDir, "blazor.boot.json");
-                    if (File.Exists(fn9))
+                    if (objOutputDir != null)
                     {
-                        using (var writer = new System.IO.StreamWriter(fn9, false, System.Text.Encoding.UTF8))
+                        var fn9 = Path.Combine(objOutputDir, "blazor.boot.json");
+                        if (File.Exists(fn9))
                         {
-                            foreach (var line in strLines)
+                            using (var writer = new System.IO.StreamWriter(fn9, false, System.Text.Encoding.UTF8))
                             {
-                                writer.WriteLine(line);
+                                foreach (var line in strLines)
+                                {
+                                    writer.WriteLine(line);
+                                }
                             }
+                            MyConsole.Instance.WriteLine("   Modifiy " + fn9);
                         }
-                        MyConsole.Instance.WriteLine("   Modifiy " + fn9);
                     }
                 }
             }
@@ -3082,14 +3088,14 @@ namespace JIEJIE
                             }
                             else
                             {
-                                MyConsole.Instance.CursorLeft = left;
-                                MyConsole.Instance.CursorTop = top;
+                                //MyConsole.Instance.CursorLeft = left;
+                                //MyConsole.Instance.CursorTop = top;
                                 countDown--;
                                 if (countDown < 0)
                                 {
                                     break;
                                 }
-                                MyConsole.Instance.Write("(" + countDown.ToString("00") + "):");
+                                MyConsole.Instance.Write("(" + countDown.ToString() + ")");
                                 System.Threading.Thread.Sleep(1000);
                             }
                         }
@@ -6324,6 +6330,12 @@ namespace JIEJIE
             }
         }
         /// <summary>
+        /// 执行加密字符串的类型或者方法名称的选择器
+        /// </summary>
+        public string StringsSelector = null;
+        
+
+        /// <summary>
         /// 加密字符串操作
         /// </summary>
         /// <param name="allMethods"></param>
@@ -6350,12 +6362,34 @@ namespace JIEJIE
                 }
             }
             allMethods = listTemp;
-
+            StringPattern[] patters = null;
+            if (this.StringsSelector != null && this.StringsSelector.Length > 0)
+            {
+                // 指明要处理的方法名称
+                patters = StringPattern.CreatePatterns(this.StringsSelector);
+            }
             foreach (var method in allMethods)
             {
                 if (method.RuntimeSwitchs.Strings == false)
                 {
                     continue;
+                }
+                if (patters != null)
+                {
+                    var bolInclude = true;
+                    foreach (var item in patters)
+                    {
+                        if (item.Match(method.OwnerClass?.Name) || item.Match(method.Name))
+                        {
+                            bolInclude = item.IsInclude;
+                            break;
+                        }
+                    }
+                    if (bolInclude == false)
+                    {
+                        // 不处理这个方法
+                        continue;
+                    }
                 }
                 method.OperCodes.EnumDeeply(method, delegate (EnumOperCodeArgs args)
                 {

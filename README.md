@@ -2,7 +2,8 @@
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 ## update log
-<br />2024-2-1 : Fix bug for `LoadResourceSet`.
+<br />2024-10-19: Add `StringsSelector` command argument.[Bless my babies SAM and LISA 4th birthday.]
+<br />2024-2-1  : Fix bug for `LoadResourceSet`.
 <br/> 2024-1-12 : Fix bug for `SMF_GetContent`.
 <br/> 2023-12-2 : Fix bug for parse string value.
 <br/> 2023-11-7 : Support Blazor Web assembly.clean custom attributes,remove dead code.
@@ -458,6 +459,8 @@ public static byte[] z0ZzZzbu(string A_0)
 }
 ```
 This code avoid the performance problem.
+
+[2024-10-19]Now , JIEJIET.NET add `StringsSelector` command arguments. String encrypt cause more memory cost , more software initialztion time . And normaly , most of string value is not need to encrypt, so we add `StringsSelector` arugment to reduce range of string encrypt . For example `StringsSelector=+DCSoft.DCSR|+ShowAboutDialog|+GetNotSupportModules|+DCSoft.MyLicense*|-*`. there `+` operator let classes or methods specify names include in encryt range , and `-` operator exclude encrypt range. and `*` match one or more charactors.
 
 ## 4 , Encrypt *.resources file.
  Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
