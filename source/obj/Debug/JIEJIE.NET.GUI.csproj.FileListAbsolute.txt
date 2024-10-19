@@ -1,8 +1,0 @@
-E:\Source\github\JIEJIE.NET\source\bin\Debug\JIEJIE.NET.GUI.exe
-E:\Source\github\JIEJIE.NET\source\bin\Debug\JIEJIE.NET.GUI.pdb
-E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.GUI.csproj.AssemblyReference.cache
-E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.frmJieJieNetGUI.resources
-E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.GUI.csproj.GenerateResource.cache
-E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.GUI.csproj.CoreCompileInputs.cache
-E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.GUI.exe
-E:\Source\github\JIEJIE.NET\source\obj\Debug\JIEJIE.NET.GUI.pdb
