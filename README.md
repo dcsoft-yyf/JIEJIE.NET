@@ -461,7 +461,8 @@ public static byte[] z0ZzZzbu(string A_0)
 ```
 This code avoid the performance problem.
 
-[2024-10-19]Now , JIEJIET.NET add `StringsSelector` command arguments. String encrypt cause more memory cost , more software initialztion time . And normaly , most of string value is not need to encrypt, so we add `StringsSelector` arugment to reduce range of string encrypt . For example `StringsSelector=+DCSoft.DCSR|+ShowAboutDialog|+GetNotSupportModules|+DCSoft.MyLicense*|-*`. there `+` operator let classes or methods specify names include in encryt range , and `-` operator exclude encrypt range. and `*` match one or more charactors.
+[2024-10-19]Now , JIEJIET.NET add `StringsSelector` command arguments. String encrypt cause more memory cost , more software initialztion time . And normaly , most of string value is not need to encrypt, so we add `StringsSelector` arugment to reduce range of string encrypt . 
+<br />For example `StringsSelector=+DCSoft.DCSR,+ShowAboutDialog,+GetNotSupportModules,+DCSoft.MyLicense*,-*`. there `+` operator let classes or methods specify names include in encryt range , and `-` operator exclude encrypt range. and `*` match one or more charactors.
 
 ## 4 , Encrypt *.resources file.
  Haker can dasm .NET assembly file use ildasm.exe, and get all `*.resouces` file embed in assembly , change it , maby replace their name or logo image, and use ilasm.exe to rebuild a .NET assembly file.Change your copyright UI to haker's copyright UI.
