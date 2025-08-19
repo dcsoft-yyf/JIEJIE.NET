@@ -1,9 +1,10 @@
+# 2025-8-18 : IMPORTAND!!New project publish at [https://github.com/dcsoft-yyf/DCWriterLite](https://github.com/dcsoft-yyf/DCWriterLite)
+
 # JIEJIE.NET | 结界.NET
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 <br />Author : yongfu-yuan(袁永福) from CHINA . Email:28348092@qq.com
 ## update log
-<br />2025-8-18 : IMPORTAND!!New project publish at [https://github.com/dcsoft-yyf/DCWriterLite](https://github.com/dcsoft-yyf/DCWriterLite)
 <br />2024-10-19: Add `StringsSelector` command argument.[Bless my babies SAM and LISA 4th birthday.]
 <br />2024-2-1  : Fix bug for `LoadResourceSet`.
 <br/> 2024-1-12 : Fix bug for `SMF_GetContent`.
