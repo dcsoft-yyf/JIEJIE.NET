@@ -1,4 +1,3 @@
-# 2025-8-18 : IMPORTAND!!New project publish at [https://github.com/dcsoft-yyf/DCWriterLite](https://github.com/dcsoft-yyf/DCWriterLite)
 
 # JIEJIE.NET | 结界.NET
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
