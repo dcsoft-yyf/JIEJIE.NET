@@ -1,4 +1,4 @@
-
+# Publish DCWriterApp at [https://github.com/dcsoft-yyf/DCWriterApp](https://github.com/dcsoft-yyf/DCWriterApp)
 # JIEJIE.NET | 结界.NET
   An open source tool to obfuscation .NET assembly file, help people protect theirs copyright.
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
