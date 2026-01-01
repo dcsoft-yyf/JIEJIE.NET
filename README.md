@@ -4,6 +4,7 @@
   <br /> Jie(2)Jie(4) in chinese is a kind of transparet magic protect shield.
 <br />Author : yongfu-yuan(袁永福) from CHINA . Email:28348092@qq.com
 ## update log
+<br />2026-1-1 :Fix bug for encryption resource.
 <br />2025-12-4 Add knowledge [How to Migrate WinForm.NET Code to Blazor WASM Platform?|如何将WinForm.NET代码迁移到Blazor WASM平台上?](https://github.com/dcsoft-yyf/DCWriterApp/blob/main/WinFormWASM/WinFormWASM.md)
 <br />2024-10-19: Add `StringsSelector` command argument.[Bless my babies SAM and LISA 4th birthday.]
 <br />2024-2-1  : Fix bug for `LoadResourceSet`.
