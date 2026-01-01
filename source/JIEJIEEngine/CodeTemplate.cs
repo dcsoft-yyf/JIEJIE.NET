@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -986,14 +986,19 @@ namespace JIEJIE
 				uint8[] bs
 			) cil managed 
 		{
-			// Method begins at RVA 0x26234
-			// Code size 150 (0x96)
+			// Method begins at RVA 0x2d47c
+			// Header size: 12
+			// Code size: 197 (0xc5)
 			.maxstack 5
 			.locals init (
 				[0] int32 gzipLen,
 				[1] bool,
 				[2] class [mscorlib]System.IO.MemoryStream msSource,
-				[3] class [System]System.IO.Compression.GZipStream gm
+				[3] class [System]System.IO.Compression.GZipStream gm,
+				[4] int32 readOffset,
+				[5] int32 readLen,
+				[6] bool,
+				[7] bool
 			)
 
 			IL_0000: ldarg.0
@@ -1039,7 +1044,7 @@ namespace JIEJIE
 			IL_0049: call void [mscorlib]System.Array::Copy(class [mscorlib]System.Array, int32, class [mscorlib]System.Array, int32, int32)
 			IL_004e: nop
 			IL_004f: nop
-			IL_0050: br.s IL_0095
+			IL_0050: br.s IL_00c4
 
 			IL_0052: nop
 			IL_0053: ldarg.1
@@ -1058,22 +1063,55 @@ namespace JIEJIE
 			IL_006c: ldloc.0
 			IL_006d: newarr [mscorlib]System.Byte
 			IL_0072: stfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
-			IL_0077: ldloc.3
-			IL_0078: ldarg.0
-			IL_0079: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
-			IL_007e: ldc.i4.0
-			IL_007f: ldloc.0
-			IL_0080: callvirt instance int32 [mscorlib]System.IO.Stream::Read(uint8[], int32, int32)
-			IL_0085: pop
-			IL_0086: ldloc.3
-			IL_0087: callvirt instance void [mscorlib]System.IO.Stream::Close()
-			IL_008c: nop
-			IL_008d: ldloc.2
-			IL_008e: callvirt instance void [mscorlib]System.IO.Stream::Close()
-			IL_0093: nop
-			IL_0094: nop
+			IL_0077: ldc.i4.0
+			IL_0078: stloc.s 4
+			IL_007a: br.s IL_00aa
+			// loop start (head: IL_00aa)
+				IL_007c: nop
+				IL_007d: ldloc.3
+				IL_007e: ldarg.0
+				IL_007f: ldfld uint8[] __DC20211119.JIEJIEHelper/SMF_ResStream::_Content
+				IL_0084: ldloc.s 4
+				IL_0086: ldloc.0
+				IL_0087: ldloc.s 4
+				IL_0089: sub
+				IL_008a: callvirt instance int32 [mscorlib]System.IO.Stream::Read(uint8[], int32, int32)
+				IL_008f: stloc.s 5
+				IL_0091: ldloc.s 5
+				IL_0093: ldc.i4.0
+				IL_0094: cgt
+				IL_0096: ldc.i4.0
+				IL_0097: ceq
+				IL_0099: stloc.s 6
+				IL_009b: ldloc.s 6
+				IL_009d: brfalse.s IL_00a2
 
-			IL_0095: ret
+				IL_009f: nop
+				IL_00a0: br.s IL_00b5
+
+				IL_00a2: ldloc.s 4
+				IL_00a4: ldloc.s 5
+				IL_00a6: add
+				IL_00a7: stloc.s 4
+				IL_00a9: nop
+
+				IL_00aa: ldloc.s 4
+				IL_00ac: ldloc.0
+				IL_00ad: clt
+				IL_00af: stloc.s 7
+				IL_00b1: ldloc.s 7
+				IL_00b3: brtrue.s IL_007c
+			// end loop
+
+			IL_00b5: ldloc.3
+			IL_00b6: callvirt instance void [mscorlib]System.IO.Stream::Close()
+			IL_00bb: nop
+			IL_00bc: ldloc.2
+			IL_00bd: callvirt instance void [mscorlib]System.IO.Stream::Close()
+			IL_00c2: nop
+			IL_00c3: nop
+
+			IL_00c4: ret
 		} // end of method SMF_ResStream::.ctor
 
 		.method public hidebysig specialname virtual 
