@@ -465,7 +465,7 @@ public static byte[] z0ZzZzbu(string A_0)
 ```
 This code avoid the performance problem.
 
-[2024-10-19]Now , JIEJIET.NET add `StringsSelector` command arguments. String encrypt cause more memory cost , more software initialztion time . And normaly , most of string value is not need to encrypt, so we add `StringsSelector` arugment to reduce range of string encrypt . 
+[2024-10-19]Now , JIEJIET.NET add `StringsSelector` command arguments. String encrypt cause more memory cost , more software initialztion time . And normaly , most of string value is not need to encrypt, so we add `StringsSelector` argument to reduce range of string encrypt . 
 <br />For example `StringsSelector=+DCSoft.DCSR,+ShowAboutDialog,+GetNotSupportModules,+DCSoft.MyLicense*,-*`. there `+` operator let classes or methods specify names include in encryt range , and `-` operator exclude encrypt range. and `*` match one or more charactors.
 
 ## 4 , Encrypt *.resources file.
@@ -1033,7 +1033,7 @@ My new tool is a .NET framework console  application.
       RemoveCustomAttributeTypeFullnames=[optional, Full type name list for custom attributes which you want remove.]
    Example 1, protect d:\a.dll ,this will modify dll file.
       >JIEJIE.NET.exe d:\a.dll  
-   Exmaple 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
+   Example 2, anlyse d:\a.dll , and write result to another dll file with strong name. enable obfuscate control flow and not encript resources.
       >JIEJIE.NET.exe input=d:\a.dll output=d:\publish\a.dll snk=d:\source\company.snk switch=+contorlfow,-resources
 
 ```
